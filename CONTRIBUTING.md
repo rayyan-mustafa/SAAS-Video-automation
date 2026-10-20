@@ -1,8 +1,6 @@
-# Contributing to AUTORA
+# Engineering & Contribution Standards
 
-First off, thank you for considering contributing to AUTORA! It is contributors like you that make this multi-platform AI video automation platform exceptional.
-
-Please take a few moments to review these guidelines before submitting a Pull Request or opening an Issue.
+These guidelines outline internal engineering standards, git workflows, and pull request verification protocols for authorized engineers, contractors, and maintainers collaborating on AUTORA.
 
 ---
 

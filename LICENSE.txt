@@ -1,47 +1,37 @@
-Business Source License 1.1
+PROPRIETARY COMMERCIAL SOFTWARE LICENSE AGREEMENT
+ALL RIGHTS RESERVED
 
-Parameters:
+Copyright (c) 2026 Rayyan Mustafa. All rights reserved.
 
-Licensor:                 AUTORA (Rayyan Mustafa)
-Licensed Work:            AUTORA Platform Source Code and associated documentation
-Additional Use Grant:     You may use the Licensed Work for personal development, testing,
-                          internal company operations, and non-commercial educational purposes.
-                          You may self-host the Licensed Work for your own internal video creation
-                          workflows. You may NOT provide the functionality of the Licensed Work
-                          to third parties as a hosted service, managed platform, commercial API,
-                          or competing video automation Software-as-a-Service (SaaS).
-Change Date:              2029-10-01
-Change License:           Apache License, Version 2.0
+NOTICE TO ALL PERSONS:
+This software, source code, documentation, algorithms, visual designs, database schemas,
+and associated digital assets (collectively, the "Software") are the exclusive, confidential,
+and proprietary intellectual property of Rayyan Mustafa (the "Owner").
 
---------------------------------------------------------------------------------
+1. OWNERSHIP & INTELLECTUAL PROPERTY:
+The Owner retains sole, complete, and unencumbered ownership of all copyright, patent,
+trademark, trade secret, and other intellectual property rights in and to the Software.
+No title to or ownership of the Software is transferred to any third party.
 
-Copyright (c) 2026 AUTORA (Rayyan Mustafa). All rights reserved.
+2. STRICT PROPRIETARY RESTRICTIONS:
+Except as expressly authorized in writing by the Owner or pursuant to a formal acquisition,
+asset purchase, or commercial licensing agreement executed by the Owner:
+   a. You may NOT copy, modify, adapt, translate, reverse engineer, decompile, or disassemble
+      the Software in whole or in part.
+   b. You may NOT distribute, sublicense, rent, lease, loan, sell, assign, or make available
+      the Software or its functionality to any third party.
+   c. You may NOT publicly display, disclose, or publish the source code or architecture of
+      the Software on any public repository, forum, or digital marketplace.
 
-The Licensor hereby grants you the right to copy, modify, create derivative works,
-redistribute, and make non-production use of the Licensed Work. The Licensor also
-grants you an Additional Use Grant as defined above.
+3. COMMERCIAL ACQUISITION & TRANSFERABILITY:
+This Software is structured as a turnkey commercial asset. In the event of a verified sale,
+merger, or acquisition of the business or software assets, full proprietary ownership,
+copyrights, and operational rights may be assigned and transferred exclusively to the
+authorized acquiring entity subject to the terms of the definitive purchase agreement.
 
-The Licensor grants you these rights provided that you comply with all of the
-restrictions on your use of the Licensed Work that are contained in this License,
-including without limitation the limitations on the Additional Use Grant.
-
-Any use of the Licensed Work that is not explicitly permitted under this License
-is strictly prohibited and constitutes copyright infringement.
-
-Effective on the Change Date, or the date when the Licensed Work is made available
-under the Change License, whichever occurs first, the Licensor hereby grants you
-the rights to use the Licensed Work under the terms of the Change License specified
-above. On and after the Change Date, your use of the Licensed Work will no longer
-be subject to the restrictions in this License.
-
-Notice Requirement:
-You must include this License, including the copyright notice, in all copies or
-substantial portions of the Licensed Work that you distribute.
-
-DISCLAIMER:
-THE LICENSED WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE LICENSOR OR
-AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-LICENSED WORK OR THE USE OR OTHER DEALINGS IN THE LICENSED WORK.
+4. DISCLAIMER OF WARRANTY:
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE OWNER BE LIABLE FOR ANY CLAIM, DAMAGES,
+OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM,
+OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

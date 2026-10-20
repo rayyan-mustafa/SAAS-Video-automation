@@ -8,9 +8,9 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14.2.15-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-3178C6?style=for-the-badge)](LICENSE.txt)
-[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-FE5196?style=for-the-badge&logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](CONTRIBUTING.md)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg?style=for-the-badge)](LICENSE.txt)
+[![Status: Production Ready](https://img.shields.io/badge/Status-Production%20Ready-success.svg?style=for-the-badge)](https://autora.live)
+[![Code Style: Conventional](https://img.shields.io/badge/Code%20Style-Conventional%20Commits-FE5196?style=for-the-badge&logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
 <br/>
 
@@ -176,33 +176,39 @@ docker run -p 3000:3000 --env-file .env autora-saas
 
 ---
 
-## 🏢 Commercial Open-Source (Open-Core) Model
+## 🏢 Turnkey Commercial SaaS Architecture & Asset Overview
 
-AUTORA follows the **Commercial Open-Source Software (COSS)** model pioneered by Sentry, Supabase, and CockroachDB:
+AUTORA is engineered as an enterprise-grade, turn-key Software-as-a-Service (SaaS) business asset:
 
-| Edition | Audience & Purpose | Cost | Key Capabilities |
-|---|---|---|---|
-| **Community Self-Hosted** | Developers, individual creators, self-hosters | **Free** | Core video generation pipeline, local SQLite, FFmpeg composition, edge neural speech, and manual channel publishing. |
-| **AUTORA Cloud (`autora.live`)** | Production creators, agencies, media companies | **Paid SaaS** | Zero-maintenance cloud rendering, managed proxy rotations, multi-platform OAuth credentials vault, multi-channel auto-pilot scheduling, 99.9% uptime SLA, and automated credit refunds. |
-
----
-
-## 🤝 Contributing
-
-We welcome community contributions, bug fixes, and feature proposals! Please read our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) before submitting a Pull Request.
-
-All commits must adhere to the [Conventional Commits](https://www.conventionalcommits.org/) specification as detailed in [agents.md](agents.md).
+| Component | Architecture & Valuation Highlights |
+|---|---|
+| **Multi-Tier Subscription Monetization** | Creator Plan ($49/mo, 100 credits) and Pro Plan ($99/mo, 250 credits) with automated Polar/Stripe webhooks and dynamic per-job cost calculation. |
+| **Zero-Waste Auto-Refund Engine** | Automated 100% credit restoration on pipeline error with structured ledger transaction auditing. |
+| **Multi-Provider AI Routing** | Pluggable failover pipeline supporting Wan 2.1, Fal.ai, OpenAI Video, Google Veo, Runway, and Luma with edge neural voice synthesis. |
+| **Omni-Channel Direct Publishing** | Direct API integrations with YouTube Data API v3, TikTok Video API, Instagram Graph API, and Facebook Graph API with duration guards. |
+| **Enterprise Security Posture** | In-memory sliding-window IP rate limiters, constant-time HMAC SHA-256 admin tokens, and AES-256-GCM encrypted credential vault. |
 
 ---
 
-## 🛡️ Security
+## 🤝 Internal Engineering & Contribution Standards
 
-For vulnerability reports and responsible disclosure instructions, please consult our [Security Policy](SECURITY.md).
+Authorized team members, contributors, and maintaining engineers must adhere to our internal development protocols:
+
+- Review [agents.md](agents.md) for architecture rules, canonical scopes, and testing mandates.
+- All commits must strictly conform to [Conventional Commits](https://www.conventionalcommits.org/).
+- PRs must satisfy the checklist in [.github/pull_request_template.md](.github/pull_request_template.md).
 
 ---
 
-## 📄 Licensing & Trademark Policy
+## 🛡️ Security & Responsible Disclosure
 
-- **Source Code**: Licensed under the **Business Source License 1.1 (BSL 1.1)** — see [LICENSE.txt](LICENSE.txt). Free for personal use, internal business operations, testing, and self-hosting. You may **not** provide the software to third parties as a competing commercial cloud service or video automation SaaS. Converts automatically to **Apache 2.0** on October 1, 2029.
-- **Trademarks**: The names "AUTORA", "autora.live", brand logos, and visual marks are exclusive trademarks of AUTORA and may not be used without prior written authorization.
+For internal security guidelines and responsible disclosure procedures, please refer to [SECURITY.md](SECURITY.md).
+
+---
+
+## 📄 Proprietary License & Acquisition Terms
+
+- **Proprietary Software**: Copyright (c) 2026 Rayyan Mustafa. All Rights Reserved. This software is proprietary and confidential. Unauthorized copying, distribution, decompilation, public disclosure, or resale is strictly prohibited.
+- **Acquisition Transferability**: In the event of an authorized asset purchase or business acquisition, full exclusive ownership, intellectual property rights, database schemas, and operational assets transfer to the acquiring entity per the definitive purchase agreement. See [LICENSE.txt](LICENSE.txt) for full legal terms.
+
 
