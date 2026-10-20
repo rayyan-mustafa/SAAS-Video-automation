@@ -1,0 +1,67 @@
+name: "Bug Report"
+description: "Report an issue, defect, or unexpected behavior in AUTORA"
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue! Please check existing issues before submitting.
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of the bug.
+      placeholder: Describe what happened...
+    validations:
+      required: true
+  - type: dropdown
+    id: module
+    attributes:
+      label: Affected Module
+      options:
+        - "Module 1: Production Security & 2-Tier Pricing"
+        - "Module 2: Zero-Waste Credit Ledger & Auto-Refund System"
+        - "Module 3: AI Video Pipeline & Production Bible"
+        - "Module 4: Competitor Intelligence & Outliers"
+        - "Module 5: Own Channel IQ & Winner-Bias Engine"
+        - "Module 6: Multi-Platform Social Auto-Publishing"
+        - "Module 7: Telemetry & Analytics Dashboard"
+        - "Module 8: Licensed Voice & Narrative Engine"
+        - "Frontend / UI / Navigation"
+        - "DevOps / CI / Docker"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this behavior?
+      placeholder: |
+        1. Navigate to '...'
+        2. Click on '....'
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs or Error Output
+      description: Please copy and paste any relevant terminal, browser console, or server logs.
+      render: shell
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Verification
+      options:
+        - label: I have verified this is not a duplicate of an existing issue.
+          required: true
+        - label: I am running the latest version from the `main` branch.
+          required: false

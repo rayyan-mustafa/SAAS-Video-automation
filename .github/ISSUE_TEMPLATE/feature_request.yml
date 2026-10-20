@@ -1,0 +1,53 @@
+name: "Feature Request"
+description: "Suggest an idea or architectural enhancement for AUTORA"
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an improvement for AUTORA!
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a problem or limitation?
+      placeholder: I'm always frustrated when...
+    validations:
+      required: true
+  - type: dropdown
+    id: module
+    attributes:
+      label: Target Module
+      options:
+        - "Module 1: Production Security & 2-Tier Pricing"
+        - "Module 2: Zero-Waste Credit Ledger & Auto-Refund System"
+        - "Module 3: AI Video Pipeline & Production Bible"
+        - "Module 4: Competitor Intelligence & Outliers"
+        - "Module 5: Own Channel IQ & Winner-Bias Engine"
+        - "Module 6: Multi-Platform Social Auto-Publishing"
+        - "Module 7: Telemetry & Analytics Dashboard"
+        - "Module 8: Licensed Voice & Narrative Engine"
+        - "UI / UX Experience"
+        - "Other / Integrations"
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution & Workflow
+      description: Describe the solution you'd like to see implemented.
+      placeholder: Provide a clear and concise description of what should happen...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions Considered
+      description: Any alternative solutions or features you've considered?
+  - type: checkboxes
+    id: willingness
+    attributes:
+      label: Contribution
+      options:
+        - label: I am willing to submit a Pull Request to implement this feature.

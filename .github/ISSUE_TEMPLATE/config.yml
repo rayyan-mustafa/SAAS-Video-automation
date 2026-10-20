@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/rayyan-mustafa/SAAS-Video-automation/discussions
+    about: Ask questions, share ideas, and connect with other creators and developers.
+  - name: Security Vulnerability Reporting
+    url: https://github.com/rayyan-mustafa/SAAS-Video-automation/security/advisories/new
+    about: Responsibly report sensitive security vulnerabilities.
