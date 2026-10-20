@@ -1,0 +1,20 @@
+# AUTORA (AutoVideo) - Web Crawler & Robots Policy
+User-agent: *
+Allow: /
+Allow: /landing
+Allow: /calendar
+Allow: /templates
+Allow: /workflow
+Allow: /billing
+Allow: /login
+Allow: /signup
+
+# Disallow protected and internal API areas from search index
+Disallow: /admin
+Disallow: /api/
+Disallow: /settings/security
+Disallow: /reset-password
+Disallow: /verify-email
+
+# XML Sitemaps
+Sitemap: https://autora.live/sitemap.xml
