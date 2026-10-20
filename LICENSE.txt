@@ -1,0 +1,18 @@
+COMMERCIAL SOFTWARE LICENSE AGREEMENT
+
+Copyright (c) 2026 AutoVideo. All rights reserved.
+
+Permission is hereby granted to the purchaser of this software source code package
+to use, modify, deploy, and commercialize the software for personal, agency, or
+SaaS business operations, subject to the following conditions:
+
+1. REDISTRIBUTION RESTRICTION: The source code may not be sublicensed, resold,
+   redistributed, or published as a competing digital asset or marketplace template
+   without substantial modification and integration into an operational end-user service.
+
+2. AS-IS DISCLAIMER: THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
