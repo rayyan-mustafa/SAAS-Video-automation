@@ -150,3 +150,24 @@ To uphold the highest software quality across all contributions:
    - Platform OAuth tokens must be encrypted in storage using AES-256-GCM.
 3. **Rate Limiting & Abuse Prevention**:
    - Public and computational endpoints (`/api/auth/login`, `/api/calendar/generate-plan`, `/api/render/*`) must be defended by the sliding-window rate limiter.
+
+---
+
+## Continuous Deployment (CD) & Release Standards
+
+1. **Automated Container Packaging**:
+   - Every merge to `main` and version tag (`v*.*.*`) triggers the CD workflow (`.github/workflows/cd.yml`).
+   - Builds production multi-stage Docker images with GitHub Actions caching.
+   - Publishes verified images to GitHub Container Registry (`ghcr.io/rayyan-mustafa/saas-video-automation`).
+2. **Semantic Versioning & Release Tagging**:
+   - Releases follow semantic versioning: `v<MAJOR>.<MINOR>.<PATCH>` (e.g., `v2.1.0`).
+   - Pushing a git tag automatically creates a GitHub Release with auto-generated release notes derived from Conventional Commits.
+   - Command to tag and trigger a production release:
+     ```bash
+     git tag -a v2.1.0 -m "Release v2.1.0"
+     git push origin v2.1.0
+     ```
+3. **Environment Separation**:
+   - `staging`: Automated preview deployments for QA verification.
+   - `production`: Immutable containerized releases with zero-downtime rolling updates.
+
