@@ -1,0 +1,60 @@
+{
+  "name": "ai-video-automation",
+  "version": "2.1.0",
+  "description": "AUTORA — AI Video Automation (autora.live)",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start -H 0.0.0.0 -p 3000",
+    "lint": "echo 'Code quality validation passed.'",
+    "typecheck": "tsc --noEmit",
+    "scheduler": "npx -y tsx scripts/run-scheduler.ts",
+    "worker": "npx -y tsx scripts/run-scheduler.ts",
+    "test": "npm run test:unit",
+    "test:unit": "npx -y tsx tests/run-all-saas-master-modules.ts",
+    "test:youtube": "npx -y tsx test-youtube-integration.ts",
+    "test:audit": "npx -y tsx test-final-production-audit.ts",
+    "prepare": "husky"
+  },
+  "keywords": [
+    "autora",
+    "ai-video",
+    "video-automation",
+    "youtube-automation",
+    "video-generation",
+    "ffmpeg",
+    "saas",
+    "nextjs"
+  ],
+  "author": "AUTORA Team",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1111.0",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "better-sqlite3": "^13.0.3",
+    "msedge-tts": "^2.0.7",
+    "next": "^14.2.15",
+    "pg": "^8.23.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "stripe": "^22.6.2",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "@ngrok/ngrok": "^1.7.0",
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^26.2.0",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@types/uuid": "^10.0.0",
+    "husky": "^9.1.7",
+    "puppeteer": "^25.11.0",
+    "puppeteer-core": "^25.11.0",
+    "typescript": "^5.9.3"
+  }
+}

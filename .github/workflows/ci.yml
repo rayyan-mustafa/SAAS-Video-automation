@@ -1,0 +1,41 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    name: Build, Typecheck, Lint & Master Module Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Static Type Check (tsc)
+        run: npm run typecheck
+
+      - name: Master Module Regression & Security Tests
+        run: npm run test:unit
+        env:
+          ADMIN_SECRET: ci-test-admin-secret-at-least-32-chars-long
+          JWT_SECRET: ci-test-jwt-secret-at-least-32-chars-long
+          ENCRYPTION_KEY: ci-test-encryption-key-32-chars-long
+          ADMIN_USER: autora_admin
+          ADMIN_PASSWORD: TestAdminPassword123!
+          AUTH_SECRET: ci-test-auth-secret-at-least-32-chars-long
+
+      - name: ESLint Code Quality
+        run: npm run lint

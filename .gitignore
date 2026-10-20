@@ -1,0 +1,45 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+
+# Production
+/build
+
+# Misc
+.DS_Store
+*.pem
+
+# Local env files
+.env*.local
+.env
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Application dynamic data & generated media storage
+/data/*.db*
+*.sqlite
+/storage
+/temp
+*.log
+out.txt
+landing.html
+product_page.html
+browser-qa-results.json
+*-qa-results.json
+screenshot-*.png
+qa-screenshots/
+mobile-ux-audit-results.json
+
