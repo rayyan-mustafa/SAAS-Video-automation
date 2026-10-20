@@ -8,7 +8,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14.2.15-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-F5A623?style=for-the-badge)](LICENSE.txt)
+[![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-3178C6?style=for-the-badge)](LICENSE.txt)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-FE5196?style=for-the-badge&logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](CONTRIBUTING.md)
 
@@ -176,6 +176,17 @@ docker run -p 3000:3000 --env-file .env autora-saas
 
 ---
 
+## 🏢 Commercial Open-Source (Open-Core) Model
+
+AUTORA follows the **Commercial Open-Source Software (COSS)** model pioneered by Sentry, Supabase, and CockroachDB:
+
+| Edition | Audience & Purpose | Cost | Key Capabilities |
+|---|---|---|---|
+| **Community Self-Hosted** | Developers, individual creators, self-hosters | **Free** | Core video generation pipeline, local SQLite, FFmpeg composition, edge neural speech, and manual channel publishing. |
+| **AUTORA Cloud (`autora.live`)** | Production creators, agencies, media companies | **Paid SaaS** | Zero-maintenance cloud rendering, managed proxy rotations, multi-platform OAuth credentials vault, multi-channel auto-pilot scheduling, 99.9% uptime SLA, and automated credit refunds. |
+
+---
+
 ## 🤝 Contributing
 
 We welcome community contributions, bug fixes, and feature proposals! Please read our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) before submitting a Pull Request.
@@ -190,6 +201,8 @@ For vulnerability reports and responsible disclosure instructions, please consul
 
 ---
 
-## 📄 License
+## 📄 Licensing & Trademark Policy
 
-This project is licensed under the MIT License — see the [LICENSE.txt](LICENSE.txt) file for details.
+- **Source Code**: Licensed under the **Business Source License 1.1 (BSL 1.1)** — see [LICENSE.txt](LICENSE.txt). Free for personal use, internal business operations, testing, and self-hosting. You may **not** provide the software to third parties as a competing commercial cloud service or video automation SaaS. Converts automatically to **Apache 2.0** on October 1, 2029.
+- **Trademarks**: The names "AUTORA", "autora.live", brand logos, and visual marks are exclusive trademarks of AUTORA and may not be used without prior written authorization.
+

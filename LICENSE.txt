@@ -1,18 +1,47 @@
-COMMERCIAL SOFTWARE LICENSE AGREEMENT
+Business Source License 1.1
 
-Copyright (c) 2026 AutoVideo. All rights reserved.
+Parameters:
 
-Permission is hereby granted to the purchaser of this software source code package
-to use, modify, deploy, and commercialize the software for personal, agency, or
-SaaS business operations, subject to the following conditions:
+Licensor:                 AUTORA (Rayyan Mustafa)
+Licensed Work:            AUTORA Platform Source Code and associated documentation
+Additional Use Grant:     You may use the Licensed Work for personal development, testing,
+                          internal company operations, and non-commercial educational purposes.
+                          You may self-host the Licensed Work for your own internal video creation
+                          workflows. You may NOT provide the functionality of the Licensed Work
+                          to third parties as a hosted service, managed platform, commercial API,
+                          or competing video automation Software-as-a-Service (SaaS).
+Change Date:              2029-10-01
+Change License:           Apache License, Version 2.0
 
-1. REDISTRIBUTION RESTRICTION: The source code may not be sublicensed, resold,
-   redistributed, or published as a competing digital asset or marketplace template
-   without substantial modification and integration into an operational end-user service.
+--------------------------------------------------------------------------------
 
-2. AS-IS DISCLAIMER: THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Copyright (c) 2026 AUTORA (Rayyan Mustafa). All rights reserved.
+
+The Licensor hereby grants you the right to copy, modify, create derivative works,
+redistribute, and make non-production use of the Licensed Work. The Licensor also
+grants you an Additional Use Grant as defined above.
+
+The Licensor grants you these rights provided that you comply with all of the
+restrictions on your use of the Licensed Work that are contained in this License,
+including without limitation the limitations on the Additional Use Grant.
+
+Any use of the Licensed Work that is not explicitly permitted under this License
+is strictly prohibited and constitutes copyright infringement.
+
+Effective on the Change Date, or the date when the Licensed Work is made available
+under the Change License, whichever occurs first, the Licensor hereby grants you
+the rights to use the Licensed Work under the terms of the Change License specified
+above. On and after the Change Date, your use of the Licensed Work will no longer
+be subject to the restrictions in this License.
+
+Notice Requirement:
+You must include this License, including the copyright notice, in all copies or
+substantial portions of the Licensed Work that you distribute.
+
+DISCLAIMER:
+THE LICENSED WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE LICENSOR OR
+AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+LICENSED WORK OR THE USE OR OTHER DEALINGS IN THE LICENSED WORK.

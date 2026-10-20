@@ -171,3 +171,21 @@ To uphold the highest software quality across all contributions:
    - `staging`: Automated preview deployments for QA verification.
    - `production`: Immutable containerized releases with zero-downtime rolling updates.
 
+---
+
+## Commercial Open-Source (Open-Core) Governance Standards
+
+1. **Licensing Framework (Business Source License 1.1)**:
+   - Source code is protected under **BSL 1.1** with non-compete commercial cloud protections.
+   - Anyone is free to read the source, self-host for internal channel creation, test, and contribute.
+   - Third parties are strictly prohibited from offering AUTORA as a competing commercial video automation SaaS or managed API.
+   - Automatically converts to permissive **Apache 2.0** on October 1, 2029.
+
+2. **Open-Core Architecture Boundaries**:
+   - **Community / Self-Hosted Edition**: Fully functional standalone engine (local SQLite, neural TTS, multi-provider routing, FFmpeg composition, manual social publish).
+   - **AUTORA Cloud (`autora.live`)**: Managed enterprise infrastructure (Polar subscription billing, automated multi-tenant proxy rotation, credit auto-refund ledger, team workspaces, 99.9% uptime SLA).
+
+3. **Trademark & Brand Protection**:
+   - The names "AUTORA", "autora.live", visual marks, and logos remain exclusive trademarks of the Licensor and cannot be used by forks or derivative projects without express written consent.
+
+
