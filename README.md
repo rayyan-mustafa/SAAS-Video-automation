@@ -1,56 +1,195 @@
-# AI Video Automation SaaS
+<div align="center">
 
-A minimal, multi-channel AI Video Automation SaaS built with Next.js, SQLite/D1, FFmpeg, and pluggable AI/Video/Voice providers.
+# ⚡ AUTORA — Autonomous Multi-Platform AI Video SaaS
 
-## Core Workflow
+**Produce, Schedule, and Auto-Publish High-Retention Short-Form & Long-Form Video Channels with Zero Manual Editing.**
+
+[![CI Pipeline](https://github.com/rayyan-mustafa/SAAS-Video-automation/actions/workflows/ci.yml/badge.svg)](https://github.com/rayyan-mustafa/SAAS-Video-automation/actions/workflows/ci.yml)
+[![Next.js](https://img.shields.io/badge/Next.js-14.2.15-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-F5A623?style=for-the-badge)](LICENSE.txt)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-FE5196?style=for-the-badge&logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](CONTRIBUTING.md)
+
+<br/>
+
+[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=flat-square&logo=youtube&logoColor=white)](https://youtube.com)
+[![TikTok](https://img.shields.io/badge/TikTok-000000?style=flat-square&logo=tiktok&logoColor=white)](https://tiktok.com)
+[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=flat-square&logo=instagram&logoColor=white)](https://instagram.com)
+[![Facebook](https://img.shields.io/badge/Facebook-1877F2?style=flat-square&logo=facebook&logoColor=white)](https://facebook.com)
+
+</div>
+
+---
+
+## 📖 Overview
+
+**AUTORA** (`autora.live`) is an enterprise-grade autonomous video generation and social publishing platform. It bridges generative AI scripting, multimodal video generation, neural speech synthesis, and direct social media publishing APIs into a continuous background automation engine.
+
+From identifying viral competitor topics to generating dynamic FFmpeg video renders and auto-publishing to YouTube Shorts, TikTok, Instagram Reels, and Facebook Reels — AUTORA operates completely hands-free.
+
+---
+
+## 📐 Architecture & Workflow Pipeline
 
 ```text
-CHANNEL ──► TOPIC ──► GENERATE ──► SCRIPT ──► SCENES ──► VIDEO CLIPS ──► VOICE ──► SUBTITLES ──► FINAL MP4
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────────┐
+│ Competitor Data │ ──► │  Outlier Formula │ ──► │ Winner-Bias Calendar│
+└─────────────────┘     └──────────────────┘     └─────────────────────┘
+                                                            │
+                                                            ▼
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────────┐
+│  Social Publish │ ◄── │ FFmpeg Compositor│ ◄── │ Multi-Model Video AI│
+│ (YT/TT/IG/FB)   │     │ (Subtitles & Mux)│     │ (Wan/Fal/Veo/OpenAI)│
+└─────────────────┘     └──────────────────┘     └─────────────────────┘
 ```
 
-## Features
+```mermaid
+graph TD
+    A[Autonomous Scheduler Daemon] --> B{Pending Jobs in DB?}
+    B -- Yes --> C[Module 2: Per-Job Cost Preview]
+    C --> D[Credit Deduction]
+    D --> E[Module 3: Video Pipeline Execution]
+    E -- Failure --> F[Instant 100% Credit Auto-Refund]
+    E -- Success --> G[FFmpeg Video Composition & Subtitles]
+    G --> H[Module 6: Multi-Platform Publishing]
+    H --> I[YouTube Shorts]
+    H --> J[TikTok Video API]
+    H --> K[Instagram Graph API]
+    H --> L[Facebook Graph API]
+    H --> M[Module 7: Live Telemetry & Analytics]
+```
 
-- **Multi-Channel Architecture**: Fully decoupled channel management supporting independent niches (Health, Tech, Finance, History, etc.) with custom voice models.
-- **Provider Abstraction Layer**:
-  - `aiProvider`: Structured script generation (Hook, Introduction, Main Sections, Conclusion, Call-to-Action) and scene breakdowns with natural durations. Supports Google Gemini / OpenAI with built-in intelligent fallback.
-  - `videoProvider`: Scene visual clip generation with automatic splitting of long scenes (>8s) into continuous 8-second clips.
-  - `voiceProvider`: Server-side TTS generation using neural voices with clean audio muxing.
-  - `subtitleProvider`: Precise subtitle generator producing SRT and WebVTT timed cues.
-  - `ffmpegCompositor`: Concatenates multi-scene clips, muxes synchronized voiceover, and renders high-definition web-ready MP4.
-- **Asynchronous Background Processing**: Video generation is processed asynchronously in the background. The API returns immediately and clients poll or stream live pipeline statuses.
-- **Fault-Tolerant & Retryable**: Each pipeline stage (`SCRIPT`, `SCENES`, `VIDEO`, `VOICE`, `SUBTITLES`, `FINAL_VIDEO`) tracks real state (`PENDING`, `PROCESSING`, `COMPLETED`, `FAILED`) with isolated stage retry capabilities.
-- **Minimal SaaS UI**: Ultra-clean monochrome design built with vanilla CSS tokens, zero bloat, and no chatbot distractions.
+---
 
-## Minimal Pages
+## 🚀 Core 8 Production Modules
 
-- `/channels` — Manage independent channels (Name, Niche, Language, Video Count).
-- `/content` — View generated videos and real-time generation statuses.
-- `/content/new` — Generate a new video by picking a channel, topic, target length, and language.
-- `/content/:id` — Real-time vertical pipeline stepper, scene breakdown, audio preview, subtitle inspector, and embedded HTML5 video player.
+| Module | Core Functionality | Technical Highlights |
+|---|---|---|
+| **1. Production Security & 2-Tier Pricing** | In-memory sliding-window rate limiter & tamper-proof auth | Constant-time HMAC SHA-256 tokens; Creator ($49/mo) & Pro ($99/mo) tiers. |
+| **2. Zero-Waste Credit Ledger** | Real-time cost preview & instant automated refunds | Automatic 100% credit restoration on pipeline failure; zero wasted customer credits. |
+| **3. AI Video Pipeline & Bible** | Multi-provider video routing & continuity engine | Wan 2.1, Fal.ai, OpenAI Video, Google Veo, Runway, Luma; FFmpeg libass subtitles. |
+| **4. Competitor Intelligence** | Scraping viral outliers across competitor channels | Formula: `Viral Score = Views / Channel Baseline Average`; 1-click calendar sync. |
+| **5. Own Channel IQ** | Historical winner-bias performance loop | YouTube Data API v3 feedback loop prioritizing high-retention hooks and topics. |
+| **6. Multi-Platform Auto-Publish** | Native API publishing to 4 major video platforms | YouTube Shorts, TikTok, Instagram Reels, Facebook Reels duration & tag guards. |
+| **7. Telemetry & Analytics** | Real-time observability dashboard | Precise render durations, motion distributions, error logs, and refund receipts. |
+| **8. Licensed Voice & Variety** | Microsoft Edge Neural TTS & rotating frameworks | 5 storytelling frameworks avoiding repetitive AI video structure patterns. |
 
-## Getting Started
+---
 
-### 1. Install Dependencies
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js 14](https://nextjs.org/) (App Router, Server Actions, Dynamic API Routes)
+- **Language**: [TypeScript 5.9](https://www.typescriptlang.org/) (Strict Mode)
+- **Database**: [SQLite (better-sqlite3)](https://github.com/WiseLibs/better-sqlite3) & PostgreSQL adapter
+- **Media Engine**: [FFmpeg](https://ffmpeg.org/) (via `@ffmpeg-installer/ffmpeg`)
+- **Speech Synthesis**: [Microsoft Edge Neural TTS](https://github.com/schroffl/msedge-tts)
+- **Payments & Billing**: [Polar.sh](https://polar.sh/) & [Stripe](https://stripe.com/)
+- **Social APIs**: YouTube Data API v3, TikTok Video API, Meta Graph API (Instagram & Facebook)
+- **CI / CD**: GitHub Actions, Docker, Husky, Commitlint
+
+---
+
+## ⚡ Getting Started
+
+### Prerequisites
+- **Node.js**: `v20.x` or `v22.x`
+- **npm**: `v10.x` or newer
+- **FFmpeg**: Handled automatically via `@ffmpeg-installer/ffmpeg`
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/rayyan-mustafa/SAAS-Video-automation.git
+cd SAAS-Video-automation
+```
+
+### 2. Install Dependencies
 ```bash
 npm install
 ```
 
-### 2. Run Development Server
+### 3. Configure Environment Variables
+Copy the environment template and populate your API credentials:
+```bash
+cp .env.example .env
+```
+
+Key environment variables:
+```env
+# Application Secrets
+ADMIN_SECRET="your-32-char-min-admin-secret"
+JWT_SECRET="your-32-char-min-jwt-secret"
+ENCRYPTION_KEY="your-32-char-min-encryption-key"
+ADMIN_USER="autora_admin"
+ADMIN_PASSWORD="YourStrongPassword123!"
+
+# AI Video & Speech Providers
+GEMINI_API_KEY="your-google-gemini-key"
+OPENAI_API_KEY="your-openai-key"
+FAL_KEY="your-fal-ai-key"
+
+# Billing & Monetization
+POLAR_ACCESS_TOKEN="polar_at_..."
+POLAR_WEBHOOK_SECRET="whsec_..."
+```
+
+### 4. Run Development Server
 ```bash
 npm run dev
 ```
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+---
 
-### 3. Build for Production
+## 🧪 Testing & Verification
+
+The project includes unit, regression, security, and real-browser QA suites:
+
 ```bash
+# Static TypeScript Type Checking
+npm run typecheck
+
+# Execute Master Modules 1 Through 8 Test Suite
+npm run test:unit
+
+# Run Production Regression Audit
+npm run test:audit
+
+# Validate Next.js Production Build
 npm run build
-npm start
 ```
 
-## Environment Variables (Optional)
+---
 
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
+## 🐳 Docker Deployment
+
+You can build and deploy AUTORA as a lightweight Docker container:
+
+```bash
+# Build Docker image
+docker build -t autora-saas .
+
+# Run Docker container
+docker run -p 3000:3000 --env-file .env autora-saas
 ```
-*(If omitted, the system uses the built-in structured script and clip generation engine for 100% offline self-contained operation.)*
+
+---
+
+## 🤝 Contributing
+
+We welcome community contributions, bug fixes, and feature proposals! Please read our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) before submitting a Pull Request.
+
+All commits must adhere to the [Conventional Commits](https://www.conventionalcommits.org/) specification as detailed in [agents.md](agents.md).
+
+---
+
+## 🛡️ Security
+
+For vulnerability reports and responsible disclosure instructions, please consult our [Security Policy](SECURITY.md).
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License — see the [LICENSE.txt](LICENSE.txt) file for details.

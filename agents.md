@@ -36,59 +36,117 @@
 
 ---
 
-## Git Commit & Workflow Standards
-Whenever asked to commit or push code in this project:
+## Git Commit & Conventional Commit Standards
 
-1. **Format**: Strictly use Conventional Commits: `<type>(<scope>): <summary>`
-2. **Types**: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `chore`, `ci`, `style`, `build`
-3. **Common Scopes**:
-   - `pipeline` (video worker, FFmpeg composition)
-   - `scheduler` (background worker daemon, sweeper)
-   - `auth` (multi-tenant session auth, login routes)
-   - `billing` (Polar, Stripe, plans)
-   - `db` (SQLite schema, migrations, queries)
-   - `blog` (SEO articles, posts)
-   - `seo` (sitemap, meta tags, search console)
-   - `video` (AI video providers, stock footage)
-   - `admin` (admin dashboard, API key vault)
-   - `ui` (components, responsive layouts)
-   - `qa` (test suites, browser automation)
-   - `publishing` (YouTube, TikTok, Instagram, Facebook publishing engines)
-   - `competitors` (competitor intelligence & viral scraping)
-   - `ci` (GitHub actions, husky hooks, linters)
-4. **Detail**: Include a multi-line body with bullet points explaining changes.
-5. **Atomic Commits**: Always group related files into individual commits rather than bundling everything into one commit.
+Every commit in this repository must strictly adhere to the **Conventional Commits** specification:
+
+### 1. Commit Message Structure
+```text
+<type>(<scope>): <summary in lowercase>
+
+[optional body with bullet points explaining rationale]
+
+[optional footer(s)]
+```
+
+### 2. Supported Types
+- `feat`: A new feature or major enhancement.
+- `fix`: A bug fix or patch.
+- `docs`: Documentation updates only.
+- `style`: Formatting, whitespace, missing semicolons (no code behavior change).
+- `refactor`: Restructuring existing code without modifying external behavior.
+- `perf`: Code changes improving computational performance or latency.
+- `test`: Adding or updating test suites.
+- `build`: Changes affecting build systems or external dependencies.
+- `ci`: Changes to CI configuration, GitHub Actions, or deployment scripts.
+- `chore`: Maintenance tasks, dependency bumps, or repository housekeeping.
+
+### 3. Canonical Scopes
+- `pipeline` — Video render worker, FFmpeg composition, scene generation.
+- `scheduler` — Background daemon, sweepers, automated cron runners.
+- `auth` — Multi-tenant session auth, OAuth platform credentials, token guards.
+- `billing` — Polar/Stripe integrations, subscription tiers, credit refund ledgers.
+- `db` — Database schema, SQLite migrations, connection adapters.
+- `blog` — SEO articles, dynamic blog routes, schema markup.
+- `seo` — Sitemap generation, robots.txt, metadata.
+- `video` — Multimodal AI providers, stock footage engines, asset storage.
+- `admin` — Admin analytics, diagnostics, rate-limit settings, key vault.
+- `ui` — AppShell layout, dashboard components, creator studio views.
+- `qa` — Test suites, browser QA scripts, regression runners.
+- `publishing` — Multi-platform social publishers (YouTube, TikTok, Instagram, Facebook).
+- `competitors` — Competitor intelligence scraper, viral outliers, hook generators.
+- `ci` — GitHub Actions, Husky hooks, Commitlint, Dockerfile.
+
+### 4. Commit Rules & Atomic Mandates
+- **Atomic Commits**: Always group related files into cohesive, self-contained units. Do NOT bundle unrelated changes (e.g., UI tweaks + database schema changes) into a single commit.
+- **Detailed Body**: When introducing architectural changes or refactors, include a bullet-pointed body explaining what changed and why.
+- **Header Length**: The commit header must not exceed 120 characters and must be strictly lowercase.
 
 ---
 
 ## Multi-Collaborator Synchronization & Branching Standards
-When collaborating with partners on this repository:
 
-1. **Always Pull Before Starting Work**:
-   - Before executing code changes or implementing new features, always run:
-     ```bash
-     git fetch origin
-     git pull --rebase origin <current-branch>
-     ```
-   - If incoming changes update `package.json` or lockfiles, immediately run `npm install`.
+### 1. Branch Strategy (GitHub Flow)
+- `main` is protected, stable, and production-ready at all times.
+- Development happens on dedicated topic branches created from the latest `main`:
+  - `feat/<feature-name>` for new features (e.g., `feat/tiktok-video-direct`)
+  - `fix/<bug-name>` for bug fixes (e.g., `fix/credit-refund-edgecase`)
+  - `docs/<topic>` for documentation (e.g., `docs/workflow-best-practices`)
+  - `refactor/<target>` for refactoring (e.g., `refactor/ffmpeg-muxing`)
 
-2. **Feature Branch Mandate**:
-   - Do NOT develop directly on `main` when collaborating on shared features.
-   - Always create a dedicated branch for features or bugfixes:
-     ```bash
-     git checkout -b feature/<feature-name>
-     # or
-     git checkout -b fix/<bug-description>
-     ```
-   - Before merging or pushing, rebase against the latest `origin/main`:
-     ```bash
-     git fetch origin main
-     git rebase origin/main
-     ```
+### 2. Synchronization Routine
+Before starting any local development session, sync with `origin/main`:
+```bash
+git fetch origin
+git pull --rebase origin main
+```
+If dependencies or lockfiles were updated upstream, immediately run:
+```bash
+npm install
+```
 
-3. **Safe Pull Routine (Option 1 Workflow)**:
-   - When local work is in progress and remote changes arrive:
-     1. Stage and commit local progress: `git add <files>` && `git commit -m "..."`
-     2. Pull remote changes with rebase: `git pull --rebase origin <branch>`
-     3. Resolve any conflicts cleanly if prompted.
-     4. Push cleanly: `git push origin <branch>`
+### 3. Rebase Before Pull Request
+Before submitting or merging a Pull Request, rebase your branch on `origin/main` to maintain a clean linear commit history:
+```bash
+git fetch origin main
+git rebase origin/main
+```
+
+---
+
+## Pull Request & Code Review Standards
+
+To uphold the highest software quality across all contributions:
+
+1. **Small & Focused PRs**: Keep PRs small and targeted (ideally under 400 lines of code changes). Large changes should be broken into sequenced PRs.
+2. **Template Compliance**: Every Pull Request must complete `.github/pull_request_template.md` thoroughly.
+3. **Mandatory Pre-Push Checks**:
+   - `npm run typecheck` (zero TypeScript errors)
+   - `npm run test:unit` (all master module tests pass)
+   - `npm run build` (Next.js production build succeeds)
+4. **No Direct Commits to Main**: All code must arrive on `main` via reviewed and approved Pull Requests with passing CI status.
+
+---
+
+## GitHub Actions & CI/CD Pipeline Standards
+
+1. **Continuous Integration Gates**:
+   - All PRs and pushes to `main` trigger the automated CI pipeline defined in `.github/workflows/ci.yml`.
+   - Matrix testing across active Node.js LTS versions (Node 20 and Node 22).
+   - Strict gates: static type checking (`tsc`), ESLint quality, 8-module test suite, and Next.js production compilation.
+2. **Deterministic Builds**: Always use `npm ci --legacy-peer-deps` in automated pipelines to ensure dependencies match `package-lock.json` precisely.
+3. **Cancellation of Stale Runs**: CI workflows must cancel redundant in-progress runs when new commits are pushed to the same PR branch (`concurrency.cancel-in-progress: true`).
+
+---
+
+## Security, Zero Trust & Safe Credential Standards
+
+1. **Zero Secret Leaks**:
+   - Never commit `.env`, `.env.local`, API keys, or private keys to version control.
+   - Always commit template variables in `.env.example`.
+2. **Cryptographic Protection**:
+   - Admin authentication tokens use HMAC SHA-256 with constant-time equality checks (`crypto.timingSafeEqual`) to prevent timing attacks.
+   - User passwords must be hashed using strong one-way hashing algorithms.
+   - Platform OAuth tokens must be encrypted in storage using AES-256-GCM.
+3. **Rate Limiting & Abuse Prevention**:
+   - Public and computational endpoints (`/api/auth/login`, `/api/calendar/generate-plan`, `/api/render/*`) must be defended by the sliding-window rate limiter.
