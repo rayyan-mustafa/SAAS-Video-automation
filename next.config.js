@@ -2,10 +2,10 @@ const path = require('path');
 
 const nextConfig = {
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   experimental: {
     serverComponentsExternalPackages: ['better-sqlite3', '@ffmpeg-installer/ffmpeg'],

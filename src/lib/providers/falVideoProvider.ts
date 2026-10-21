@@ -122,7 +122,7 @@ export class FalVideoProvider implements VideoGenerationProvider {
       input.num_frames = Math.min(81, Math.max(33, Math.round(targetDuration * 16)));
       input.resolution = '720p';
       input.aspect_ratio = params.aspectRatio === '9:16' ? '9:16' : '16:9';
-      input.enable_safety_checker = false;
+      input.enable_safety_checker = true;
     } else if (model.includes('kling')) {
       input.duration = String(Math.min(10, Math.max(5, Math.round(targetDuration))));
       input.aspect_ratio = params.aspectRatio === '9:16' ? '9:16' : '16:9';
@@ -254,9 +254,21 @@ export class FalVideoProvider implements VideoGenerationProvider {
 
         await this.downloadVideo(videoUrl, params.outputPath);
 
+        // Probe actual duration of downloaded video
+        let probedDuration = targetDuration;
+        try {
+          const { inspectMedia } = await import('./videoProvider');
+          const meta = await inspectMedia(params.outputPath);
+          if (meta.durationSec > 0) {
+            probedDuration = Math.round(meta.durationSec * 10) / 10;
+          }
+        } catch (probeErr: any) {
+          console.warn(`[FalVideoProvider] inspectMedia warning: ${probeErr.message}`);
+        }
+
         return {
           filePath: params.outputPath,
-          durationSec: targetDuration,
+          durationSec: probedDuration,
           providerId: this.id,
           hasNativeAudio: false,
           metadata: {

@@ -12,6 +12,8 @@ import { storage } from '../storage';
 import { sceneQualityChecker, QualityReport } from '../video/qualityControl';
 import { resolveGlobalVisualStyle } from '../video/visualStyles';
 import { AspectRatio } from '../providers/video-provider.types';
+import { EngineError } from '../video/engineErrors';
+import { issuePriceDeltaRefund, calculatePriceDeltaRefund } from '../billing/refundEngine';
 
 export type PipelineStage = 'SCRIPT' | 'SCENES' | 'VIDEO' | 'VOICE' | 'SUBTITLES' | 'FINAL_VIDEO' | 'THUMBNAIL';
 
@@ -546,7 +548,31 @@ export class VideoPipelineWorker {
               attempt++;
             }
           } catch (sceneErr: any) {
-            console.error(`[VideoPipeline] Scene ${scene.scene_index} generation error (${sceneErr?.message || sceneErr}), continuing pipeline with fallback...`);
+            console.error(`[VideoPipeline] Scene ${scene.scene_index} generation error:`, sceneErr?.message || sceneErr);
+            if (bestClips.length === 0) {
+              throw new EngineError('NO_VALID_CLIPS', `Scene ${scene.scene_index} generation failed: ${sceneErr?.message || sceneErr}`);
+            }
+          }
+
+          if (bestClips.length === 0) {
+            throw new EngineError('NO_VALID_CLIPS', `Scene ${scene.scene_index} produced 0 valid clips`);
+          }
+
+          // Price-delta refund check if scene was downgraded
+          const plannedTier = (scene as any).planned_tier || (scene as any).visual_tier;
+          const deliveredTier = (bestClips[0] as any)?.tier || (bestClips[0] as any)?.visualTier;
+          if (plannedTier && deliveredTier && plannedTier !== deliveredTier) {
+            const refundDelta = calculatePriceDeltaRefund(plannedTier, deliveredTier);
+            if (refundDelta > 0) {
+              issuePriceDeltaRefund({
+                userId: project.user_id,
+                projectId: project.id,
+                sceneIndex: scene.scene_index,
+                plannedTier,
+                deliveredTier,
+                refundCredits: refundDelta,
+              });
+            }
           }
 
           // Persist QC report to video_scenes table
@@ -593,6 +619,11 @@ export class VideoPipelineWorker {
             ...scene,
             visual_prompt: currentPrompt,
           };
+        }
+
+        const totalClips = db.prepare("SELECT COUNT(*) as count FROM generated_assets WHERE project_id = ? AND asset_type = 'clip'").get(project.id) as { count: number } | undefined;
+        if (!totalClips || totalClips.count === 0) {
+          throw new EngineError('NO_VALID_CLIPS', `No valid video clips generated for project ${project.id}`);
         }
         break;
       }
@@ -646,30 +677,8 @@ export class VideoPipelineWorker {
           .prepare("SELECT * FROM generated_assets WHERE project_id = ? AND asset_type = 'clip' ORDER BY created_at ASC")
           .all(project.id) as GeneratedAsset[];
 
-        // Instant fallback clip if container restarted
         if (clipAssets.length === 0) {
-          const fallbackClipKey = `clips/${project.id}/scene_1_clip_1.mp4`;
-          const fallbackClipPath = storage.getFilePath(fallbackClipKey);
-          const dir = path.dirname(fallbackClipPath);
-          if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-
-          const cachedSample = path.join(path.dirname(dir), 'base_sample_clip.mp4');
-          if (fs.existsSync(cachedSample)) {
-            await fs.promises.copyFile(cachedSample, fallbackClipPath);
-          } else {
-            const minimalMp4Header = Buffer.from([
-              0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d,
-              0x00, 0x00, 0x02, 0x00, 0x69, 0x73, 0x6f, 0x6d, 0x69, 0x73, 0x6f, 0x32,
-              0x61, 0x76, 0x63, 0x31, 0x6d, 0x70, 0x34, 0x31
-            ]);
-            await fs.promises.writeFile(fallbackClipPath, minimalMp4Header);
-          }
-
-          db.prepare(
-            `INSERT INTO generated_assets (id, project_id, asset_type, storage_key, url, duration_sec, metadata_json, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-          ).run(uuidv4(), project.id, 'clip', fallbackClipKey, storage.getUrl(fallbackClipKey), 15, '{}', now);
-          clipAssets = db.prepare("SELECT * FROM generated_assets WHERE project_id = ? AND asset_type = 'clip' ORDER BY created_at ASC").all(project.id) as GeneratedAsset[];
+          throw new EngineError('NO_VALID_CLIPS', `No valid video clips found for project ${project.id} assembly`);
         }
 
         let audioAsset = db
@@ -686,15 +695,18 @@ export class VideoPipelineWorker {
               text: project.topic || 'Autora Video Production',
               projectId: project.id,
             });
+            if (!voiceRes.audioBuffer || voiceRes.audioBuffer.length < 1000) {
+              throw new EngineError('NO_VALID_AUDIO', `Voice generation produced invalid audio buffer for project ${project.id}`);
+            }
             await fs.promises.writeFile(audioPath, voiceRes.audioBuffer);
-          } catch {
-            await fs.promises.writeFile(audioPath, Buffer.alloc(2048, 0));
+            db.prepare(
+              `INSERT INTO generated_assets (id, project_id, asset_type, storage_key, url, duration_sec, metadata_json, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+            ).run(uuidv4(), project.id, 'audio', audioKey, storage.getUrl(audioKey), voiceRes.durationSec, '{}', now);
+            audioAsset = db.prepare("SELECT * FROM generated_assets WHERE project_id = ? AND asset_type = 'audio' ORDER BY created_at DESC LIMIT 1").get(project.id) as GeneratedAsset;
+          } catch (voiceErr: any) {
+            throw new EngineError('NO_VALID_AUDIO', `No valid audio narration found for project ${project.id}: ${voiceErr?.message || voiceErr}`);
           }
-          db.prepare(
-            `INSERT INTO generated_assets (id, project_id, asset_type, storage_key, url, duration_sec, metadata_json, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-          ).run(uuidv4(), project.id, 'audio', audioKey, storage.getUrl(audioKey), 15, '{}', now);
-          audioAsset = db.prepare("SELECT * FROM generated_assets WHERE project_id = ? AND asset_type = 'audio' ORDER BY created_at DESC LIMIT 1").get(project.id) as GeneratedAsset;
         }
 
         const subAsset = db
@@ -744,19 +756,26 @@ export class VideoPipelineWorker {
               } catch {}
             }
           }
-          const vRes = await voiceProvider.generateVoiceover({
-            text: narrationText,
-            voiceName: channel.voice,
-            voiceSpeed: channel.voice_speed,
-            language: project.language || channel.language,
-            projectId: project.id,
-          });
-          const dir = path.dirname(audioPath);
-          if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-          await fs.promises.writeFile(audioPath, vRes.audioBuffer);
-          await storage.putObject(audioAsset.storage_key, vRes.audioBuffer, `audio/${vRes.format}`);
-          db.prepare("UPDATE generated_assets SET duration_sec = ? WHERE id = ?").run(vRes.durationSec, audioAsset.id);
-          audioAsset.duration_sec = vRes.durationSec;
+          try {
+            const vRes = await voiceProvider.generateVoiceover({
+              text: narrationText,
+              voiceName: channel.voice,
+              voiceSpeed: channel.voice_speed,
+              language: project.language || channel.language,
+              projectId: project.id,
+            });
+            if (!vRes.audioBuffer || vRes.audioBuffer.length < 1000) {
+              throw new EngineError('NO_VALID_AUDIO', `Auto-healed voiceover generated empty audio for project ${project.id}`);
+            }
+            const dir = path.dirname(audioPath);
+            if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+            await fs.promises.writeFile(audioPath, vRes.audioBuffer);
+            await storage.putObject(audioAsset.storage_key, vRes.audioBuffer, `audio/${vRes.format}`);
+            db.prepare("UPDATE generated_assets SET duration_sec = ? WHERE id = ?").run(vRes.durationSec, audioAsset.id);
+            audioAsset.duration_sec = vRes.durationSec;
+          } catch (healErr: any) {
+            throw new EngineError('NO_VALID_AUDIO', `Failed to heal audio track for project ${project.id}: ${healErr?.message || healErr}`);
+          }
         }
 
         const totalClipDuration = clipAssets.reduce((sum, c) => sum + (c.duration_sec || 0), 0);

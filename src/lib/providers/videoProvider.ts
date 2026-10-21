@@ -11,8 +11,8 @@ import { cloudflareVideoProvider } from './cloudflareVideoProvider';
 import { veoVideoProvider } from './veoVideoProvider';
 import { runwayVideoProvider } from './runwayVideoProvider';
 import { lumaVideoProvider } from './lumaVideoProvider';
-import { buildEnhancedVideoPrompt } from '../video/presets';
 import { characterManager } from '../video/characterManager';
+import { EngineError } from '../video/engineErrors';
 
 const execFileAsync = util.promisify(execFile);
 
@@ -271,9 +271,35 @@ class DefaultVideoProvider implements VideoProvider {
         topic: (params as any).topic,
       } as any);
 
+      // Ensure valid clip file on disk and probe actual duration
+      if (!fs.existsSync(localFilePath)) {
+        throw new EngineError(
+          'NO_VALID_CLIPS',
+          `Video clip generation produced no output file for Scene ${sceneIndex} Clip ${cIdx + 1}`
+        );
+      }
+
+      const fileStat = await fs.promises.stat(localFilePath);
+      if (fileStat.size < 1000) {
+        throw new EngineError(
+          'NO_VALID_CLIPS',
+          `Video clip file for Scene ${sceneIndex} Clip ${cIdx + 1} is corrupted (${fileStat.size} bytes)`
+        );
+      }
+
+      let actualDuration = clipDuration;
+      try {
+        const meta = await inspectMedia(localFilePath);
+        if (meta.durationSec > 0) {
+          actualDuration = Math.round(meta.durationSec * 10) / 10;
+        }
+      } catch (probeErr: any) {
+        console.warn(`[VideoProvider] Probe media warning for Scene ${sceneIndex} Clip ${cIdx + 1}: ${probeErr.message}`);
+      }
+
       clips.push({
         clipIndex: cIdx + 1,
-        durationSec: clipDuration,
+        durationSec: actualDuration,
         storageKey: clipKey,
         url: storage.getUrl(clipKey),
         filePath: localFilePath,
@@ -330,8 +356,8 @@ class DefaultVideoProvider implements VideoProvider {
     }
 
     if (!skipAiVideoClips) {
-      // 1. Try OpenAI Video Generation if configured (Sora / OpenAI Video API — Deprecated/Preview)
-      if (openaiVideoProvider.isConfigured()) {
+      // 1. Try OpenAI Video Generation if explicitly enabled (Sora / OpenAI Video API — Sunset/Deprecated)
+      if (process.env.ENABLE_LEGACY_SORA === 'true' && openaiVideoProvider.isConfigured()) {
         try {
           console.log(`[VideoProvider] Calling OpenAI Video Provider (Preview) for Scene ${sceneIndex} Clip ${clipIndex}...`);
           await openaiVideoProvider.generateClip({
@@ -610,8 +636,8 @@ class DefaultVideoProvider implements VideoProvider {
       }
     }
 
-    // 2c. High-Speed Pollinations AI Turbo (Guaranteed AI-generated visual matching prompt)
-    if (!generatedAiImage) {
+    // 2c. Optional Pollinations AI (Gated behind ALLOW_POLLINATIONS === '1' due to unverified commercial terms)
+    if (!generatedAiImage && process.env.ALLOW_POLLINATIONS === '1') {
       try {
         console.log(`[VideoProvider] Generating AI visual for Scene ${sceneIndex} using Pollinations AI Turbo...`);
         const polliUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=${width}&height=${height}&nologo=true&model=turbo`;
@@ -714,7 +740,7 @@ class DefaultVideoProvider implements VideoProvider {
       console.warn(`[VideoProvider] Stock video search/render error: ${stockErr.message}`);
     }
 
-    // 4. Fallback Clean Ambient Visual (Calibrated 1080x1920 9:16)
+    // 4. Local High-Quality Ambient Visual (FFmpeg 1080x1920)
     const filterGraph = [
       `drawgrid=width=120:height=120:thickness=1:color=white@0.05`,
       `drawbox=x=0:y=0:w=${width}:h=${height}:color=${bg2}@0.4:t=fill`,
@@ -741,54 +767,25 @@ class DefaultVideoProvider implements VideoProvider {
 
     try {
       await execFileAsync(ffmpegPath, args);
+      console.log(`[VideoProvider] Rendered local FFmpeg ambient visual for Scene ${sceneIndex}`);
     } catch (err: any) {
-      // Fallback simple solid color clip
-      try {
-        const fallbackArgs = [
-          '-y',
-          '-f',
-          'lavfi',
-          '-i',
-          `color=c=${bg2}:s=${width}x${height}:d=${durationSec}:r=30`,
-          '-c:v',
-          'libx264',
-          '-pix_fmt',
-          'yuv420p',
-          '-preset',
-          'ultrafast',
-          '-t',
-          String(durationSec),
-          outputPath,
-        ];
-        await execFileAsync(ffmpegPath, fallbackArgs);
-      } catch {
-        // Fallback: If FFmpeg binary is missing on serverless, cache and copy standard footage
-        try {
-          const cacheSample = path.join(tempDir, 'base_sample_clip.mp4');
-          if (!fs.existsSync(cacheSample)) {
-            const fallbackVideoUrl = 'https://cdn.coverr.co/videos/coverr-typing-on-computer-keyboard-5182/1080p.mp4';
-            const dlRes = await fetch(fallbackVideoUrl, { signal: AbortSignal.timeout(4000) });
-            if (dlRes.ok) {
-              const buf = await dlRes.arrayBuffer();
-              await fs.promises.writeFile(cacheSample, Buffer.from(buf));
-            }
-          }
-          if (fs.existsSync(cacheSample)) {
-            await fs.promises.copyFile(cacheSample, outputPath);
-          }
-        } catch {}
-      }
+      console.warn(`[VideoProvider] FFmpeg ambient visual render failed: ${err.message}`);
     }
 
-    // Ensure valid file on disk
+    // Honest verification: Fail closed if no valid clip file was generated
     if (!fs.existsSync(outputPath)) {
-      // Minimal valid MP4 header fallback
-      const minimalMp4Header = Buffer.from([
-        0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d,
-        0x00, 0x00, 0x02, 0x00, 0x69, 0x73, 0x6f, 0x6d, 0x69, 0x73, 0x6f, 0x32,
-        0x61, 0x76, 0x63, 0x31, 0x6d, 0x70, 0x34, 0x31
-      ]);
-      await fs.promises.writeFile(outputPath, minimalMp4Header);
+      throw new EngineError(
+        'NO_VALID_CLIPS',
+        `Video generation failed for Scene ${sceneIndex} Clip ${clipIndex}: No valid video clip or motion visual produced.`
+      );
+    }
+
+    const finalStat = await fs.promises.stat(outputPath);
+    if (finalStat.size < 1000) {
+      throw new EngineError(
+        'NO_VALID_CLIPS',
+        `Video generation failed for Scene ${sceneIndex} Clip ${clipIndex}: Output file is empty or corrupted (${finalStat.size} bytes).`
+      );
     }
   }
 }

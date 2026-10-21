@@ -19,7 +19,18 @@ export interface User {
 // 1. CRYPTOGRAPHIC PASSWORD HASHING (SCRYPT + DETERMINISTIC SALT)
 // ─────────────────────────────────────────────────────────────
 
-const AUTH_SECRET = process.env.ADMIN_SECRET || 'autovideo_saas_secure_fallback_secret_key_2026';
+function getAuthSecret(): string {
+  const secret = process.env.AUTH_SECRET || process.env.ADMIN_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('AUTH_SECRET or ADMIN_SECRET environment variable is missing in production.');
+    }
+    return 'autovideo_saas_secure_dev_secret_key_2026';
+  }
+  return secret;
+}
+
+const AUTH_SECRET = getAuthSecret();
 
 export function getEmailSalt(email: string): string {
   return crypto.createHmac('sha256', AUTH_SECRET).update(email.toLowerCase().trim()).digest('hex').slice(0, 32);

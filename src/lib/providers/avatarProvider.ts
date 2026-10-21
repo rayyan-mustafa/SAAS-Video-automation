@@ -41,19 +41,15 @@ export class MultiEngineAvatarProvider implements AvatarProvider {
   name = 'MultiEngineAvatarProvider';
 
   /**
-   * Checks whether external real talking-avatar APIs (D-ID / HeyGen / Replicate) are configured
+   * Checks whether talking-avatar feature is enabled
    */
   async isAvailable(): Promise<boolean> {
-    const hasDid = !!process.env.DID_API_KEY;
-    const hasHeygen = !!process.env.HEYGEN_API_KEY;
-    const hasReplicate = !!process.env.REPLICATE_API_TOKEN;
-    return hasDid || hasHeygen || hasReplicate;
+    return process.env.ENABLE_AVATARS === 'true';
   }
 
   /**
-   * Generates presenter clip. If external talking avatar API is configured, dispatches to it.
-   * Otherwise, renders high-production Standard Presenter Studio Mode using FFmpeg
-   * without faking lip-sync, clearly reporting STANDARD_PRESENTER.
+   * Generates presenter clip using honest Standard Presenter Studio Mode with FFmpeg.
+   * Reports STANDARD_PRESENTER without faking external lip-sync.
    */
   async generatePresenterClip(params: AvatarGenerationParams): Promise<AvatarGenerationResult> {
     const {
@@ -77,32 +73,7 @@ export class MultiEngineAvatarProvider implements AvatarProvider {
     const outputPath = path.join(tempDir, outputFileName);
     const storageKey = `projects/${projectId}/avatar/${outputFileName}`;
 
-    // 1. Check for external real talking avatar provider
-    const isExternalConfigured = await this.isAvailable();
-    if (isExternalConfigured && params.audioPath && fs.existsSync(params.audioPath)) {
-      try {
-        const externalResult = await this.callExternalTalkingAvatar(params, outputPath);
-        if (externalResult) {
-          const finalStoragePath = storage.getFilePath(storageKey);
-          const finalDir = path.dirname(finalStoragePath);
-          if (!fs.existsSync(finalDir)) fs.mkdirSync(finalDir, { recursive: true });
-          await fs.promises.copyFile(outputPath, finalStoragePath);
-
-          return {
-            videoPath: finalStoragePath,
-            storageKey,
-            url: storage.getUrl(storageKey),
-            durationSec,
-            providerStatus: 'REAL',
-            statusLabel: 'Real AI Talking Avatar (Lip-Synced)',
-          };
-        }
-      } catch (err: any) {
-        console.warn('[MultiEngineAvatarProvider] External avatar generation failed, falling back to Standard Presenter:', err.message);
-      }
-    }
-
-    // 2. Standard Presenter Studio Mode (Honest high-quality presenter framing)
+    // Standard Presenter Studio Mode (Honest high-quality presenter framing via FFmpeg)
     await this.renderStandardPresenterStudioClip({
       photoPath,
       outputPath,
@@ -124,10 +95,8 @@ export class MultiEngineAvatarProvider implements AvatarProvider {
       storageKey,
       url: storage.getUrl(storageKey),
       durationSec,
-      providerStatus: isExternalConfigured ? 'UNAVAILABLE' : 'STANDARD_PRESENTER',
-      statusLabel: isExternalConfigured
-        ? 'Avatar generation unavailable — rendered in Standard Presenter Mode'
-        : 'Standard Presenter Studio Mode (No Lip-Sync Fake)',
+      providerStatus: 'STANDARD_PRESENTER',
+      statusLabel: 'Standard Presenter Studio Mode (No Lip-Sync Fake)',
     };
   }
 
@@ -231,20 +200,6 @@ export class MultiEngineAvatarProvider implements AvatarProvider {
     }
   }
 
-  /**
-   * External talking avatar API dispatcher (D-ID / HeyGen / Replicate)
-   */
-  private async callExternalTalkingAvatar(
-    params: AvatarGenerationParams,
-    outputPath: string
-  ): Promise<boolean> {
-    const didKey = process.env.DID_API_KEY;
-    if (didKey) {
-      // D-ID API implementation stub
-      return false; // Safely fall back if live webhook/polling not complete
-    }
-    return false;
-  }
 }
 
 export const avatarProvider = new MultiEngineAvatarProvider();
