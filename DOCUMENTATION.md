@@ -130,25 +130,33 @@ AutoVideo uses the **official YouTube Data API v3** with Google OAuth 2.0 author
 
 ---
 
-## 7. Video Synthesis & FFmpeg Rendering Pipeline
-1. **Script Engine**: Contextual script generation with viral hook synthesis.
-2. **Scene Decomposition**: Multi-scene storyboard ($4-16$ scenes) with camera movements and lighting notes.
-3. **Visual Sourcing**: Multi-tier B-roll matcher with Coverr HD footage, Pexels API, Pixabay API, and procedural canvas fallbacks.
-4. **Voice Synthesizer**: Google Neural Voice streamer with ElevenLabs high-tier voice support.
-5. **Subtitles Generator**: Frame-accurate SRT subtitle track generation.
-6. **Compositor**: FFmpeg 1080p Constant Frame Rate (CFR `30fps`) compositor generating valid FastStart MP4 videos.
+## 7. Video Synthesis & Audio-First Rendering Pipeline
+1. **Prompt-to-Plan (`PLAN`)**: Free plan generation producing final scene-by-scene narration and visual tiers across 5 narrative frameworks.
+2. **Storyboard Approval Gate**: Users review style preview frames and narration before credits are locked; moderation checks re-run automatically.
+3. **Audio-First Synthesis (`VOICE`)**: Neural voice synthesis with native word boundaries generates master audio and locks exact scene durations.
+4. **Three-Tier Visual Rendering (`VIDEO`)**:
+   - **Tier 1 (AI Video)**: Google Veo 3.1 Lite ($0.05/s) & Seedance 2.0 Fast ($0.24/s) with verified registry pricing.
+   - **Tier 2 (Graphic Stat Cards)**: High-speed glassmorphic stat cards rendered locally via FFmpeg in $<4$s ($0.00 COGS).
+   - **Tier 3 (Motion Stills)**: Flux 1 Schnell 1080x1920 cinematic stills with Ken Burns zoompan movement.
+5. **Quality Control & Retry Policy**: Hook-only retry policy allows 1 retry on Scene 1; subsequent scenes auto-downgrade to motion stills with price-delta credit refunds.
+6. **Karaoke Subtitles (`SUBTITLES`)**: High-accuracy ASS karaoke subtitles rendered with $\ge 320$px bottom safe zone.
+7. **Final Assembly (`FINAL_VIDEO`)**: 1080x1920 vertical MP4 composited with audio ducking (-20dB) and fast-start optimization.
+8. **Scene Editor-Lite (`/content/[id]`)**: Single-scene re-voicing, visual tier swapping, 1-click undo history (`video_scenes.history_json`), and fast recomposition.
 
 ---
 
 ## 8. Customer SaaS Experience vs. Administrator Platform Configuration
 
-AutoVideo is designed as a turnkey commercial SaaS where customers purchase subscription plans / credits and immediately create videos using platform-managed infrastructure.
+AUTORA is designed as a turnkey commercial SaaS where customers purchase subscription plans / credits and immediately create videos using platform-managed infrastructure.
 
 ### 8.1 Customer Experience (No API Keys Required)
 - **Zero API Configuration:** Customers do NOT enter OpenAI, Google Gemini, ElevenLabs, Cloudflare, Pexels, or Pixabay API keys.
-- **Credit-Based Usage:** Customers use platform-allocated credits (Free: 500 credits, Creator: 2,500 credits, Pro: 7,500 credits, Agency: 25,000 credits) to generate videos.
-- **YouTube Integration:** Customers connect their own YouTube channel via standard Google OAuth 2.0 (**Settings $\to$ YouTube Publishing $\to$ Connect YouTube**).
-- **Studio Preferences:** Customers configure their own video duration defaults, language, and auto-publishing schedule triggers.
+- **Reconciled 2-Tier Pricing (Preserving $\ge 60\%$ Gross Margin):**
+  - **Creator Plan ($49/mo, 750 credits):** 30 Band 1 videos ($\le 60$s, 25 credits/video, includes up to $0.47 AI budget).
+  - **Pro Plan ($99/mo, 1,500 credits):** 60 Band 1 videos ($\le 60$s, 25 credits/video, includes up to $0.47 AI budget).
+- **Zero-Waste Credit Policy:** Worst-case quote ceiling with automatic delta-refund on actual delivery; 100% refund on unhandled pipeline failure.
+- **Multi-Platform Integration:** Customers connect their social accounts (YouTube, TikTok, Instagram, Facebook) via OAuth with automated background scheduling.
+- **Studio Preferences:** Customers configure their video duration defaults, language, and auto-publishing schedule triggers.
 
 ### 8.2 Administrator Platform Configuration (Protected Admin Portal)
 - **Protected Route:** Platform administrators access the dedicated admin portal at **`/admin`** using secure HMAC credentials.

@@ -9,15 +9,24 @@
 1. **Module 1 — Production Security & 2-Tier Pricing**:
    - Sliding-window in-memory IP rate limiter (guards login, calendar generation, and rendering).
    - Tamper-proof HMAC SHA-256 admin tokens with constant-time comparison.
-   - Reconciled pricing tiers: **Creator Plan** ($49/mo, 100 credits) and **Pro Plan** ($99/mo, 250 credits).
+   - Reconciled 2-tier pricing architecture (guaranteeing $\ge 60\%$ gross margins):
+     - **Creator Plan** ($49/mo, 750 credits): 30 Band 1 videos ($\le 60$s, 25 credits/video, includes up to $0.47 AI budget).
+     - **Pro Plan** ($99/mo, 1,500 credits): 60 Band 1 videos ($\le 60$s, 25 credits/video, includes up to $0.47 AI budget).
+   - Worst-case quote ceiling price-lock with zero-waste delta-refund on actual delivery.
    - Purged admin routes from public sitemaps and disallow directives in `robots.txt`.
 2. **Module 2 — Zero-Waste Credit Ledger & Auto-Refund System**:
-   - Dynamic per-job cost preview calculation before execution.
-   - Instant 100% credit refund trigger upon any pipeline stage failure with structured error logging.
-3. **Module 3 — AI Video Generation Pipeline & Production Bible**:
-   - Multi-provider video routing: Wan 2.1, Fal.ai, Pollinations AI, OpenAI Video, Cloudflare MiniMax, Google Veo, Runway, and Luma.
-   - Character and visual continuity enforced via `ProductionBible` seed consistency.
-   - FFmpeg composition engine with libass subtitle styling, auto-ducking audio, and format compliance (9:16 vertical and 16:9 horizontal).
+   - Real-time length-band credit preview before execution.
+   - Fail-closed error handling with instant credit auto-refund on any unhandled pipeline failure (`BAND_OVERFLOW`, `NO_VALID_CLIPS`, `FFMPEG_RENDER_FAILED`).
+   - Price-delta auto-refund when visual tier auto-downgrades from `ai_clip` to `motion_still`.
+3. **Module 3 — Three-Tier Visual Renderer & Audio-First Timing**:
+   - Audio-First Pipeline: `PLAN -> VOICE -> SCENES -> VIDEO -> SUBTITLES -> FINAL_VIDEO -> THUMBNAIL`.
+   - Native word-boundary TTS audio generation drives exact scene durations.
+   - Three visual tiers:
+     - **AI Video** (`ai_clip`): Google Veo 3.1 Lite ($0.05/s) and Seedance 2.0 Fast ($0.24/s) with verified registry pricing.
+     - **Graphic Stat Card** (`graphic`): High-speed glassmorphic stat cards rendered via local FFmpeg `lavfi` in $<4$s ($0.00 COGS).
+     - **Cinematic Motion Still** (`motion_still`): Flux 1 Schnell 1080x1920 stills with Ken Burns dynamic zoompan.
+   - Hook-Only Retry Policy: Scene 1 allows 1 retry; Scenes $>1$ auto-downgrade to `motion_still` with instant credit delta refund.
+   - ASS karaoke subtitles with safe zones ($\ge 320$px from bottom) preventing platform UI overlap.
 4. **Module 4 — Competitor Intelligence & Viral Outliers**:
    - Competitor channel scraping and historical average calculation.
    - Outlier detection formula: `Viral Score = Views / Baseline Channel Average`.
@@ -25,14 +34,18 @@
 5. **Module 5 — Own Channel IQ & Winner-Bias Engine**:
    - Connected channel telemetry integration (YouTube Data API v3).
    - Winner-bias feedback loop injecting historical top-performing hooks, pacing, and topics into weekly calendar generation.
-6. **Module 6 — Multi-Platform Social Auto-Publishing**:
-   - Direct API integration with **YouTube**, **TikTok**, **Instagram Graph API**, and **Facebook Graph API**.
-   - Platform-specific duration guards, aspect ratios, and tag formatting.
+6. **Module 6 — Multi-Platform Publishing & Compliance**:
+   - Direct API publishing to **YouTube**, **TikTok**, **Instagram Reels**, and **Facebook Reels**.
+   - TikTok compliance: `TIKTOK_APP_AUDITED` guard forcing `SELF_ONLY` for unaudited apps with post-publish read-back visibility query.
+   - Instagram compliance: Valid public HTTPS URL enforcement and `MAX_INSTAGRAM_REELS_DURATION_SEC = 90` ceiling.
+   - YouTube compliance: `status.containsSyntheticMedia: true` AI disclosure and channel-level `madeForKids` support.
+   - Originality Radar: Pre-publish check comparing hook and title against past 10 published videos; alerts if similarity $>80\%$.
 7. **Module 7 — Real Telemetry & Analytics Dashboard**:
-   - Live telemetry recording exact render durations, visual motion distributions (AI Video vs Ken Burns still motion), and refund ledgers.
-8. **Module 8 — Licensed Voice & Narrative Variety Engine**:
-   - Microsoft Edge Neural TTS with Azure Speech licensing compliance.
-   - 5 rotating storytelling frameworks (*Provocative Question Hook*, *Counter-Intuitive Mistake*, *Behind-the-Scenes Case Study*, *3-Step Tactical System*, *Mystery Box & Loophole*) preventing generic repetitive AI script patterns.
+   - Live telemetry recording exact render durations, visual motion distributions (AI Video vs Motion Still vs Graphic Card), COGS, and refund ledgers.
+8. **Module 8 — Prompt-to-Plan with Storyboard Approval & Scene Editor-Lite**:
+   - Prompt-to-Plan (`/content/new`): Free atomic plan generation across 5 narrative frameworks, length bands ($\le 60$s, $\le 120$s, $\le 180$s), and word budgets.
+   - Storyboard approval with style previews before credits are locked.
+   - Scene Editor-Lite (`/content/[id]`): Single-scene re-voicing, tier swapping, 1-click undo history via `video_scenes.history_json`, and fast recomposition.
 
 ---
 

@@ -108,6 +108,10 @@ export function getAllModels(): ModelRegistryEntry[] {
   return [...activeRegistry];
 }
 
+export function getVerifiedModels(): ModelRegistryEntry[] {
+  return activeRegistry.filter((m) => m.verified && m.pricedAt !== null);
+}
+
 export function getModelById(id: string): ModelRegistryEntry | undefined {
   return activeRegistry.find((m) => m.id === id);
 }

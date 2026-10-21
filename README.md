@@ -9,7 +9,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg?style=for-the-badge)](LICENSE.txt)
-[![Status: Production Ready](https://img.shields.io/badge/Status-Production%20Ready-success.svg?style=for-the-badge)](https://autora.live)
+[![Build Status: Passing](https://img.shields.io/badge/Build-Passing-brightgreen.svg?style=for-the-badge)](https://github.com/rayyan-mustafa/SAAS-Video-automation)
 [![Code Style: Conventional](https://img.shields.io/badge/Code%20Style-Conventional%20Commits-FE5196?style=for-the-badge&logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
 <br/>
@@ -67,14 +67,14 @@ graph TD
 
 | Module | Core Functionality | Technical Highlights |
 |---|---|---|
-| **1. Production Security & 2-Tier Pricing** | In-memory sliding-window rate limiter & tamper-proof auth | Constant-time HMAC SHA-256 tokens; Creator ($49/mo) & Pro ($99/mo) tiers. |
-| **2. Zero-Waste Credit Ledger** | Real-time cost preview & instant automated refunds | Automatic 100% credit restoration on pipeline failure; zero wasted customer credits. |
-| **3. AI Video Pipeline & Bible** | Multi-provider video routing & continuity engine | Wan 2.1, Fal.ai, OpenAI Video, Google Veo, Runway, Luma; FFmpeg libass subtitles. |
+| **1. Production Security & 2-Tier Pricing** | In-memory sliding-window rate limiter & tamper-proof auth | Creator ($49/mo, 750 cr, 30 videos) & Pro ($99/mo, 1,500 cr, 60 videos) with 60%+ gross margin guarantee. |
+| **2. Zero-Waste Credit Ledger** | Real-time length-band credit preview & instant automated refunds | Automatic 100% credit restoration on pipeline error; price-delta refund on visual downgrade. |
+| **3. Three-Tier Compositor & Timing** | Audio-first pipeline with native word boundaries | Three tiers: AI Video (Veo/Seedance), Graphic Stat Cards (<4s, $0 COGS), Motion Stills (Flux); ASS karaoke captions. |
 | **4. Competitor Intelligence** | Scraping viral outliers across competitor channels | Formula: `Viral Score = Views / Channel Baseline Average`; 1-click calendar sync. |
 | **5. Own Channel IQ** | Historical winner-bias performance loop | YouTube Data API v3 feedback loop prioritizing high-retention hooks and topics. |
-| **6. Multi-Platform Auto-Publish** | Native API publishing to 4 major video platforms | YouTube Shorts, TikTok, Instagram Reels, Facebook Reels duration & tag guards. |
-| **7. Telemetry & Analytics** | Real-time observability dashboard | Precise render durations, motion distributions, error logs, and refund receipts. |
-| **8. Licensed Voice & Variety** | Microsoft Edge Neural TTS & rotating frameworks | 5 storytelling frameworks avoiding repetitive AI video structure patterns. |
+| **6. Multi-Platform Auto-Publish** | Native API publishing to 4 major video platforms | YouTube AI disclosure, TikTok audited compliance guard & visibility readback, Instagram 90s ceiling, multi-platform scheduler. |
+| **7. Telemetry & Analytics** | Real-time observability dashboard | Precise render durations, motion distributions, error logs, and transparent COGS ledger. |
+| **8. Prompt-to-Plan & Scene Editor** | Storyboard approval and scene-level editing | Free plan generation, 5 narrative frameworks, style previews, 1-click undo history (`history_json`), fast recomposition. |
 
 ---
 
@@ -182,7 +182,7 @@ AUTORA is engineered as an enterprise-grade, turn-key Software-as-a-Service (Saa
 
 | Component | Architecture & Valuation Highlights |
 |---|---|
-| **Multi-Tier Subscription Monetization** | Creator Plan ($49/mo, 100 credits) and Pro Plan ($99/mo, 250 credits) with automated Polar/Stripe webhooks and dynamic per-job cost calculation. |
+| **Multi-Tier Subscription Monetization** | Creator Plan ($49/mo, 750 credits, 30 videos) and Pro Plan ($99/mo, 1,500 credits, 60 videos) with worst-case price-lock and zero-waste delta-refunds. |
 | **Zero-Waste Auto-Refund Engine** | Automated 100% credit restoration on pipeline error with structured ledger transaction auditing. |
 | **Multi-Provider AI Routing** | Pluggable failover pipeline supporting Wan 2.1, Fal.ai, OpenAI Video, Google Veo, Runway, and Luma with edge neural voice synthesis. |
 | **Omni-Channel Direct Publishing** | Direct API integrations with YouTube Data API v3, TikTok Video API, Instagram Graph API, and Facebook Graph API with duration guards. |
