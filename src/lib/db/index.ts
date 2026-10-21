@@ -271,7 +271,9 @@ export function getDb(): Database.Database {
     safeAddColumn('content_projects', 'quoted_credits', 'INTEGER');
     safeAddColumn('content_projects', 'length_band', "TEXT DEFAULT 'short'");
     safeAddColumn('content_projects', 'approved_at', 'TEXT');
+    safeAddColumn('content_projects', 'free_edits_used', 'INTEGER DEFAULT 0');
     safeAddColumn('video_scenes', 'storyboard_preview_url', 'TEXT');
+    safeAddColumn('video_scenes', 'history_json', 'TEXT');
 
     // Create oauth_connections table if missing
     dbInstance.exec(`
@@ -787,6 +789,10 @@ export interface ContentProject {
   auto_publish: number; // 0 or 1
   metadata_json?: string | null;
   telemetry_json?: string | null;
+  quoted_credits?: number | null;
+  length_band?: string | null;
+  approved_at?: string | null;
+  free_edits_used?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -809,6 +815,8 @@ export interface VideoScene {
   audio_storage_key?: string | null;
   audio_duration_sec?: number | null;
   visual_tier?: string | null;
+  storyboard_preview_url?: string | null;
+  history_json?: string | null;
   created_at: string;
 }
 
@@ -1240,6 +1248,133 @@ export function checkUserEligibilityForPlan(userId: string): {
     return { eligible: false, reason: 'Active subscription or trial required to generate new plans' };
   }
   return { eligible: true, balance: credits.balance };
+}
+
+export interface SceneHistorySnapshot {
+  timestamp: string;
+  narration: string;
+  subtitle_text: string;
+  visual_prompt: string;
+  visual_tier?: string | null;
+  camera_movement?: string | null;
+  audio_storage_key?: string | null;
+  audio_duration_sec?: number | null;
+  clip_storage_key?: string | null;
+  clip_url?: string | null;
+}
+
+export function saveSceneHistory(sceneId: string): void {
+  const db = getDb();
+  const scene = db.prepare('SELECT * FROM video_scenes WHERE id = ?').get(sceneId) as VideoScene | undefined;
+  if (!scene) return;
+
+  const clipAsset = db.prepare("SELECT * FROM generated_assets WHERE project_id = ? AND scene_id = ? AND asset_type = 'clip'").get(scene.project_id, scene.id) as GeneratedAsset | undefined;
+
+  let history: SceneHistorySnapshot[] = [];
+  try {
+    if (scene.history_json) {
+      history = JSON.parse(scene.history_json);
+    }
+  } catch {}
+
+  const snapshot: SceneHistorySnapshot = {
+    timestamp: new Date().toISOString(),
+    narration: scene.narration,
+    subtitle_text: scene.subtitle_text,
+    visual_prompt: scene.visual_prompt,
+    visual_tier: scene.visual_tier,
+    camera_movement: scene.camera_movement,
+    audio_storage_key: scene.audio_storage_key,
+    audio_duration_sec: scene.audio_duration_sec,
+    clip_storage_key: clipAsset?.storage_key || null,
+    clip_url: clipAsset?.url || null,
+  };
+
+  history.push(snapshot);
+  if (history.length > 10) history = history.slice(-10);
+
+  db.prepare('UPDATE video_scenes SET history_json = ? WHERE id = ?').run(JSON.stringify(history), sceneId);
+}
+
+export function revertSceneFromHistory(sceneId: string): { reverted: boolean; previousState?: SceneHistorySnapshot } {
+  const db = getDb();
+  const scene = db.prepare('SELECT * FROM video_scenes WHERE id = ?').get(sceneId) as VideoScene | undefined;
+  if (!scene || !scene.history_json) return { reverted: false };
+
+  let history: SceneHistorySnapshot[] = [];
+  try {
+    history = JSON.parse(scene.history_json);
+  } catch {
+    return { reverted: false };
+  }
+
+  if (history.length === 0) return { reverted: false };
+
+  const previous = history.pop()!;
+
+  db.prepare(`
+    UPDATE video_scenes 
+    SET narration = ?, subtitle_text = ?, visual_prompt = ?, visual_tier = ?, camera_movement = ?,
+        audio_storage_key = ?, audio_duration_sec = ?, history_json = ?
+    WHERE id = ?
+  `).run(
+    previous.narration,
+    previous.subtitle_text,
+    previous.visual_prompt,
+    previous.visual_tier || 'motion_still',
+    previous.camera_movement || null,
+    previous.audio_storage_key || null,
+    previous.audio_duration_sec || null,
+    JSON.stringify(history),
+    sceneId
+  );
+
+  if (previous.clip_storage_key) {
+    db.prepare(`
+      UPDATE generated_assets 
+      SET storage_key = ?, url = ? 
+      WHERE project_id = ? AND scene_id = ? AND asset_type = 'clip'
+    `).run(previous.clip_storage_key, previous.clip_url || '', scene.project_id, scene.id);
+  }
+
+  return { reverted: true, previousState: previous };
+}
+
+export function checkAndConsumeFreeEdit(
+  projectId: string,
+  userId: string,
+  operationCostCredits: number
+): { isFree: boolean; creditsDeducted: number; remainingFreeEdits: number } {
+  const db = getDb();
+  const project = db.prepare('SELECT free_edits_used FROM content_projects WHERE id = ?').get(projectId) as any;
+  const currentFreeUsed = project?.free_edits_used || 0;
+  const FREE_LIMIT = 5;
+
+  if (currentFreeUsed < FREE_LIMIT) {
+    const updatedUsed = currentFreeUsed + 1;
+    db.prepare('UPDATE content_projects SET free_edits_used = ? WHERE id = ?').run(updatedUsed, projectId);
+    return {
+      isFree: true,
+      creditsDeducted: 0,
+      remainingFreeEdits: FREE_LIMIT - updatedUsed,
+    };
+  }
+
+  if (operationCostCredits > 0) {
+    deductUserCredits(
+      userId,
+      operationCostCredits,
+      'SCENE_EDITOR_OVERAGE',
+      `Scene Edit (${operationCostCredits} credits, exceeded ${FREE_LIMIT} free edits)`,
+      projectId
+    );
+  }
+
+  return {
+    isFree: false,
+    creditsDeducted: operationCostCredits,
+    remainingFreeEdits: 0,
+  };
 }
 
 export function getMonthlyVideoUsage(userId: string = DEFAULT_USER_ID): { used: number; limit: number; remaining: number } {

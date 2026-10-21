@@ -717,6 +717,98 @@ export default function VideoStudioPage({ params }: { params?: any }) {
     }
   };
 
+  const [isRevoicing, setIsRevoicing] = useState(false);
+  const [isSwappingTier, setIsSwappingTier] = useState(false);
+  const [isUndoing, setIsUndoing] = useState(false);
+  const [isRecomposing, setIsRecomposing] = useState(false);
+  const [editedNarrationText, setEditedNarrationText] = useState<string>('');
+
+  const handleRevoiceScene = async (targetScene: any, newText: string) => {
+    if (!targetScene || isRevoicing) return;
+    try {
+      setIsRevoicing(true);
+      toast.info(`🎙️ Re-voicing Scene ${targetScene.scene_index}...`);
+      const search = typeof window !== 'undefined' ? window.location.search : '';
+      const res = await fetch(`/api/projects/${id}/scenes/${targetScene.id || targetScene.scene_index}/narration${search}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ narration: newText }),
+      });
+      const resJson = await res.json();
+      if (!res.ok) throw new Error(resJson.error || 'Failed to re-voice scene');
+
+      toast.success(`Scene ${targetScene.scene_index} re-voiced! (${resJson.durationSec}s) ${resJson.isFree ? '• Free Edit Used' : `• Billed ${resJson.creditsDeducted} cr`}`);
+      await fetchProject();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to re-voice scene');
+    } finally {
+      setIsRevoicing(false);
+    }
+  };
+
+  const handleSwapSceneTier = async (targetScene: any, targetTier: string) => {
+    if (!targetScene || isSwappingTier) return;
+    try {
+      setIsSwappingTier(true);
+      toast.info(`🎨 Swapping Scene ${targetScene.scene_index} to [${targetTier.toUpperCase()}]...`);
+      const search = typeof window !== 'undefined' ? window.location.search : '';
+      const res = await fetch(`/api/projects/${id}/scenes/${targetScene.id || targetScene.scene_index}/swap${search}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetTier, visualPrompt: targetScene.visual_prompt }),
+      });
+      const resJson = await res.json();
+      if (!res.ok) throw new Error(resJson.error || 'Failed to swap visual tier');
+
+      toast.success(`Scene ${targetScene.scene_index} swapped to ${targetTier}! ${resJson.isFree ? '• Free Edit Used' : `• Billed ${resJson.creditsDeducted} cr`}`);
+      await fetchProject();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to swap visual tier');
+    } finally {
+      setIsSwappingTier(false);
+    }
+  };
+
+  const handleUndoScene = async (targetScene: any) => {
+    if (!targetScene || isUndoing) return;
+    try {
+      setIsUndoing(true);
+      toast.info(`↩️ Reverting Scene ${targetScene.scene_index} to prior version...`);
+      const search = typeof window !== 'undefined' ? window.location.search : '';
+      const res = await fetch(`/api/projects/${id}/scenes/${targetScene.id || targetScene.scene_index}/undo${search}`, {
+        method: 'POST',
+      });
+      const resJson = await res.json();
+      if (!res.ok) throw new Error(resJson.error || 'Failed to revert scene');
+
+      toast.success(`Scene ${targetScene.scene_index} reverted to previous version! ✨`);
+      await fetchProject();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to revert scene');
+    } finally {
+      setIsUndoing(false);
+    }
+  };
+
+  const handleRecomposeVideo = async () => {
+    if (isRecomposing) return;
+    try {
+      setIsRecomposing(true);
+      toast.info('🎬 Re-composing video with latest scene cuts...');
+      const search = typeof window !== 'undefined' ? window.location.search : '';
+      const res = await fetch(`/api/projects/${id}/recompose${search}`, { method: 'POST' });
+      const resJson = await res.json();
+      if (!res.ok) throw new Error(resJson.error || 'Failed to recompose video');
+
+      toast.success('Full video re-composed successfully! 🎉');
+      await fetchProject();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to recompose video');
+    } finally {
+      setIsRecomposing(false);
+    }
+  };
+
   const formatTime = (secs: number) => {
     const mins = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
@@ -1853,6 +1945,85 @@ export default function VideoStudioPage({ params }: { params?: any }) {
                   </button>
                 </div>
 
+                {/* WP5 Visual Tier Controls */}
+                <div style={{ padding: '12px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#e4e4e7' }}>Visual Tier:</span>
+                    <span style={{
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      background: (activeScene as any).visual_tier === 'ai_clip' ? 'rgba(99, 102, 241, 0.2)' : (activeScene as any).visual_tier === 'graphic' ? 'rgba(56, 189, 248, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+                      color: (activeScene as any).visual_tier === 'ai_clip' ? '#818cf8' : (activeScene as any).visual_tier === 'graphic' ? '#38bdf8' : '#34d399',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                    }}>
+                      {((activeScene as any).visual_tier || 'motion_still').toUpperCase()}
+                    </span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleSwapSceneTier(activeScene, 'ai_clip')}
+                      disabled={isSwappingTier || (activeScene as any).visual_tier === 'ai_clip'}
+                      className="btn btn-secondary btn-xs"
+                      style={{ fontSize: '10px', padding: '5px 2px', justifyContent: 'center' }}
+                    >
+                      AI Video
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSwapSceneTier(activeScene, 'graphic')}
+                      disabled={isSwappingTier || (activeScene as any).visual_tier === 'graphic'}
+                      className="btn btn-secondary btn-xs"
+                      style={{ fontSize: '10px', padding: '5px 2px', justifyContent: 'center' }}
+                    >
+                      Graphic Card
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSwapSceneTier(activeScene, 'motion_still')}
+                      disabled={isSwappingTier || (activeScene as any).visual_tier === 'motion_still'}
+                      className="btn btn-secondary btn-xs"
+                      style={{ fontSize: '10px', padding: '5px 2px', justifyContent: 'center' }}
+                    >
+                      Motion Still
+                    </button>
+                  </div>
+                </div>
+
+                {/* WP5 Narration Edit & 1-Click Undo */}
+                <div style={{ padding: '12px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#e4e4e7' }}>Narration (Edit & Re-Voice)</span>
+                    <button
+                      type="button"
+                      onClick={() => handleUndoScene(activeScene)}
+                      disabled={isUndoing}
+                      className="btn btn-ghost btn-xs"
+                      style={{ fontSize: '10px', color: '#f59e0b', padding: '2px 6px' }}
+                    >
+                      ↩️ 1-Click Undo
+                    </button>
+                  </div>
+                  <textarea
+                    className="form-textarea"
+                    value={editedNarrationText || activeScene.narration}
+                    onChange={(e) => setEditedNarrationText(e.target.value)}
+                    rows={3}
+                    style={{ fontSize: '11px', lineHeight: 1.4 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRevoiceScene(activeScene, editedNarrationText || activeScene.narration)}
+                    disabled={isRevoicing}
+                    className="btn btn-secondary btn-xs"
+                    style={{ width: '100%', marginTop: '6px', fontSize: '11px', justifyContent: 'center' }}
+                  >
+                    {isRevoicing ? 'Synthesizing Audio...' : '🎙️ Re-Voice Segment'}
+                  </button>
+                </div>
+
                 <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <button
                     onClick={() => handleRegenerateScene(activeScene)}
@@ -1880,6 +2051,14 @@ export default function VideoStudioPage({ params }: { params?: any }) {
                         <span>⚡ Regenerate This Scene (AI)</span>
                       </>
                     )}
+                  </button>
+                  <button
+                    onClick={handleRecomposeVideo}
+                    disabled={isRecomposing}
+                    className="btn btn-secondary btn-sm"
+                    style={{ width: '100%', background: 'rgba(34, 197, 94, 0.15)', color: '#4ade80', borderColor: 'rgba(34, 197, 94, 0.3)' }}
+                  >
+                    {isRecomposing ? '🎬 Re-composing...' : '🎬 Recompose Full Video'}
                   </button>
                   <button
                     onClick={handleRerollActiveScene}

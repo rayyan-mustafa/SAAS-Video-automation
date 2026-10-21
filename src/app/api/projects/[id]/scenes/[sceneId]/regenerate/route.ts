@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { getDb, ContentProject, VideoScene, GeneratedAsset } from '@/lib/db';
+import { getDb, ContentProject, VideoScene, GeneratedAsset, saveSceneHistory, checkAndConsumeFreeEdit } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { videoProvider } from '@/lib/providers/videoProvider';
 import { ffmpegCompositor } from '@/lib/providers/ffmpegCompositor';
@@ -52,6 +52,12 @@ export async function POST(
     if (!scene) {
       return NextResponse.json({ error: 'Scene not found' }, { status: 404 });
     }
+
+    // Save history for 1-click undo
+    saveSceneHistory(scene.id);
+
+    // Consume free edit quota (up to 5 free per project) or charge 10 credits for AI video regeneration
+    const editQuota = checkAndConsumeFreeEdit(projectId, user.id, 10);
 
     // Parse optional overrides from request body
     let body: any = {};
@@ -262,6 +268,9 @@ export async function POST(
       clipUrl,
       finalVideoUrl,
       qualityReport: qcReport,
+      isFree: editQuota.isFree,
+      creditsDeducted: editQuota.creditsDeducted,
+      remainingFreeEdits: editQuota.remainingFreeEdits,
       message: `Scene ${scene.scene_index} regenerated successfully (QC Score: ${qcReport.overallScore}%)`,
     });
   } catch (err: any) {

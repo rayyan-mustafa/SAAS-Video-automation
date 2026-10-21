@@ -97,6 +97,8 @@ export interface GeneratedClip {
   storageKey: string;
   url: string;
   filePath: string;
+  visualTier?: string;
+  tier?: string;
 }
 
 export interface VideoProvider {
