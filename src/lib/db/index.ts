@@ -259,7 +259,19 @@ export function getDb(): Database.Database {
         updated_at TEXT NOT NULL
       );
       CREATE INDEX IF NOT EXISTS idx_characters_user_project ON project_characters(user_id, project_id);
+
+      CREATE TABLE IF NOT EXISTS plan_generation_rate_limits (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        timestamp INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_plan_rate_limits_user_ts ON plan_generation_rate_limits(user_id, timestamp);
     `);
+
+    safeAddColumn('content_projects', 'quoted_credits', 'INTEGER');
+    safeAddColumn('content_projects', 'length_band', "TEXT DEFAULT 'short'");
+    safeAddColumn('content_projects', 'approved_at', 'TEXT');
+    safeAddColumn('video_scenes', 'storyboard_preview_url', 'TEXT');
 
     // Create oauth_connections table if missing
     dbInstance.exec(`
@@ -1169,6 +1181,65 @@ export function grantUserCredits(
   }
 
   return updated.balance;
+}
+
+export function recordPlanGeneration(userId: string): void {
+  const db = getDb();
+  const id = uuidv4();
+  const now = Date.now();
+  db.prepare('INSERT INTO plan_generation_rate_limits (id, user_id, timestamp) VALUES (?, ?, ?)').run(id, userId, now);
+}
+
+export function checkPlanGenerationRateLimit(userId: string): {
+  allowed: boolean;
+  count: number;
+  retryAfterSec?: number;
+} {
+  const db = getDb();
+  const oneHourAgo = Date.now() - 3600 * 1000;
+
+  try {
+    db.prepare('DELETE FROM plan_generation_rate_limits WHERE timestamp < ?').run(Date.now() - 7200 * 1000);
+  } catch {}
+
+  const row = db
+    .prepare('SELECT COUNT(*) as count, MIN(timestamp) as oldest_ts FROM plan_generation_rate_limits WHERE user_id = ? AND timestamp >= ?')
+    .get(userId, oneHourAgo) as { count: number; oldest_ts: number | null } | undefined;
+
+  const count = row?.count || 0;
+  if (count >= 3) {
+    const oldest = row?.oldest_ts || Date.now();
+    const retryAfterSec = Math.max(1, Math.ceil((oldest + 3600 * 1000 - Date.now()) / 1000));
+    return {
+      allowed: false,
+      count,
+      retryAfterSec,
+    };
+  }
+
+  return {
+    allowed: true,
+    count,
+  };
+}
+
+export function checkUserEligibilityForPlan(userId: string): {
+  eligible: boolean;
+  reason?: string;
+  balance?: number;
+} {
+  const credits = getUserCredits(userId);
+  if (!credits) {
+    return { eligible: false, reason: 'User credit account not initialized' };
+  }
+  if (credits.balance <= 0) {
+    return { eligible: false, reason: 'Insufficient credits. Active subscription or trial with positive balance required.' };
+  }
+  const activeStatus = ['ACTIVE', 'TRIALING', 'TRIAL'];
+  if (!activeStatus.includes(credits.subscription_status.toUpperCase())) {
+    return { eligible: false, reason: 'Active subscription or trial required to generate new plans' };
+  }
+  return { eligible: true, balance: credits.balance };
 }
 
 export function getMonthlyVideoUsage(userId: string = DEFAULT_USER_ID): { used: number; limit: number; remaining: number } {

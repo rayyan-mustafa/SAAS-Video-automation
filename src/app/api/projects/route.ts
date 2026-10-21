@@ -1,6 +1,17 @@
 import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { getDb, DEFAULT_USER_ID, ContentProject, Channel, deductUserCredits, getMonthlyVideoUsage } from '@/lib/db';
+import {
+  getDb,
+  DEFAULT_USER_ID,
+  ContentProject,
+  Channel,
+  deductUserCredits,
+  getMonthlyVideoUsage,
+  checkPlanGenerationRateLimit,
+  checkUserEligibilityForPlan,
+  recordPlanGeneration,
+} from '@/lib/db';
+import { resolveLengthBand } from '@/lib/video/lengthBands';
 import { videoWorker } from '@/lib/queue/worker';
 import { getCurrentUser } from '@/lib/auth';
 
@@ -54,6 +65,31 @@ export async function POST(request: Request) {
   try {
     const user = await getCurrentUser(request);
     const userId = user?.id || DEFAULT_USER_ID;
+
+    // WP8 Eligibility Check: User must have active account and sufficient balance
+    const eligibility = checkUserEligibilityForPlan(userId);
+    if (!eligibility.eligible) {
+      return NextResponse.json(
+        {
+          error: eligibility.reason || 'User not eligible for plan generation',
+          balance: eligibility.balance,
+        },
+        { status: 402 }
+      );
+    }
+
+    // WP8 Rate Limit: Max 3 plans per rolling hour per user
+    const rateLimit = checkPlanGenerationRateLimit(userId);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: `Plan generation rate limit reached (max 3 plans per rolling hour). Please wait ${rateLimit.retryAfterSec}s before generating another plan.`,
+          retryAfterSec: rateLimit.retryAfterSec,
+          count: rateLimit.count,
+        },
+        { status: 429 }
+      );
+    }
 
     // Check monthly quota (30 videos/month server-side enforcement)
     const monthlyUsage = getMonthlyVideoUsage(userId);
@@ -136,13 +172,13 @@ export async function POST(request: Request) {
     const willAutoPublish = auto_publish || channel.auto_publish ? 1 : 0;
     const initialPublishStatus = scheduled_at ? 'SCHEDULED' : willAutoPublish ? 'SCHEDULED' : 'DRAFT';
 
-    // Deduct 25 credits for automated generation
-    try {
-      deductUserCredits(userId, 25, 'GENERATE_VIDEO', `Generated video: ${topic.trim().substring(0, 40)}`, projectId);
-    } catch {}
+    // WP8: Plan generation is free! Credits are deducted only upon Storyboard Approval.
+    // Record rate limit consumption in persistent SQLite ledger
+    recordPlanGeneration(userId);
 
     const numericLength = Number(target_length_minutes);
     const parsedLength = !isNaN(numericLength) && numericLength > 0 ? numericLength : 3;
+    const lengthBand = resolveLengthBand(parsedLength).band;
     const resolvedAspectRatio = body.aspect_ratio || body.aspectRatio || '9:16';
     const selectedPlatforms = Array.isArray(body.platforms) && body.platforms.length > 0
       ? body.platforms
@@ -156,23 +192,24 @@ export async function POST(request: Request) {
 
     db.prepare(
       `INSERT INTO content_projects (
-        id, user_id, channel_id, topic, target_length_minutes, preset,
+        id, user_id, channel_id, topic, target_length_minutes, length_band, preset,
         language, platform, aspect_ratio, visibility, status, current_stage, publishing_status,
         scheduled_at, auto_publish, metadata_json, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       projectId,
       userId,
       channel_id,
       cleanTopic,
       parsedLength,
+      lengthBand,
       preset,
       language || channel.language,
       selectedPlatforms.join(', '),
       resolvedAspectRatio,
       visibility || channel.default_visibility || 'PRIVATE',
-      'PENDING',
-      'SCRIPT',
+      'PROCESSING',
+      'PLAN',
       initialPublishStatus,
       scheduled_at,
       willAutoPublish,
@@ -181,14 +218,16 @@ export async function POST(request: Request) {
       now
     );
 
-    // Launch pipeline in background (client Studio monitors and can trigger generation)
-    videoWorker.startProjectPipeline(projectId);
+    // Launch pipeline in background (starts at PLAN stage and halts at PENDING_APPROVAL)
+    videoWorker.startProjectPipeline(projectId, 'PLAN');
 
     return NextResponse.json(
       {
-        message: 'Video project created successfully',
+        message: 'Video plan generation initiated',
         projectId,
-        status: 'DRAFT',
+        status: 'PROCESSING',
+        currentStage: 'PLAN',
+        lengthBand,
         publishingStatus: initialPublishStatus,
         monthlyUsage: getMonthlyVideoUsage(userId),
       },

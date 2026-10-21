@@ -58,8 +58,8 @@ async function runModule7Tests() {
       COUNT(*) as total_jobs,
       COUNT(CASE WHEN status = 'COMPLETED' THEN 1 END) as completed_jobs
     FROM video_jobs
-    WHERE started_at IS NOT NULL AND completed_at IS NOT NULL
-  `).get() as any;
+    WHERE project_id IN (?, ?) AND started_at IS NOT NULL AND completed_at IS NOT NULL
+  `).get(project1Id, project2Id) as any;
 
   assert.ok(renderStats.avg_render_seconds > 100, 'Render time should be realistic (> 100s, not fake 38s)');
   console.log(`✓ Real average render duration verified: ${Math.round(renderStats.avg_render_seconds)}s.`);

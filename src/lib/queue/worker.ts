@@ -16,6 +16,8 @@ import { EngineError } from '../video/engineErrors';
 import { issuePriceDeltaRefund, calculatePriceDeltaRefund } from '../billing/refundEngine';
 import { generateVideoPlan } from '../video/planGenerator';
 import { resolveLengthBand, isWithinBandLimit } from '../video/lengthBands';
+import { generateStoryboardPreview } from '../video/storyboardPreview';
+import { calculateWorstCaseQuote, reconcilePriceLockRefund } from '../billing/priceLockEngine';
 
 export type PipelineStage = 'PLAN' | 'VOICE' | 'SCENES' | 'VIDEO' | 'SUBTITLES' | 'FINAL_VIDEO' | 'THUMBNAIL';
 
@@ -161,6 +163,18 @@ export class VideoPipelineWorker {
         db.prepare(
           'UPDATE video_jobs SET status = ?, completed_at = ? WHERE project_id = ? AND stage = ?'
         ).run('COMPLETED', stageEndTime, projectId, stage);
+
+        // WP8 Fail-Closed Gate: Pause at PLAN until user reviews & approves storyboard
+        if (stage === 'PLAN') {
+          const freshProject = db.prepare('SELECT approved_at FROM content_projects WHERE id = ?').get(projectId) as any;
+          if (!freshProject?.approved_at) {
+            db.prepare(
+              'UPDATE content_projects SET status = ?, current_stage = ?, updated_at = ? WHERE id = ?'
+            ).run('PENDING_APPROVAL', 'PLAN', stageEndTime, projectId);
+            console.log(`[VideoPipeline] ⏸️ Plan generated and locked for project ${projectId}. Awaiting user storyboard approval.`);
+            return;
+          }
+        }
       } catch (err: any) {
         const errorMsg = err?.message || 'Stage execution failed';
         console.error(`Error at stage ${stage} for project ${projectId}:`, err);
@@ -348,6 +362,38 @@ export class VideoPipelineWorker {
             now
           );
         }
+
+        // Generate storyboard style previews for each scene
+        for (const scene of planResult.scenes) {
+          try {
+            const preview = await generateStoryboardPreview({
+              projectId: project.id,
+              sceneIndex: scene.sceneIndex,
+              visualPrompt: scene.visualPrompt,
+              visualTier: (scene as any).visualTier || 'motion_still',
+              niche: channel.niche,
+              topic: project.topic,
+            });
+            db.prepare('UPDATE video_scenes SET storyboard_preview_url = ? WHERE project_id = ? AND scene_index = ?')
+              .run(preview.url, project.id, scene.sceneIndex);
+          } catch (err: any) {
+            console.warn(`[VideoPipeline] Preview generation skipped for scene ${scene.sceneIndex}:`, err.message);
+          }
+        }
+
+        // Calculate and stamp worst-case quote upfront
+        const lengthBandConfig = resolveLengthBand(project.target_length_minutes || 1);
+        const quote = calculateWorstCaseQuote({
+          targetLengthMinutes: project.target_length_minutes || 1,
+          scenes: planResult.scenes.map((s) => ({
+            sceneIndex: s.sceneIndex,
+            visualTier: (s as any).visualTier || 'motion_still',
+            durationSec: s.estimatedDurationSec,
+          })),
+        });
+
+        db.prepare(`UPDATE content_projects SET quoted_credits = ?, length_band = ? WHERE id = ?`)
+          .run(quote.totalQuotedCredits, lengthBandConfig.band, project.id);
         break;
       }
 
@@ -436,6 +482,21 @@ export class VideoPipelineWorker {
           JSON.stringify({ voice: channel.voice, voiceSpeed: channel.voice_speed, segmentCount: segmentPaths.length }),
           now
         );
+
+        // WP8 True Price Lock Delta Reconciliation:
+        // Automatically refund difference if actual cost < quoted worst-case ceiling!
+        try {
+          const refundRes = reconcilePriceLockRefund({
+            projectId: project.id,
+            userId: project.user_id,
+            targetLengthMinutes: project.target_length_minutes || 1,
+          });
+          if (refundRes.deltaRefundCredits > 0) {
+            console.log(`[VideoPipeline] 💸 Auto-refunded ${refundRes.deltaRefundCredits} credits (quoted ${refundRes.quotedCredits} vs actual ${refundRes.actualCredits})`);
+          }
+        } catch (reconcileErr: any) {
+          console.error('[VideoPipeline] Price lock reconciliation error:', reconcileErr.message);
+        }
         break;
       }
 
