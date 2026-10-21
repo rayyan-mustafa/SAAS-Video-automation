@@ -1,0 +1,58 @@
+name: Upstream Intelligence & Change Auditor
+
+on:
+  schedule:
+    # Runs twice every day at 06:00 UTC and 18:00 UTC
+    - cron: '0 6,18 * * *'
+  workflow_dispatch:
+    # Allows manual trigger at any time from GitHub Actions UI
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  audit-upstream:
+    name: Audit Upstream Changes
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Private Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Configure Upstream Git Remote
+        run: |
+          git config --global user.name "autora-intelligence-bot"
+          git config --global user.email "bot@autora.live"
+          git remote add upstream https://github.com/saninabbas/youtube-automation-.git || true
+          git remote set-url --push upstream DISABLE
+          git fetch upstream
+
+      - name: Run Upstream Change Auditor & Issue Alert
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          npx tsx scripts/check-upstream.ts
+
+      - name: Commit Updated Audit Logs If Changed
+        run: |
+          if [[ -n $(git status -s UPSTREAM_LOGS.md) ]]; then
+            git add UPSTREAM_LOGS.md
+            git commit -m "docs(upstream): log new upstream commits audit dossier [skip ci]"
+            git push origin HEAD:${{ github.ref }}
+          else
+            echo "No log updates needed."
+          fi

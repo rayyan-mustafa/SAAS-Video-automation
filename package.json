@@ -15,6 +15,7 @@
     "test:unit": "npx -y tsx tests/run-all-saas-master-modules.ts",
     "test:youtube": "npx -y tsx test-youtube-integration.ts",
     "test:audit": "npx -y tsx test-final-production-audit.ts",
+    "upstream:check": "npx -y tsx scripts/check-upstream.ts",
     "prepare": "husky"
   },
   "keywords": [
