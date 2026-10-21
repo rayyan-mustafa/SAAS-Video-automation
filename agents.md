@@ -188,5 +188,29 @@ To uphold the highest software quality across all contributions:
    - Zero copyleft (GPL / AGPL) dependency contamination. All third-party libraries strictly utilize permissive commercial licenses (MIT, Apache 2.0, BSD).
    - Zero committed secrets: all production tokens, API vaults, and cryptographic secrets are isolated strictly in runtime environment variables.
 
+---
+
+## Emergency Rollback & Disaster Recovery Protocol
+
+1. **History Erase & Hard Reset (Accidental Pushes / Leaked Secrets)**:
+   - Locate the last known good commit: `git log --oneline -n 10`
+   - Rewind the working tree: `git reset --hard <good-commit-hash>`
+   - Force overwrite the remote branch: `git push origin main --force`
+2. **Non-Destructive Revert (Public / Team Branches)**:
+   - Invert the erroneous changes: `git revert HEAD` (or `git revert <bad-commit-hash>`)
+   - Push reversal commit: `git push origin main`
+3. **Rescue Net via `git reflog`**:
+   - Recover any overwritten or seemingly lost commit: `git reflog` -> `git reset --hard HEAD@{n}`.
+
+---
+
+## Upstream Tracking & Multi-Remote Isolation
+
+1. **Push Lock**: `upstream` remote push is permanently locked (`git remote set-url --push upstream DISABLE`).
+2. **Zero Blind-Merges**: Never merge `upstream/main` directly to prevent conflicting deletions or unvetted logic.
+3. **Selective Feature Pull**: Import only vetted directories/files via `git checkout upstream/main -- <path>`.
+4. **Automated Change Detection**: Monitored via `.github/workflows/check-upstream.yml` and `npm run upstream:check`, logged in `UPSTREAM_LOGS.md`.
+
+
 
 
