@@ -77,11 +77,53 @@ export class SceneQualityChecker {
   /**
    * Validates a generated video clip file against all 8 quality criteria.
    */
+  /**
+   * Technical anomaly detector using FFmpeg blackdetect and freezedetect filters.
+   * Runs in stream null mode (-f null -) for lightning-fast analysis (<200ms).
+   */
+  public async detectAnomalies(clipPath: string): Promise<{
+    hasBlackFrames: boolean;
+    hasFrozenFrames: boolean;
+    blackDetails?: string;
+    freezeDetails?: string;
+  }> {
+    if (!fs.existsSync(clipPath)) {
+      return { hasBlackFrames: false, hasFrozenFrames: false };
+    }
+
+    try {
+      const ffmpegPath = getFfmpegPath();
+      const { stderr } = await execFileAsync(ffmpegPath, [
+        '-y',
+        '-i',
+        clipPath,
+        '-vf',
+        'blackdetect=d=0.5:pix_th=0.10,freezedetect=n=0.003:d=1.0',
+        '-f',
+        'null',
+        '-',
+      ]);
+
+      const blackMatch = stderr.match(/black_start:\s*([0-9.]+)/);
+      const freezeMatch = stderr.match(/freeze_start:\s*([0-9.]+)/);
+
+      return {
+        hasBlackFrames: !!blackMatch,
+        hasFrozenFrames: !!freezeMatch,
+        blackDetails: blackMatch ? `Black screen detected at ${blackMatch[1]}s` : undefined,
+        freezeDetails: freezeMatch ? `Frozen/static video detected at ${freezeMatch[1]}s` : undefined,
+      };
+    } catch (err: any) {
+      console.warn(`[QualityChecker] Anomaly detection probe error for ${clipPath}: ${err.message}`);
+      return { hasBlackFrames: false, hasFrozenFrames: false };
+    }
+  }
+
   public async validateSceneClip(params: ValidateSceneClipParams): Promise<QualityReport> {
     const { scene, clipPath, globalStyle, previousScene, attempt = 1, niche = 'General' } = params;
     const isFirstScene = scene.scene_index === 1;
 
-    // 1. Technical Media Probe
+    // 1. Technical Media Probe & ffprobe inspection
     let mediaMeta: MediaMetadata = {
       durationSec: 0,
       isValid: false,
@@ -101,6 +143,28 @@ export class SceneQualityChecker {
       console.warn(`[QualityChecker] Media probe failed for ${clipPath}: ${err.message}`);
     }
 
+    // FFmpeg Anomaly Detection (blackdetect + freezedetect)
+    let anomalyResult: {
+      hasBlackFrames: boolean;
+      hasFrozenFrames: boolean;
+      blackDetails?: string;
+      freezeDetails?: string;
+    } = { hasBlackFrames: false, hasFrozenFrames: false };
+    if (fileExists && fileSize > 1000 && clipPath.endsWith('.mp4')) {
+      anomalyResult = await this.detectAnomalies(clipPath);
+    }
+
+    // Duration Conformance Check (within ±0.2s of expected duration, when specified)
+    let durationCheckPassed = true;
+    let durationMismatchDetails: string | undefined;
+    if (scene.estimated_duration_sec > 0 && mediaMeta.durationSec > 0) {
+      const durationDiff = Math.abs(mediaMeta.durationSec - scene.estimated_duration_sec);
+      if (durationDiff > 0.2) {
+        durationCheckPassed = false;
+        durationMismatchDetails = `Duration drift: actual ${mediaMeta.durationSec.toFixed(2)}s vs expected ${scene.estimated_duration_sec.toFixed(2)}s exceeds ±0.2s tolerance (drift: ${durationDiff.toFixed(2)}s).`;
+      }
+    }
+
     // 2. Evaluate Each of the 8 Criteria (Base Heuristics)
     let narrationCheck = this.evaluateVisualMatchesNarration(scene.narration, scene.visual_prompt, scene.visual_subject);
     let subjectObjectsCheck = this.evaluateCorrectSubjectAndObjects(scene.visual_prompt, scene.visual_subject, scene.narration);
@@ -111,82 +175,125 @@ export class SceneQualityChecker {
     let diffCheck = this.evaluateSceneDifferentiation(scene, previousScene);
     let hookCheck = this.evaluateStrongVisualHook(scene, isFirstScene);
 
+    // Fail-Closed Anomaly Overrides
+    if (anomalyResult.hasBlackFrames) {
+      artifactsCheck = {
+        name: 'No obvious AI artifacts or severe distortions',
+        passed: false,
+        score: 0,
+        details: `FAILED_BLACK_DETECT: ${anomalyResult.blackDetails || 'Black screen detected for >=0.5s'}`,
+      };
+    }
+
+    if (anomalyResult.hasFrozenFrames) {
+      motionCheck = {
+        name: 'Natural-looking motion',
+        passed: false,
+        score: 0,
+        details: `FAILED_FREEZE_DETECT: ${anomalyResult.freezeDetails || 'Frozen/static video detected for >=1.0s'}`,
+      };
+    }
+
     let isProceduralFallback = false;
 
-    // 3. Multimodal Real Video Frame Inspection (and physical frame entropy analysis)
-    if (fileExists && fileSize > 1000 && clipPath.endsWith('.mp4')) {
+    // 3. 3-Frame Multimodal Real Video Frame Inspection (t=0.5s, t=50%, t=duration-0.5s)
+    const framePaths: string[] = [];
+    if (fileExists && fileSize > 1000 && clipPath.endsWith('.mp4') && !anomalyResult.hasBlackFrames) {
       try {
         const ffmpegPath = getFfmpegPath();
         const frameDir = path.dirname(clipPath);
-        const framePath = path.join(frameDir, `qc_frame_scene_${scene.scene_index}.jpg`);
+        const duration = mediaMeta.durationSec > 0 ? mediaMeta.durationSec : (scene.estimated_duration_sec || 3.0);
 
-        // Extract real video frame at t=1.0s
-        await execFileAsync(ffmpegPath, [
-          '-y',
-          '-ss',
-          '00:00:01.0',
-          '-i',
-          clipPath,
-          '-vframes',
-          '1',
-          '-q:v',
-          '2',
-          framePath,
-        ]);
+        const t1 = 0.5;
+        const t2 = Math.max(0.6, duration * 0.5);
+        const t3 = Math.max(0.7, duration - 0.5);
+        const sampleTimestamps = [t1, t2, t3];
 
-        if (fs.existsSync(framePath)) {
-          const frameStat = await fs.promises.stat(framePath).catch(() => null);
-          isProceduralFallback = !!(frameStat && frameStat.size < 50000);
+        let lowEntropyCount = 0;
 
-          const geminiKey = getApiKey('gemini') || process.env.GEMINI_API_KEY;
-          let visionResults: any = null;
-          if (geminiKey) {
-            visionResults = await this.evaluateWithGeminiVision({
-              framePath,
-              scene,
-              globalStyle,
-              isFirstScene,
-              geminiKey,
-            });
+        for (let i = 0; i < sampleTimestamps.length; i++) {
+          const framePath = path.join(frameDir, `qc_frame_s${scene.scene_index}_sample_${i + 1}.jpg`);
+          framePaths.push(framePath);
+
+          await execFileAsync(ffmpegPath, [
+            '-y',
+            '-ss',
+            sampleTimestamps[i].toFixed(2),
+            '-i',
+            clipPath,
+            '-vframes',
+            '1',
+            '-q:v',
+            '2',
+            framePath,
+          ]);
+
+          if (fs.existsSync(framePath)) {
+            const frameStat = await fs.promises.stat(framePath).catch(() => null);
+            if (frameStat && frameStat.size < 50000) {
+              lowEntropyCount++;
+            }
           }
+        }
 
-          if (visionResults) {
-            if (visionResults.visualMatchesNarration) narrationCheck = visionResults.visualMatchesNarration;
-            if (visionResults.correctSubjectAndObjects) subjectObjectsCheck = visionResults.correctSubjectAndObjects;
-            if (visionResults.noAiArtifactsOrDistortions) artifactsCheck = visionResults.noAiArtifactsOrDistortions;
-            if (visionResults.correct916Framing) framingCheck = visionResults.correct916Framing;
-            if (visionResults.consistentVisualStyle) styleCheck = visionResults.consistentVisualStyle;
-            if (visionResults.strongVisualHook && isFirstScene) hookCheck = visionResults.strongVisualHook;
-          } else if (isProceduralFallback) {
-            // Guardrail: cap scores when physical frame is an ambient/procedural fallback grid
-            narrationCheck = {
-              name: 'Visual matches narration',
-              passed: false,
-              score: 40,
-              details: 'PROCEDURAL_FALLBACK_DETECTED: Low frame entropy (<50KB); spoken narration subjects not identifiable.',
-            };
-            subjectObjectsCheck = {
-              name: 'Correct subject and objects',
-              passed: false,
-              score: 40,
-              details: 'PROCEDURAL_FALLBACK_DETECTED: Focal subject is represented by procedural graphics rather than concrete visual elements.',
-            };
-            artifactsCheck = {
-              name: 'No obvious AI artifacts or severe distortions',
-              passed: false,
-              score: 50,
-              details: 'PROCEDURAL_FALLBACK_DETECTED: Frame lacks photographic visual complexity; procedural grid detected.',
-            };
-            styleCheck = {
-              name: 'Consistent visual style with other scenes',
-              passed: false,
-              score: 45,
-              details: 'PROCEDURAL_FALLBACK_DETECTED: Frame does not exhibit documentary/cinematic texture DNA.',
-            };
-          }
+        // If all 3 sample frames have low entropy (<50KB), procedural fallback grid is detected
+        isProceduralFallback = lowEntropyCount === sampleTimestamps.length;
+
+        const geminiKey = getApiKey('gemini') || process.env.GEMINI_API_KEY;
+        let visionResults: any = null;
+        const validFrames = framePaths.filter((p) => fs.existsSync(p));
+        if (geminiKey && validFrames.length > 0) {
+          visionResults = await this.evaluateWithMultiFrameGeminiVision({
+            framePaths: validFrames,
+            scene,
+            globalStyle,
+            isFirstScene,
+            geminiKey,
+          });
+        }
+
+        if (visionResults) {
+          if (visionResults.visualMatchesNarration) narrationCheck = visionResults.visualMatchesNarration;
+          if (visionResults.correctSubjectAndObjects) subjectObjectsCheck = visionResults.correctSubjectAndObjects;
+          if (visionResults.noAiArtifactsOrDistortions) artifactsCheck = visionResults.noAiArtifactsOrDistortions;
+          if (visionResults.correct916Framing) framingCheck = visionResults.correct916Framing;
+          if (visionResults.consistentVisualStyle) styleCheck = visionResults.consistentVisualStyle;
+          if (visionResults.strongVisualHook && isFirstScene) hookCheck = visionResults.strongVisualHook;
+        } else if (isProceduralFallback) {
+          narrationCheck = {
+            name: 'Visual matches narration',
+            passed: false,
+            score: 40,
+            details: 'PROCEDURAL_FALLBACK_DETECTED: Low frame entropy (<50KB); spoken narration subjects not identifiable.',
+          };
+          subjectObjectsCheck = {
+            name: 'Correct subject and objects',
+            passed: false,
+            score: 40,
+            details: 'PROCEDURAL_FALLBACK_DETECTED: Focal subject is represented by procedural graphics rather than concrete visual elements.',
+          };
+          artifactsCheck = {
+            name: 'No obvious AI artifacts or severe distortions',
+            passed: false,
+            score: 50,
+            details: 'PROCEDURAL_FALLBACK_DETECTED: Frame lacks photographic visual complexity; procedural grid detected.',
+          };
+          styleCheck = {
+            name: 'Consistent visual style with other scenes',
+            passed: false,
+            score: 45,
+            details: 'PROCEDURAL_FALLBACK_DETECTED: Frame does not exhibit documentary/cinematic texture DNA.',
+          };
         }
       } catch (visionErr: any) {
         console.warn(`[QualityChecker] Video frame extraction / vision check bypassed: ${visionErr.message}`);
+      } finally {
+        // Clean up temporary extracted frames
+        for (const p of framePaths) {
+          try {
+            if (fs.existsSync(p)) await fs.promises.unlink(p);
+          } catch {}
+        }
       }
     }
 
@@ -208,7 +315,6 @@ export class SceneQualityChecker {
     );
 
     if (isProceduralFallback) {
-      // Hard cap: Cannot receive a QC score above 55%
       overallScore = Math.min(overallScore, 50);
     }
 
@@ -216,14 +322,35 @@ export class SceneQualityChecker {
       .filter((item) => !item.passed)
       .map((item) => item.name);
 
+    if (anomalyResult.hasBlackFrames && !failedChecks.includes('FAILED_BLACK_DETECT')) {
+      failedChecks.unshift('FAILED_BLACK_DETECT');
+    }
+
+    if (anomalyResult.hasFrozenFrames && !failedChecks.includes('FAILED_FREEZE_DETECT')) {
+      failedChecks.unshift('FAILED_FREEZE_DETECT');
+    }
+
+    if (!durationCheckPassed && durationMismatchDetails) {
+      failedChecks.unshift('DURATION_MISMATCH');
+    }
+
     if (isProceduralFallback && !failedChecks.includes('PROCEDURAL_FALLBACK_DETECTED')) {
       failedChecks.unshift('PROCEDURAL_FALLBACK_DETECTED');
     }
 
-    // Critical failure criteria: if procedural fallback, framing fails, artifacts fail, or score below 75
-    const passed = !isProceduralFallback && (failedChecks.length === 0 || (overallScore >= 75 && framingCheck.passed && artifactsCheck.passed));
+    // Fail-Closed Critical Guard:
+    // If black frames, frozen frames, duration mismatch, procedural fallback, framing fails, or score below 75 -> FAIL
+    const hasCriticalFailure =
+      isProceduralFallback ||
+      anomalyResult.hasBlackFrames ||
+      anomalyResult.hasFrozenFrames ||
+      !durationCheckPassed ||
+      !framingCheck.passed ||
+      !artifactsCheck.passed;
 
-    // 3. Generate targeted prompt adjustments if quality check did not pass
+    const passed = !hasCriticalFailure && failedChecks.length === 0 && overallScore >= 75;
+
+    // 4. Generate targeted prompt adjustments if quality check did not pass
     let retryPromptAdjustment: string | undefined;
     if (!passed) {
       retryPromptAdjustment = this.generatePromptAdjustments({
@@ -465,11 +592,20 @@ export class SceneQualityChecker {
     const styleId = globalStyle.id.toLowerCase();
 
     // Check style DNA markers
+    const nameWords = styleName.split(/[\s-]+/).filter((w) => w.length > 3);
+    const dnaMarkers = [
+      'cinematic', 'documentary', 'realistic', 'photorealistic', 'lighting', 'lens',
+      'shadow', 'depth of field', 'contrast', 'volumetric', 'natural', '8k', 'color grade',
+      'blueprint', 'graphic', 'typography', 'studio', 'hyperlapse', 'aerial', 'drone',
+      'rim', 'schematic', 'sterile', 'ambient', 'moody'
+    ];
+    const hasDnaMarker = dnaMarkers.some((m) => prompt.includes(m));
+
     const hasStyleRef =
       prompt.includes(styleName) ||
       prompt.includes(styleId) ||
-      prompt.includes('cinematic') ||
-      prompt.includes('lighting:') ||
+      nameWords.some((w) => prompt.includes(w)) ||
+      hasDnaMarker ||
       prompt.includes('visual style:');
 
     let score = 80;
@@ -648,11 +784,11 @@ export class SceneQualityChecker {
   }
 
   /**
-   * Multimodal AI Visual Verification using Google Gemini Vision
-   * Directly inspects the extracted pixel frame from the generated video.
+   * 3-Frame Multimodal AI Visual Verification using Google Gemini Vision
+   * Directly inspects the 3 extracted pixel frames (t=0.5s, t=50%, t=duration-0.5s) from the generated video.
    */
-  private async evaluateWithGeminiVision(params: {
-    framePath: string;
+  public async evaluateWithMultiFrameGeminiVision(params: {
+    framePaths: string[];
     scene: {
       scene_index: number;
       narration: string;
@@ -672,9 +808,23 @@ export class SceneQualityChecker {
     strongVisualHook: QualityCheckItem;
   }> | null> {
     try {
-      const base64Img = (await fs.promises.readFile(params.framePath)).toString('base64');
+      const imageParts: Array<{ inline_data: { mime_type: string; data: string } }> = [];
+      for (const fPath of params.framePaths) {
+        if (fs.existsSync(fPath)) {
+          const base64Img = (await fs.promises.readFile(fPath)).toString('base64');
+          imageParts.push({
+            inline_data: {
+              mime_type: 'image/jpeg',
+              data: base64Img,
+            },
+          });
+        }
+      }
+
+      if (imageParts.length === 0) return null;
+
       const prompt = `You are a strict film Quality Control AI inspector for mobile short-form video production (YouTube Shorts, Reels, TikTok).
-Inspect this real video frame extracted from a generated scene clip.
+Inspect these ${imageParts.length} sequential video frames extracted from a generated scene clip (sampled across the timeline: opening, midpoint, and concluding seconds).
 
 SCENE METADATA:
 Scene Index: ${params.scene.scene_index}
@@ -684,13 +834,13 @@ Focal Subject: "${params.scene.visual_subject || 'Not specified'}"
 Global Visual Style: "${params.globalStyle.name}" (${params.globalStyle.dna.renderStyle})
 Is Opening Hook Scene: ${params.isFirstScene}
 
-EVALUATION CHECKLIST (Examine pixels carefully):
-1. Visual matches narration: Are the key concepts/themes spoken in the narration visually represented in the frame?
+EVALUATION CHECKLIST (Examine pixels carefully across all frames):
+1. Visual matches narration: Are the key concepts/themes spoken in the narration visually represented across the frames?
 2. Correct subject and objects: Is the focal subject/object identifiable and correctly depicted without missing key elements?
-3. No obvious AI artifacts: Are there distorted faces, malformed hands, impossible anatomy, broken geometry, melting textures, or digital glitches?
+3. No obvious AI artifacts: Are there distorted faces, malformed hands, impossible anatomy, broken geometry, melting textures, or digital glitches in any of the frames?
 4. Correct 9:16 framing: Is the subject framed within a vertical mobile safe zone without awkward cropping or letterboxing?
 5. Consistent visual style: Does the visual match the ${params.globalStyle.name} aesthetic (lighting, realism, color palette)?
-6. Strong visual hook: (If Scene 1) Does this opening frame deliver a captivating, high-retention visual hook?
+6. Strong visual hook: (If Scene 1) Does the opening frame deliver a captivating, high-retention visual hook?
 
 Return valid JSON strictly matching this structure:
 {
@@ -702,7 +852,9 @@ Return valid JSON strictly matching this structure:
   "strongVisualHook": { "passed": true, "score": 90, "details": "string" }
 }`;
 
-      const geminiModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
+      const primaryModel = process.env.QC_VISION_MODEL || 'gemini-2.5-flash';
+      const geminiModels = [primaryModel, 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
+
       let res: Response | null = null;
       for (const model of geminiModels) {
         try {
@@ -714,12 +866,7 @@ Return valid JSON strictly matching this structure:
               contents: [
                 {
                   parts: [
-                    {
-                      inline_data: {
-                        mime_type: 'image/jpeg',
-                        data: base64Img,
-                      },
-                    },
+                    ...imageParts,
                     { text: prompt },
                   ],
                 },

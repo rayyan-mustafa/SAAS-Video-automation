@@ -509,9 +509,15 @@ export class VideoPipelineWorker {
           let bestClips: Array<{ clipIndex: number; storageKey: string; url: string; durationSec: number }> = [];
           let latestQcReport: QualityReport | null = null;
 
+          // Hook-Only Retry Policy (WP4):
+          // Scene 1 (Hook Beat): up to 1 retry with prompt refinement (maxAttempts = 2)
+          // Scenes > 1 (Body Beats): 0 retries (maxAttempts = 1). Immediate downgrade to motion_still on QC failure.
+          const isHookScene = scene.scene_index === 1;
+          const maxSceneAttempts = isHookScene ? 2 : 1;
+
           try {
-            while (attempt <= MAX_QC_ATTEMPTS) {
-              console.log(`[VideoPipeline] Generating clip for Scene ${scene.scene_index} (Attempt ${attempt}/${MAX_QC_ATTEMPTS}, AspectRatio: ${projectAspectRatio})...`);
+            while (attempt <= maxSceneAttempts) {
+              console.log(`[VideoPipeline] Generating clip for Scene ${scene.scene_index} (Attempt ${attempt}/${maxSceneAttempts}, AspectRatio: ${projectAspectRatio})...`);
 
               const clips = await videoProvider.generateVideoClipsForScene({
                 projectId: project.id,
@@ -559,12 +565,35 @@ export class VideoPipelineWorker {
                 `[QualityControl] ⚠️ Scene ${scene.scene_index} failed QC (${latestQcReport.failedChecks.join(', ')}). Attempt ${attempt} score: ${latestQcReport.overallScore}%.`
               );
 
-              if (attempt < MAX_QC_ATTEMPTS && latestQcReport.retryPromptAdjustment) {
-                console.log(`[QualityControl] ⚡ Auto-regenerating Scene ${scene.scene_index} with prompt refinement: ${latestQcReport.retryPromptAdjustment}`);
+              if (attempt < maxSceneAttempts && latestQcReport.retryPromptAdjustment) {
+                console.log(`[QualityControl] ⚡ Hook Scene 1 auto-regenerating with prompt refinement: ${latestQcReport.retryPromptAdjustment}`);
                 currentPrompt = `${scene.visual_prompt}, ${latestQcReport.retryPromptAdjustment}`;
-              }
+                attempt++;
+              } else {
+                // Hook retry exhausted or non-hook scene (0 retries):
+                // Enforce Hook-Only Retry Policy: Immediately downgrade to motion_still without costly re-rolls!
+                const currentTier = (scene as any).visual_tier || 'ai_clip';
+                if (currentTier !== 'motion_still' && currentTier !== 'graphic') {
+                  console.warn(`[QualityControl] 🔻 Enforcing Hook-Only Retry Policy: Scene ${scene.scene_index} downgraded to motion_still after QC failure.`);
+                  const fallbackClips = await videoProvider.generateVideoClipsForScene({
+                    projectId: project.id,
+                    sceneId: scene.id,
+                    sceneIndex: scene.scene_index,
+                    visualPrompt: currentPrompt,
+                    durationSec: scene.estimated_duration_sec,
+                    niche: channel.niche,
+                    topic: project.topic,
+                    visualStyle: channel.visual_style,
+                    aspectRatio: projectAspectRatio,
+                    visualTier: 'motion_still',
+                  } as any);
 
-              attempt++;
+                  if (fallbackClips && fallbackClips.length > 0) {
+                    bestClips = fallbackClips;
+                  }
+                }
+                break;
+              }
             }
           } catch (sceneErr: any) {
             console.error(`[VideoPipeline] Scene ${scene.scene_index} generation error:`, sceneErr?.message || sceneErr);
