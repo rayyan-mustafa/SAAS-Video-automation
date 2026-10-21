@@ -35,6 +35,10 @@ class BackgroundPublishingScheduler {
     }
   }
 
+  public async processScheduledPublishing(userId?: string): Promise<SchedulerRunResult> {
+    return this.checkAndPublishDueVideos(userId);
+  }
+
   public async checkAndPublishDueVideos(userId?: string): Promise<SchedulerRunResult> {
     if (this.isRunning) {
       return { processedCount: 0, publishedCount: 0, failedCount: 0, details: [] };
@@ -54,13 +58,19 @@ class BackgroundPublishingScheduler {
     try {
       // 0. Recover stranded video generation jobs (>3 mins in PENDING or PROCESSING without progress update)
       const stuckPipelineThreshold = new Date(Date.now() - 3 * 60 * 1000).toISOString();
-      const stuckPipelineProjects = db.prepare(
-        `SELECT id, current_stage FROM content_projects 
-         WHERE status IN ('PENDING', 'PROCESSING') 
-           AND id NOT LIKE 'proj_test_%' 
-           AND id NOT LIKE 'proj_flex_%'
-           AND updated_at < ?`
-      ).all(stuckPipelineThreshold) as Array<{ id: string; current_stage: string }>;
+      let stuckQuery = `
+        SELECT id, current_stage FROM content_projects 
+        WHERE status IN ('PENDING', 'PROCESSING') 
+          AND id NOT LIKE 'proj_test_%' 
+          AND id NOT LIKE 'proj_flex_%'
+          AND updated_at < ?
+      `;
+      const stuckArgs: any[] = [stuckPipelineThreshold];
+      if (userId) {
+        stuckQuery += ' AND user_id = ?';
+        stuckArgs.push(userId);
+      }
+      const stuckPipelineProjects = db.prepare(stuckQuery).all(...stuckArgs) as Array<{ id: string; current_stage: string }>;
 
       if (stuckPipelineProjects.length > 0) {
         try {
@@ -76,12 +86,18 @@ class BackgroundPublishingScheduler {
 
       // 1. Recover stuck jobs (>15 mins in UPLOADING without completion)
       const stuckThresholdIso = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-      db.prepare(
-        `UPDATE content_projects SET 
+      let stuckLeaseQuery = `
+        UPDATE content_projects SET 
           publishing_status = 'SCHEDULED', 
           publish_error = 'Previous upload process lease expired. Automatically recovered.' 
-         WHERE publishing_status = 'UPLOADING' AND publish_started_at < ?`
-      ).run(stuckThresholdIso);
+         WHERE publishing_status = 'UPLOADING' AND publish_started_at < ?
+      `;
+      const leaseArgs: any[] = [stuckThresholdIso];
+      if (userId) {
+        stuckLeaseQuery += ' AND user_id = ?';
+        leaseArgs.push(userId);
+      }
+      db.prepare(stuckLeaseQuery).run(...leaseArgs);
 
       // 2. Find all completed projects that are scheduled and ready to publish
       let dueQuery = `
@@ -204,7 +220,7 @@ class BackgroundPublishingScheduler {
 
         const pubResult = await publishingProvider.publishVideo({
           projectId: proj.id,
-          platform: (proj.platform as SupportedPlatform) || 'YouTube',
+          platform: (proj.platform as SupportedPlatform) || (proj.channel_platform as SupportedPlatform) || 'YouTube',
           videoFilePath,
           title: finalTitle,
           description: finalDescription,
@@ -331,3 +347,4 @@ class BackgroundPublishingScheduler {
 }
 
 export const publishingScheduler = new BackgroundPublishingScheduler();
+export const scheduler = publishingScheduler;

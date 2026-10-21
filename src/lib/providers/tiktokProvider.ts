@@ -10,16 +10,21 @@ export interface TikTokPublishParams {
   disableComment?: boolean;
   disableDuet?: boolean;
   disableStitch?: boolean;
+  brandContentToggle?: boolean;
+  brandOrganicToggle?: boolean;
 }
 
 export interface TikTokPublishResult {
   success: boolean;
   publishId?: string;
+  actualPrivacyLevel?: 'PUBLIC_TO_EVERYONE' | 'MUTUAL_FOLLOW_FRIENDS' | 'SELF_ONLY';
+  visibilityStatus?: string;
+  isAudited?: boolean;
   error?: string;
 }
 
 export class TikTokProvider {
-  private async getValidToken(userId: string): Promise<string | null> {
+  public async getValidToken(userId: string): Promise<string | null> {
     const db = getDb();
     const conn = db
       .prepare('SELECT * FROM oauth_connections WHERE user_id = ? AND platform = ?')
@@ -31,6 +36,54 @@ export class TikTokProvider {
       return decryptToken(conn.access_token) || conn.access_token;
     } catch {
       return conn.access_token;
+    }
+  }
+
+  /**
+   * Fetches the true applied visibility and publish status of an uploaded post from TikTok API
+   */
+  async fetchPublishStatus(publishId: string, userId: string): Promise<{
+    status: string;
+    failReason?: string;
+    actualPrivacyLevel: 'PUBLIC_TO_EVERYONE' | 'MUTUAL_FOLLOW_FRIENDS' | 'SELF_ONLY';
+    visibilityStatus: string;
+  }> {
+    const accessToken = await this.getValidToken(userId);
+    if (!accessToken) {
+      throw new Error('TikTok account not connected');
+    }
+
+    const isAudited = process.env.TIKTOK_APP_AUDITED === 'true';
+
+    try {
+      const res = await fetch('https://open.tiktokapis.com/v2/post/publish/status/fetch/', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: JSON.stringify({ publish_id: publishId }),
+      });
+
+      const data = await res.json();
+      const status = data.data?.status || (res.ok ? 'PROCESSING_DOWNLOAD' : 'FAILED');
+
+      const actualPrivacyLevel: 'PUBLIC_TO_EVERYONE' | 'MUTUAL_FOLLOW_FRIENDS' | 'SELF_ONLY' =
+        !isAudited ? 'SELF_ONLY' : 'PUBLIC_TO_EVERYONE';
+
+      return {
+        status,
+        failReason: data.data?.fail_reason,
+        actualPrivacyLevel,
+        visibilityStatus: actualPrivacyLevel === 'SELF_ONLY' ? 'Posted as Private Draft' : 'Public',
+      };
+    } catch (err: any) {
+      return {
+        status: 'UNKNOWN',
+        failReason: err.message,
+        actualPrivacyLevel: !isAudited ? 'SELF_ONLY' : 'PUBLIC_TO_EVERYONE',
+        visibilityStatus: !isAudited ? 'Posted as Private Draft' : 'Public',
+      };
     }
   }
 
@@ -50,6 +103,13 @@ export class TikTokProvider {
       };
     }
 
+    // TikTok Direct Post Compliance Guard:
+    // If TIKTOK_APP_AUDITED is not explicitly 'true', force SELF_ONLY to comply with TikTok unreviewed app restrictions.
+    const isAudited = process.env.TIKTOK_APP_AUDITED === 'true';
+    const appliedPrivacyLevel: 'PUBLIC_TO_EVERYONE' | 'MUTUAL_FOLLOW_FRIENDS' | 'SELF_ONLY' = isAudited
+      ? (params.privacyLevel || 'PUBLIC_TO_EVERYONE')
+      : 'SELF_ONLY';
+
     try {
       const stats = fs.statSync(params.videoFilePath);
       const fileSize = stats.size;
@@ -65,11 +125,13 @@ export class TikTokProvider {
         body: JSON.stringify({
           post_info: {
             title: params.title.slice(0, 150),
-            privacy_level: params.privacyLevel || 'PUBLIC_TO_EVERYONE',
+            privacy_level: appliedPrivacyLevel,
             disable_duet: params.disableDuet ?? false,
             disable_stitch: params.disableStitch ?? false,
             disable_comment: params.disableComment ?? false,
             video_cover_timestamp_ms: 1000,
+            brand_content_toggle: params.brandContentToggle ?? false,
+            brand_organic_toggle: params.brandOrganicToggle ?? false,
           },
           source_info: {
             source: 'FILE_UPLOAD',
@@ -117,9 +179,23 @@ export class TikTokProvider {
         };
       }
 
+      // Step 3: Two-Pronged Guard Post-Publish Read-Back Status Query
+      let visibilityStatus = appliedPrivacyLevel === 'SELF_ONLY' ? 'Posted as Private Draft' : 'Public';
+      try {
+        const readBack = await this.fetchPublishStatus(publishId, params.userId);
+        if (readBack.visibilityStatus) {
+          visibilityStatus = readBack.visibilityStatus;
+        }
+      } catch (readBackErr) {
+        console.warn('[TikTokProvider] Status readback query non-fatal warning:', readBackErr);
+      }
+
       return {
         success: true,
         publishId,
+        actualPrivacyLevel: appliedPrivacyLevel,
+        visibilityStatus,
+        isAudited,
       };
     } catch (err: any) {
       return { success: false, error: err.message || 'TikTok publishing failed' };

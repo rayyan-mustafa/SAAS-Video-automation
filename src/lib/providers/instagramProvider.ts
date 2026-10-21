@@ -1,12 +1,15 @@
 import { getDb, OAuthConnection } from '../db';
 import { decryptToken } from '../security/encryption';
 
+export const MAX_INSTAGRAM_REELS_DURATION_SEC = 90;
+
 export interface InstagramPublishParams {
   userId: string;
   videoUrl: string; // Must be publicly accessible HTTPS URL or R2 signed URL
   caption: string;
   coverUrl?: string;
   shareToFeed?: boolean;
+  durationSeconds?: number;
 }
 
 export interface InstagramPublishResult {
@@ -17,7 +20,7 @@ export interface InstagramPublishResult {
 }
 
 export class InstagramProvider {
-  private async getValidToken(userId: string): Promise<{ accessToken: string; igUserId: string } | null> {
+  public async getValidToken(userId: string): Promise<{ accessToken: string; igUserId: string } | null> {
     const db = getDb();
     const conn = db
       .prepare('SELECT * FROM oauth_connections WHERE user_id = ? AND platform = ?')
@@ -36,6 +39,36 @@ export class InstagramProvider {
   }
 
   async publishReel(params: InstagramPublishParams): Promise<InstagramPublishResult> {
+    // 1. Validate public HTTPS URL (Meta Graph API requires public HTTPS URL; rejects local file paths)
+    if (!params.videoUrl || typeof params.videoUrl !== 'string') {
+      return {
+        success: false,
+        error: 'Invalid Instagram video URL: URL must be provided as a string.',
+      };
+    }
+
+    if (!params.videoUrl.startsWith('https://')) {
+      return {
+        success: false,
+        error: `Invalid Instagram video URL: URL must be a publicly accessible HTTPS URL. Local file paths and insecure HTTP URLs are rejected by the Meta Graph API. Provided: ${params.videoUrl}`,
+      };
+    }
+
+    // 2. Enforce Instagram Reels duration ceiling (maximum 90 seconds per Meta API docs)
+    if (params.durationSeconds !== undefined && params.durationSeconds > MAX_INSTAGRAM_REELS_DURATION_SEC) {
+      return {
+        success: false,
+        error: `Instagram Reels duration cannot exceed ${MAX_INSTAGRAM_REELS_DURATION_SEC} seconds (attempted: ${params.durationSeconds}s).`,
+      };
+    }
+
+    if (params.coverUrl && !params.coverUrl.startsWith('https://')) {
+      return {
+        success: false,
+        error: `Invalid Instagram cover URL: URL must be a publicly accessible HTTPS URL. Provided: ${params.coverUrl}`,
+      };
+    }
+
     const auth = await this.getValidToken(params.userId);
     if (!auth || !auth.igUserId || !auth.accessToken) {
       return {

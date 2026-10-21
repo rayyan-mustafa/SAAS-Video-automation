@@ -23,6 +23,7 @@ export interface YouTubeUploadParams {
   visibility?: YouTubeVisibility;
   scheduledPublishTime?: string; // ISO 8601 string for scheduled release
   thumbnailFilePath?: string;
+  madeForKids?: boolean;
 }
 
 export interface YouTubeUploadResult {
@@ -292,6 +293,20 @@ class DefaultYouTubeProvider implements YouTubeProvider {
 
       const privacyStatus = scheduledPublishTime ? 'private' : visibility.toLowerCase();
 
+      let isMadeForKids = params.madeForKids ?? false;
+      if (params.madeForKids === undefined) {
+        try {
+          const db = getDb();
+          const proj = db.prepare('SELECT channel_id FROM content_projects WHERE id = ?').get(params.projectId) as { channel_id?: string } | undefined;
+          if (proj?.channel_id) {
+            const ch = db.prepare('SELECT content_rules FROM channels WHERE id = ?').get(proj.channel_id) as { content_rules?: string } | undefined;
+            if (ch?.content_rules && /kids|children|for\s+kids/i.test(ch.content_rules)) {
+              isMadeForKids = true;
+            }
+          }
+        } catch {}
+      }
+
       const metadata: any = {
         snippet: {
           title: title.slice(0, 100),
@@ -301,7 +316,7 @@ class DefaultYouTubeProvider implements YouTubeProvider {
         },
         status: {
           privacyStatus,
-          selfDeclaredMadeForKids: false,
+          selfDeclaredMadeForKids: isMadeForKids,
           containsSyntheticMedia: true,
         },
       };

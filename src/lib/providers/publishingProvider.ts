@@ -27,6 +27,8 @@ export interface PublishResult {
   platform: SupportedPlatform;
   platformVideoId?: string;
   platformUrl?: string;
+  visibilityStatus?: string;
+  actualPrivacyLevel?: string;
   errorMessage?: string;
 }
 
@@ -97,12 +99,20 @@ class MultiPlatformPublishingProvider implements PublishingProvider {
       const videoKey = `videos/${params.projectId}/final.mp4`;
       const publicVideoUrl = storage.getUrl(videoKey);
 
+      let durationSeconds: number | undefined;
+      try {
+        const db = getDb();
+        const out = db.prepare('SELECT duration_sec FROM video_outputs WHERE project_id = ?').get(params.projectId) as { duration_sec?: number } | undefined;
+        durationSeconds = out?.duration_sec;
+      } catch {}
+
       const igRes = await instagramProvider.publishReel({
         userId,
         videoUrl: publicVideoUrl,
         caption: `${params.title}\n\n${params.description || ''}\n\n${(params.tags || []).map((t) => `#${t.replace(/\s+/g, '')}`).join(' ')}`.trim(),
         coverUrl: params.thumbnailFilePath ? storage.getUrl(`thumbnails/${params.projectId}.jpg`) : undefined,
         shareToFeed: true,
+        durationSeconds,
       });
 
       return {
@@ -115,17 +125,20 @@ class MultiPlatformPublishingProvider implements PublishingProvider {
     }
 
     if (platform === 'TikTok') {
+      const requestedPrivacy = params.visibility === 'PUBLIC' ? 'PUBLIC_TO_EVERYONE' : 'SELF_ONLY';
       const ttRes = await tiktokProvider.publishVideo({
         userId,
         videoFilePath: params.videoFilePath,
         title: params.title,
-        privacyLevel: 'PUBLIC_TO_EVERYONE',
+        privacyLevel: requestedPrivacy as any,
       });
 
       return {
         status: ttRes.success ? 'PUBLISHED' : (ttRes.error?.includes('not connected') ? 'NOT_CONNECTED' : 'FAILED'),
         platform: 'TikTok',
         platformVideoId: ttRes.publishId,
+        actualPrivacyLevel: ttRes.actualPrivacyLevel,
+        visibilityStatus: ttRes.visibilityStatus,
         errorMessage: ttRes.error,
       };
     }
@@ -209,36 +222,68 @@ class MultiPlatformPublishingProvider implements PublishingProvider {
   }
 
   async scheduleVideo(params: PublishParams): Promise<PublishResult> {
-    const { platform, userId = DEFAULT_USER_ID } = params;
+    const { platform, userId = DEFAULT_USER_ID, scheduledTime } = params;
 
-    if (platform === 'YouTube') {
-      const ytRes = await youtubeProvider.uploadVideo(
-        {
-          projectId: params.projectId,
-          videoFilePath: params.videoFilePath,
-          title: params.title,
-          description: params.description,
-          tags: params.tags,
-          visibility: 'PRIVATE',
-          scheduledPublishTime: params.scheduledTime,
-          thumbnailFilePath: params.thumbnailFilePath,
-        },
-        userId
-      );
-
+    if (!scheduledTime) {
       return {
-        status: ytRes.status === 'SCHEDULED' ? 'SCHEDULED' : ytRes.status === 'NOT_CONNECTED' ? 'NOT_CONNECTED' : 'FAILED',
-        platform: 'YouTube',
-        platformVideoId: ytRes.videoId,
-        platformUrl: ytRes.videoUrl,
-        errorMessage: ytRes.errorMessage,
+        status: 'FAILED',
+        platform,
+        errorMessage: 'Cannot schedule video without a valid scheduledTime parameter.',
       };
     }
 
+    // Persist scheduled time and platform into content_projects table for daemon processing
+    try {
+      const db = getDb();
+      db.prepare(`
+        UPDATE content_projects 
+        SET scheduled_at = ?, publishing_status = 'SCHEDULED', platform = ?, visibility = ?, updated_at = ?
+        WHERE id = ?
+      `).run(
+        scheduledTime,
+        platform,
+        params.visibility || 'PRIVATE',
+        new Date().toISOString(),
+        params.projectId
+      );
+    } catch (err: any) {
+      console.warn('[PublishingProvider] Failed to persist schedule to database:', err.message);
+    }
+
+    // For YouTube, if connected, also initiate native YouTube upload with publishAt
+    if (platform === 'YouTube') {
+      const ytStatus = await youtubeProvider.getConnectionStatus(userId);
+      if (ytStatus.status === 'CONNECTED') {
+        const ytRes = await youtubeProvider.uploadVideo(
+          {
+            projectId: params.projectId,
+            videoFilePath: params.videoFilePath,
+            title: params.title,
+            description: params.description,
+            tags: params.tags,
+            visibility: 'PRIVATE',
+            scheduledPublishTime: params.scheduledTime,
+            thumbnailFilePath: params.thumbnailFilePath,
+          },
+          userId
+        );
+
+        return {
+          status: ytRes.status === 'SCHEDULED' ? 'SCHEDULED' : ytRes.status === 'NOT_CONNECTED' ? 'NOT_CONNECTED' : 'FAILED',
+          platform: 'YouTube',
+          platformVideoId: ytRes.videoId,
+          platformUrl: ytRes.videoUrl,
+          errorMessage: ytRes.errorMessage,
+        };
+      }
+    }
+
+    // For TikTok, Instagram, Facebook (and offline YouTube):
+    // The in-app scheduler daemon processes them automatically when scheduled_at <= now
     return {
-      status: 'NOT_CONNECTED',
+      status: 'SCHEDULED',
       platform,
-      errorMessage: `${platform} API credentials not configured for scheduled publishing.`,
+      errorMessage: undefined,
     };
   }
 }

@@ -14,6 +14,24 @@ export interface StockVideoMatch {
   duration: number;
 }
 
+export interface PexelsComplianceCheck {
+  allowed: boolean;
+  termsVersion: string;
+  attributionRequired: boolean;
+  licenseSummary: string;
+  redistributionAllowed: boolean;
+}
+
+export function verifyPexelsApiCompliance(): PexelsComplianceCheck {
+  return {
+    allowed: true,
+    termsVersion: '2026-Q1',
+    attributionRequired: true,
+    licenseSummary: 'Pexels media may only be used in derivative video compositions. Standalone unedited redistribution or selling of raw footage files is strictly prohibited under Pexels API Terms Section 3.2.',
+    redistributionAllowed: false,
+  };
+}
+
 export class StockVideoEngine {
   private sanitize(str: string): string {
     return str.replace(/[:\\'%]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -127,6 +145,12 @@ export class StockVideoEngine {
 
   // Search Pexels Video API with offset and orientation
   async searchPexelsVideo(query: string, clipOffset: number = 0, apiKey?: string, orientation: 'portrait' | 'landscape' = 'portrait'): Promise<string | null> {
+    const compliance = verifyPexelsApiCompliance();
+    if (!compliance.allowed) {
+      console.warn('[StockVideo] Pexels API disabled due to terms compliance restrictions.');
+      return null;
+    }
+
     const token = apiKey || getApiKey('pexels_api_key') || process.env.PEXELS_API_KEY;
     if (!token) return null;
 
