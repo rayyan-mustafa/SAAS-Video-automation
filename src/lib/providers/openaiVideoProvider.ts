@@ -5,11 +5,23 @@ import { VideoGenerationProvider, ClipGenerationParams, ClipGenerationResult } f
 
 export class OpenAIVideoProvider implements VideoGenerationProvider {
   readonly id = 'openai-video';
-  readonly name = 'OpenAI Video Generation (Sora Engine)';
+  readonly name = 'OpenAI Video Generation (Sora Engine - Deprecated / Preview)';
 
   isConfigured(): boolean {
     const key = getApiKey('openai') || process.env.OPENAI_API_KEY;
     return !!(key && key.trim().length > 10);
+  }
+
+  supportsImageToVideo(): boolean {
+    return false;
+  }
+
+  supportsCharacterReference(): boolean {
+    return false;
+  }
+
+  supportsNativeAudio(): boolean {
+    return false;
   }
 
   private getApiKey(): string {

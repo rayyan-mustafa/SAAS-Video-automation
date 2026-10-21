@@ -49,6 +49,18 @@ export class CloudflareVideoProvider implements VideoGenerationProvider {
     return !!(token && accountId && token.length > 10 && accountId.length > 5);
   }
 
+  supportsImageToVideo(): boolean {
+    return false;
+  }
+
+  supportsCharacterReference(): boolean {
+    return false;
+  }
+
+  supportsNativeAudio(): boolean {
+    return false;
+  }
+
   private getToken(): string | null {
     return getApiKey('cloudflare_api_token') || process.env.CLOUDFLARE_API_TOKEN || null;
   }

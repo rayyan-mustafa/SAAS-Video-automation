@@ -6,18 +6,23 @@ import { VideoGenerationProvider, ClipGenerationParams, ClipGenerationResult, As
 /**
  * Google Veo 3.1 AI Video Generation Provider
  * 
- * Uses Google's Veo video generation model via the Gemini API:
- * - Primary: veo-3.1-lite-generate-preview ($0.05/sec at 720p)
- * - Fallback: veo-3.1-fast-generate-preview ($0.10/sec at 720p)
+ * Uses Google's state-of-the-art Veo model via the Gemini API:
+ * - Primary: veo-3.1-generate-preview (Flagship, cinematic quality, native audio)
+ * - Fast: veo-3.1-fast-generate-preview (Ultra-fast, lower latency)
+ * - Lite: veo-3.1-lite-generate-preview (Budget/high-throughput)
  * 
- * Uses the predictLongRunning endpoint which returns an operation
- * that must be polled until completion.
+ * Features:
+ * - Real Text-to-Video and Image-to-Video
+ * - Character reference conditioning (referenceImages)
+ * - Native synchronized sound effects and dialogue
+ * - 9:16 vertical and 16:9 widescreen
  * 
- * Requires GEMINI_API_KEY with billing enabled for video generation.
+ * Requires GEMINI_API_KEY with video generation enabled.
  */
 
 const VEO_MODEL_PRIMARY = 'veo-3.1-generate-preview';
 const VEO_MODEL_FAST = 'veo-3.1-fast-generate-preview';
+const VEO_MODEL_LITE = 'veo-3.1-lite-generate-preview';
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 
 interface VeoOperation {
@@ -41,11 +46,23 @@ interface VeoOperation {
 
 export class VeoVideoProvider implements VideoGenerationProvider {
   readonly id = 'google-veo-video';
-  readonly name = 'Google Veo 3.1 AI Video Generation';
+  readonly name = 'Google Veo 3.1 AI Video Generation (Native Audio & Character Consistency)';
 
   isConfigured(): boolean {
     const key = this.getKey();
     return !!(key && key.trim().length > 10);
+  }
+
+  supportsImageToVideo(): boolean {
+    return true;
+  }
+
+  supportsCharacterReference(): boolean {
+    return true;
+  }
+
+  supportsNativeAudio(): boolean {
+    return true;
   }
 
   private getKey(): string | null {
@@ -68,6 +85,7 @@ export class VeoVideoProvider implements VideoGenerationProvider {
       cameraMovement,
       lighting,
       colorStyle,
+      characterRef,
     } = params;
 
     const parts = [
@@ -75,9 +93,13 @@ export class VeoVideoProvider implements VideoGenerationProvider {
       cameraMovement ? `Camera: ${cameraMovement}` : 'Smooth cinematic camera movement',
       lighting ? `Lighting: ${lighting}` : 'Cinematic volumetric lighting',
       colorStyle ? `Colors: ${colorStyle}` : '',
-      `Style: ${visualStyle}, photorealistic, high quality`,
-      aspectRatio === '9:16' ? 'Vertical portrait framing for mobile' : 'Widescreen landscape framing',
+      `Style: ${visualStyle}, photorealistic, high visual fidelity`,
+      aspectRatio === '9:16' ? 'Vertical portrait framing for mobile YouTube Shorts' : 'Widescreen landscape framing for YouTube 4K',
     ];
+
+    if (characterRef) {
+      parts.push(`Character: Keep character "${characterRef.name}" visually consistent with description: ${characterRef.description}`);
+    }
 
     return parts.filter(Boolean).join('. ');
   }
@@ -88,33 +110,43 @@ export class VeoVideoProvider implements VideoGenerationProvider {
   private async submitGeneration(
     apiKey: string,
     model: string,
-    prompt: string,
-    aspectRatio: AspectRatio,
-    durationSec: number
+    params: ClipGenerationParams
   ): Promise<string> {
-    // Map duration to closest supported value
     const supportedDurations = [4, 6, 8];
     const targetDuration = supportedDurations.reduce((prev, curr) =>
-      Math.abs(curr - durationSec) < Math.abs(prev - durationSec) ? curr : prev
+      Math.abs(curr - (params.durationSec || 5)) < Math.abs(prev - (params.durationSec || 5)) ? curr : prev
     );
 
-    // Map aspect ratio
-    const veoAspectRatio = aspectRatio === '9:16' ? '9:16' : '16:9';
+    const veoAspectRatio = params.aspectRatio === '9:16' ? '9:16' : '16:9';
+    const prompt = this.formatPrompt(params);
 
     const url = `${GEMINI_API_BASE}/models/${model}:predictLongRunning?key=${apiKey}`;
 
-    const body = {
-      instances: [
-        {
-          prompt,
-        },
-      ],
-      parameters: {
-        aspectRatio: veoAspectRatio,
-        personGeneration: 'allow_all',
-        resolution: '720p',
-      },
+    const instance: Record<string, any> = { prompt };
+
+    // Support Image-to-Video via reference image URI or base64
+    if (params.referenceImageUrl) {
+      instance.image = {
+        imageUri: params.referenceImageUrl,
+      };
+    }
+
+    const parameters: Record<string, any> = {
+      aspectRatio: veoAspectRatio,
+      personGeneration: 'allow_all',
+      resolution: '720p',
+      durationSeconds: targetDuration,
     };
+
+    // Support Character Reference images
+    if (params.characterRef?.referenceImageUrl) {
+      parameters.referenceImages = [
+        {
+          imageUri: params.characterRef.referenceImageUrl,
+          referenceType: 'REFERENCE_TYPE_SUBJECT',
+        },
+      ];
+    }
 
     const res = await fetch(url, {
       method: 'POST',
@@ -122,7 +154,10 @@ export class VeoVideoProvider implements VideoGenerationProvider {
         'Content-Type': 'application/json',
         'x-goog-api-key': apiKey,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        instances: [instance],
+        parameters,
+      }),
       signal: AbortSignal.timeout(30000),
     });
 
@@ -131,7 +166,7 @@ export class VeoVideoProvider implements VideoGenerationProvider {
       throw new Error(`Veo API returned HTTP ${res.status}: ${errText.substring(0, 300)}`);
     }
 
-    const operation = await res.json() as VeoOperation;
+    const operation = (await res.json()) as VeoOperation;
     if (!operation.name) {
       throw new Error('Veo API did not return an operation name');
     }
@@ -145,28 +180,26 @@ export class VeoVideoProvider implements VideoGenerationProvider {
   private async pollOperation(
     apiKey: string,
     operationName: string,
-    maxWaitMs: number = 180000 // 3 minutes
+    maxWaitMs: number = 240000 // 4 minutes
   ): Promise<VeoOperation> {
     const startTime = Date.now();
     const pollUrl = `${GEMINI_API_BASE}/${operationName}?key=${apiKey}`;
 
     while (Date.now() - startTime < maxWaitMs) {
-      await new Promise(resolve => setTimeout(resolve, 5000)); // Poll every 5s
+      await new Promise(resolve => setTimeout(resolve, 5000));
 
       try {
         const res = await fetch(pollUrl, {
-          headers: {
-            'x-goog-api-key': apiKey,
-          },
+          headers: { 'x-goog-api-key': apiKey },
           signal: AbortSignal.timeout(15000),
         });
 
         if (!res.ok) {
-          console.warn(`[VeoVideoProvider] Poll returned ${res.status}, retrying...`);
+          console.warn(`[VeoVideoProvider] Poll returned HTTP ${res.status}, retrying...`);
           continue;
         }
 
-        const operation = await res.json() as VeoOperation;
+        const operation = (await res.json()) as VeoOperation;
 
         if (operation.done) {
           if (operation.error) {
@@ -186,17 +219,17 @@ export class VeoVideoProvider implements VideoGenerationProvider {
   }
 
   /**
-   * Extract video data from a completed operation
+   * Extract video data from completed operation
    */
   private extractVideoFromOperation(operation: VeoOperation): { data?: string; uri?: string } {
     const response = operation.response;
     if (!response) {
-      throw new Error('Veo operation completed but has no response');
+      throw new Error('Veo operation completed but has no response payload');
     }
 
     const samples = response.generateVideoResponse?.generatedSamples;
     if (!samples || samples.length === 0) {
-      throw new Error('Veo response has no generated samples');
+      throw new Error('Veo response has no generated video samples');
     }
 
     const video = samples[0].video;
@@ -212,44 +245,30 @@ export class VeoVideoProvider implements VideoGenerationProvider {
 
   async generateClip(params: ClipGenerationParams): Promise<ClipGenerationResult> {
     const apiKey = this.getApiKey();
-    const prompt = this.formatPrompt(params);
-    const targetDuration = Math.min(8, Math.max(4, Math.round(params.durationSec || 5)));
+    const duration = Math.min(8, Math.max(4, Math.round(params.durationSec || 5)));
 
-    console.log(`[VeoVideoProvider] Generating AI video for Scene ${params.sceneIndex} (${targetDuration}s, ${params.aspectRatio})...`);
+    console.log(`[VeoVideoProvider] Generating real AI video for Scene ${params.sceneIndex} (${duration}s, ${params.aspectRatio})...`);
 
-    const modelsToTry = [VEO_MODEL_PRIMARY, VEO_MODEL_FAST];
+    const modelsToTry = [VEO_MODEL_PRIMARY, VEO_MODEL_FAST, VEO_MODEL_LITE];
     let lastError = '';
 
     for (const model of modelsToTry) {
       try {
         console.log(`[VeoVideoProvider] Trying model: ${model}`);
 
-        // Submit generation
-        const operationName = await this.submitGeneration(
-          apiKey,
-          model,
-          prompt,
-          params.aspectRatio || '9:16',
-          targetDuration
-        );
+        const operationName = await this.submitGeneration(apiKey, model, params);
         console.log(`[VeoVideoProvider] Operation started: ${operationName}`);
 
-        // Poll until done
         const completedOp = await this.pollOperation(apiKey, operationName);
-
-        // Extract video
         const videoInfo = this.extractVideoFromOperation(completedOp);
 
         let videoBuf: Buffer;
-
         if (videoInfo.data) {
-          // Base64-encoded video data
           videoBuf = Buffer.from(videoInfo.data, 'base64');
         } else if (videoInfo.uri) {
-          // Download from URI
           const dlRes = await fetch(videoInfo.uri, { signal: AbortSignal.timeout(60000) });
           if (!dlRes.ok) {
-            throw new Error(`Failed to download Veo video: HTTP ${dlRes.status}`);
+            throw new Error(`Failed to download Veo video from URI: HTTP ${dlRes.status}`);
           }
           const arrayBuf = await dlRes.arrayBuffer();
           videoBuf = Buffer.from(arrayBuf);
@@ -258,10 +277,9 @@ export class VeoVideoProvider implements VideoGenerationProvider {
         }
 
         if (videoBuf.length < 5000) {
-          throw new Error(`Veo video data too small: ${videoBuf.length} bytes`);
+          throw new Error(`Veo video data too small (${videoBuf.length} bytes)`);
         }
 
-        // Write to disk
         const dir = path.dirname(params.outputPath);
         if (!fs.existsSync(dir)) {
           fs.mkdirSync(dir, { recursive: true });
@@ -272,28 +290,28 @@ export class VeoVideoProvider implements VideoGenerationProvider {
 
         return {
           filePath: params.outputPath,
-          durationSec: targetDuration,
+          durationSec: duration,
           providerId: this.id,
+          hasNativeAudio: true, // Veo 3.1 includes native audio
           metadata: {
             model,
             operationName,
             aspectRatio: params.aspectRatio,
-            prompt,
+            prompt: params.prompt,
           },
         };
       } catch (err: any) {
         lastError = err.message;
         console.warn(`[VeoVideoProvider] Model ${model} failed: ${err.message}`);
 
-        // If it's a billing/auth error, don't try the next model
         if (err.message.includes('403') || err.message.includes('billing') || err.message.includes('PERMISSION_DENIED')) {
-          console.warn(`[VeoVideoProvider] Auth/billing error — skipping remaining models`);
+          console.warn(`[VeoVideoProvider] Billing/permission error on model ${model}`);
           break;
         }
       }
     }
 
-    throw new Error(`Veo video generation failed. Last error: ${lastError}`);
+    throw new Error(`Veo video generation failed on all models. Last error: ${lastError}`);
   }
 }
 

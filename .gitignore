@@ -29,6 +29,7 @@
 next-env.d.ts
 
 # Application dynamic data & generated media storage
+/data/
 /data/*.db*
 *.sqlite
 /storage

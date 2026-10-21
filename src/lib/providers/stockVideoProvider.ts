@@ -68,7 +68,13 @@ export class StockVideoEngine {
   private coverrLastCheck: number = 0;
 
   // Search Coverr.co open 1080p stock video catalog with index offset for distinct clips
+  // Note: Coverr license prohibits use in automated video generation services without written agreement.
+  // Disabled by default to comply with terms. Set ENABLE_COVERR_API=true if you hold a written commercial license.
   async searchCoverrVideo(query: string, clipOffset: number = 0): Promise<string | null> {
+    if (process.env.ENABLE_COVERR_API !== 'true') {
+      return null;
+    }
+
     if (!this.coverrAvailable && Date.now() - this.coverrLastCheck < 60000) {
       return null;
     }
@@ -185,13 +191,13 @@ export class StockVideoEngine {
       const pexelsUrl = await this.searchPexelsVideo(q, clipOffset, undefined, pexelsOrientation);
       if (pexelsUrl) return pexelsUrl;
 
-      // 2. Try Coverr HD Catalog (100% Free, high quality live action)
-      const coverrUrl = await this.searchCoverrVideo(q, clipOffset);
-      if (coverrUrl) return coverrUrl;
-
-      // 3. Try Pixabay HD Video
+      // 2. Try Pixabay HD Video
       const pixabayUrl = await this.searchPixabayVideo(q, clipOffset);
       if (pixabayUrl) return pixabayUrl;
+
+      // 3. Try Coverr HD Catalog only if explicitly enabled via agreement
+      const coverrUrl = await this.searchCoverrVideo(q, clipOffset);
+      if (coverrUrl) return coverrUrl;
     }
 
     return null;

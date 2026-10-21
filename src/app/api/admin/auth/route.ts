@@ -1,28 +1,23 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
-import { checkRateLimit, resetRateLimit, getClientIp } from '@/lib/security/rateLimit';
+import { signAdminToken, verifyAdminToken } from '@/lib/security/adminAuth';
+import { checkRateLimit } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-import {
-  signAdminToken,
-  verifyAdminToken,
-  getAdminConfig,
-  ADMIN_COOKIE_NAME as COOKIE_NAME,
-} from '@/lib/security/adminAuth';
+const COOKIE_NAME = 'admin_session_token';
 
 export async function GET() {
   try {
-    const config = getAdminConfig();
+    const configuredUser = (process.env.ADMIN_USER || '').trim();
     const cookieStore = cookies();
     const token = cookieStore.get(COOKIE_NAME)?.value;
     const isAuthenticated = !!token && verifyAdminToken(token);
 
     return NextResponse.json({
       authenticated: isAuthenticated,
-      user: isAuthenticated && config ? config.user : null,
-      configured: !!config,
+      user: isAuthenticated ? (configuredUser || 'admin') : null,
     });
   } catch (err: any) {
     return NextResponse.json({ authenticated: false, error: err.message }, { status: 500 });
@@ -31,27 +26,21 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const clientIp = getClientIp(request);
-    const rateCheck = checkRateLimit(`admin_auth_${clientIp}`, 5, 15 * 60 * 1000);
-
-    if (rateCheck.limited) {
-      const waitMinutes = Math.max(1, Math.ceil(rateCheck.resetMs / 60000));
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
+    const rateLimit = checkRateLimit(`admin_login_${ip}`, 5, 5 * 60 * 1000); // 5 attempts per 5 mins
+    if (!rateLimit.allowed) {
       return NextResponse.json(
-        {
-          success: false,
-          error: `Too many failed admin login attempts. Account locked for this IP. Try again in ${waitMinutes} minute(s).`,
-        },
+        { success: false, error: 'Too many admin login attempts. Temporarily locked out for 5 minutes.' },
         { status: 429 }
       );
     }
 
-    const config = getAdminConfig();
-    if (!config) {
+    const configuredPassword = (process.env.ADMIN_PASSWORD || '').trim();
+    const configuredUser = (process.env.ADMIN_USER || '').trim();
+
+    if (!configuredPassword || !configuredUser) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'FATAL SECURITY GUARD: Admin authentication environment variables (ADMIN_USER, ADMIN_PASSWORD, ADMIN_SECRET) are not configured.',
-        },
+        { success: false, error: 'Admin access is disabled: ADMIN_USER and ADMIN_PASSWORD must be configured in environment.' },
         { status: 503 }
       );
     }
@@ -62,18 +51,30 @@ export async function POST(request: Request) {
     const providedPassword = (password || '').trim();
     const providedUser = (username || '').trim();
 
-    const isUserMatch = !providedUser || providedUser.toLowerCase() === config.user.toLowerCase();
-    const isPassMatch = providedPassword.length > 0 && providedPassword === config.pass;
+    if (!providedUser || !providedPassword) {
+      return NextResponse.json(
+        { success: false, error: 'Both username and password are required.' },
+        { status: 400 }
+      );
+    }
+
+    const isUserMatch =
+      providedUser.length === configuredUser.length &&
+      crypto.timingSafeEqual(
+        Buffer.from(providedUser.toLowerCase()),
+        Buffer.from(configuredUser.toLowerCase())
+      );
+
+    const isPassMatch =
+      providedPassword.length === configuredPassword.length &&
+      crypto.timingSafeEqual(Buffer.from(providedPassword), Buffer.from(configuredPassword));
 
     if (isUserMatch && isPassMatch) {
-      // Reset rate limit on success
-      resetRateLimit(`admin_auth_${clientIp}`);
-
-      const signedToken = signAdminToken(config.user);
+      const signedToken = signAdminToken(configuredUser);
       const response = NextResponse.json({
         success: true,
         message: 'Admin authentication successful',
-        user: config.user,
+        user: configuredUser,
       });
 
       response.cookies.set(COOKIE_NAME, signedToken, {
@@ -88,11 +89,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Invalid admin username or password.',
-        attemptsRemaining: rateCheck.remaining,
-      },
+      { success: false, error: 'Invalid admin username or password.' },
       { status: 401 }
     );
   } catch (err: any) {
@@ -115,3 +112,4 @@ export async function DELETE() {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
+

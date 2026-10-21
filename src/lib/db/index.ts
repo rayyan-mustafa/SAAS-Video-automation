@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
+import { decryptToken } from '../security/encryption';
 
 export const DEFAULT_USER_ID = 'user_default';
 
@@ -10,21 +11,41 @@ let dbInstance: Database.Database | null = null;
 export function getDb(): Database.Database {
   if (!dbInstance) {
     const isServerless = process.env.VERCEL === '1' || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
-    const dataDir = isServerless ? path.join('/tmp', 'data') : path.join(process.cwd(), 'data');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
+    let dataDir = isServerless ? path.join('/tmp', 'data') : path.join(process.cwd(), 'data');
+
+    // Ensure directory exists and is writable, fallback to /tmp/data if permission denied
+    try {
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+      const testFile = path.join(dataDir, '.write-test-' + Date.now());
+      fs.writeFileSync(testFile, '1');
+      fs.unlinkSync(testFile);
+    } catch (permErr: any) {
+      console.warn(`[DB] Directory ${dataDir} is not writable: ${permErr.message}. Falling back to /tmp/data.`);
+      dataDir = path.join('/tmp', 'data');
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
     }
 
-    const dbPath = path.join(dataDir, 'app.db');
+    let dbPath = path.join(dataDir, 'app.db');
     console.log(`[DB] Initializing database at ${dbPath}`);
     try {
       dbInstance = new Database(dbPath);
     } catch (err: any) {
-      console.error(`[DB] Error opening database at ${dbPath}: ${err.message}. Recreating clean database...`);
+      console.error(`[DB] Error opening database at ${dbPath}: ${err.message}. Trying /tmp/data fallback...`);
       try {
-        if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath);
-      } catch {}
-      dbInstance = new Database(dbPath);
+        dataDir = path.join('/tmp', 'data');
+        if (!fs.existsSync(dataDir)) {
+          fs.mkdirSync(dataDir, { recursive: true });
+        }
+        dbPath = path.join(dataDir, 'app.db');
+        dbInstance = new Database(dbPath);
+      } catch (fallbackErr: any) {
+        console.error(`[DB] Fatal: could not open database in /tmp: ${fallbackErr.message}`);
+        throw fallbackErr;
+      }
     }
     try {
       dbInstance.pragma('journal_mode = DELETE');
@@ -35,11 +56,21 @@ export function getDb(): Database.Database {
     }
 
     // Run schema initialization
-    const schemaPath = path.join(__dirname, 'schema.sql');
-    let schemaSql: string;
-    if (fs.existsSync(schemaPath)) {
-      schemaSql = fs.readFileSync(schemaPath, 'utf8');
-    } else {
+    const possibleSchemaPaths = [
+      path.join(__dirname, 'schema.sql'),
+      path.join(process.cwd(), 'src', 'lib', 'db', 'schema.sql'),
+      path.join(process.cwd(), 'schema.sql'),
+    ];
+    let schemaSql = '';
+    for (const p of possibleSchemaPaths) {
+      if (fs.existsSync(p)) {
+        try {
+          schemaSql = fs.readFileSync(p, 'utf8');
+          break;
+        } catch {}
+      }
+    }
+    if (!schemaSql) {
       schemaSql = `
         CREATE TABLE IF NOT EXISTS channels (
           id TEXT PRIMARY KEY,
@@ -191,9 +222,6 @@ export function getDb(): Database.Database {
     `);
     safeAddColumn('content_projects', 'metadata_json', 'TEXT');
     safeAddColumn('content_projects', 'telemetry_json', 'TEXT');
-    safeAddColumn('content_projects', 'aspect_ratio', "TEXT DEFAULT '9:16'");
-    safeAddColumn('competitor_channels', 'platform', "TEXT DEFAULT 'YOUTUBE'");
-    safeAddColumn('competitor_viral_cache', 'platform', "TEXT DEFAULT 'YOUTUBE'");
     safeAddColumn('user_credits', 'created_at', 'TEXT');
     safeAddColumn('user_credits', 'stripe_customer_id', 'TEXT');
     safeAddColumn('user_credits', 'stripe_subscription_id', 'TEXT');
@@ -204,9 +232,31 @@ export function getDb(): Database.Database {
     safeAddColumn('video_scenes', 'lighting', 'TEXT');
     safeAddColumn('video_scenes', 'color_style', 'TEXT');
     safeAddColumn('video_scenes', 'continuity_notes', 'TEXT');
+    safeAddColumn('video_scenes', 'reference_image_url', 'TEXT');
+    safeAddColumn('video_scenes', 'character_prompt', 'TEXT');
+    safeAddColumn('content_projects', 'aspect_ratio', "TEXT NOT NULL DEFAULT '9:16'");
+    safeAddColumn('content_projects', 'generation_mode', "TEXT NOT NULL DEFAULT 'text-to-video'");
+    safeAddColumn('content_projects', 'character_id', 'TEXT');
+    safeAddColumn('content_projects', 'reference_image_url', 'TEXT');
     safeAddColumn('user_sessions', 'session_token', 'TEXT');
     safeAddColumn('user_sessions', 'user_agent', 'TEXT');
     safeAddColumn('user_sessions', 'ip_address', 'TEXT');
+
+    dbInstance.exec(`
+      CREATE TABLE IF NOT EXISTS project_characters (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        project_id TEXT,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL,
+        reference_image_url TEXT,
+        gender TEXT,
+        voice_id TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_characters_user_project ON project_characters(user_id, project_id);
+    `);
 
     // Create oauth_connections table if missing
     dbInstance.exec(`
@@ -396,6 +446,8 @@ export function getDb(): Database.Database {
         created_at TEXT NOT NULL,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       );
+      CREATE INDEX IF NOT EXISTS idx_personal_assets_user ON personal_creator_assets(user_id, type);
+
       CREATE TABLE IF NOT EXISTS competitor_channels (
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL,
@@ -405,6 +457,7 @@ export function getDb(): Database.Database {
         thumbnail_url TEXT,
         subscriber_count INTEGER DEFAULT 0,
         avg_views_7d INTEGER DEFAULT 0,
+        platform TEXT DEFAULT 'YOUTUBE',
         last_refreshed TEXT NOT NULL,
         created_at TEXT NOT NULL,
         UNIQUE(user_id, channel_handle),
@@ -421,12 +474,16 @@ export function getDb(): Database.Database {
         like_count INTEGER DEFAULT 0,
         published_at TEXT NOT NULL,
         viral_score REAL NOT NULL,
+        platform TEXT DEFAULT 'YOUTUBE',
         thumbnail_url TEXT,
         cached_at TEXT NOT NULL,
         FOREIGN KEY (competitor_id) REFERENCES competitor_channels(id) ON DELETE CASCADE
       );
       CREATE INDEX IF NOT EXISTS idx_viral_cache_comp ON competitor_viral_cache(competitor_id);
     `);
+
+    safeAddColumn('competitor_channels', 'platform', "TEXT DEFAULT 'YOUTUBE'");
+    safeAddColumn('competitor_viral_cache', 'platform', "TEXT DEFAULT 'YOUTUBE'");
 
     safeAddColumn('user_credits', 'stripe_customer_id', 'TEXT');
     safeAddColumn('user_credits', 'stripe_subscription_id', 'TEXT');
@@ -524,6 +581,85 @@ export function getDb(): Database.Database {
         FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
         FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE
       );
+
+      -- Central Integration Configurations
+      CREATE TABLE IF NOT EXISTS integration_configs (
+        id TEXT PRIMARY KEY,
+        category TEXT NOT NULL,
+        provider TEXT NOT NULL UNIQUE,
+        display_name TEXT NOT NULL,
+        credentials_encrypted TEXT,
+        settings_json TEXT,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        is_primary INTEGER NOT NULL DEFAULT 0,
+        last_tested_at TEXT,
+        last_test_status TEXT,
+        last_test_latency_ms INTEGER,
+        last_test_error TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_integration_configs_category ON integration_configs(category);
+      CREATE INDEX IF NOT EXISTS idx_integration_configs_provider ON integration_configs(provider);
+
+      -- Payment Gateways Management
+      CREATE TABLE IF NOT EXISTS payment_gateways (
+        id TEXT PRIMARY KEY,
+        provider TEXT NOT NULL UNIQUE,
+        mode TEXT NOT NULL DEFAULT 'test',
+        is_enabled INTEGER NOT NULL DEFAULT 0,
+        is_default INTEGER NOT NULL DEFAULT 0,
+        credentials_encrypted TEXT,
+        settings_json TEXT,
+        webhook_secret_encrypted TEXT,
+        webhook_url TEXT,
+        last_tested_at TEXT,
+        last_test_status TEXT,
+        last_test_error TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_payment_gateways_provider ON payment_gateways(provider);
+
+      -- Integration Audit Logs
+      CREATE TABLE IF NOT EXISTS integration_audit_logs (
+        id TEXT PRIMARY KEY,
+        admin_user TEXT NOT NULL,
+        action TEXT NOT NULL,
+        target_type TEXT NOT NULL,
+        target_id TEXT NOT NULL,
+        details_json TEXT,
+        ip_address TEXT,
+        created_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_integration_audit_target ON integration_audit_logs(target_type, target_id);
+      CREATE INDEX IF NOT EXISTS idx_integration_audit_created ON integration_audit_logs(created_at);
+
+      -- Connection Test Logs
+      CREATE TABLE IF NOT EXISTS connection_test_logs (
+        id TEXT PRIMARY KEY,
+        provider TEXT NOT NULL,
+        status TEXT NOT NULL,
+        latency_ms INTEGER NOT NULL,
+        endpoint TEXT,
+        error_sanitized TEXT,
+        tested_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_conn_test_logs_provider ON connection_test_logs(provider, tested_at);
+
+      -- Webhook Events & Idempotency Logs
+      CREATE TABLE IF NOT EXISTS webhook_events (
+        id TEXT PRIMARY KEY,
+        provider TEXT NOT NULL,
+        event_id TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        payload_json TEXT,
+        status TEXT NOT NULL DEFAULT 'PROCESSED',
+        error_message TEXT,
+        processed_at TEXT NOT NULL
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_webhook_events_unique ON webhook_events(provider, event_id);
+      CREATE INDEX IF NOT EXISTS idx_webhook_events_processed ON webhook_events(processed_at);
     `);
 
   }
@@ -705,17 +841,98 @@ export function maskApiKey(key?: string | null): string {
   if (!key || typeof key !== 'string') return '';
   const trimmed = key.trim();
   if (trimmed.length <= 8) {
-    return '********';
+    return '••••••••';
   }
   const prefix = trimmed.slice(0, 4);
   const suffix = trimmed.slice(-4);
-  return `${prefix}********${suffix}`;
+  return `${prefix}••••••••${suffix}`;
 }
 
 export function getApiKey(provider: string, userId: string = DEFAULT_USER_ID): string | null {
   try {
     const db = getDb();
-    const row = db.prepare('SELECT api_key FROM api_credentials WHERE user_id = ? AND provider = ? AND is_active = 1').get(userId, provider.toLowerCase()) as { api_key: string } | undefined;
+    const p = provider.toLowerCase().trim();
+
+    // 1. Check central integration configs (AES-256-GCM encrypted)
+    const intRow = db.prepare('SELECT credentials_encrypted FROM integration_configs WHERE provider = ? AND is_active = 1').get(p) as { credentials_encrypted?: string } | undefined;
+    if (intRow && intRow.credentials_encrypted) {
+      const dec = decryptToken(intRow.credentials_encrypted);
+      if (dec) {
+        try {
+          const parsed = JSON.parse(dec);
+          if (parsed.apiKey) return parsed.apiKey.trim();
+          if (parsed.apiToken) return parsed.apiToken.trim();
+          if (parsed.secretKey) return parsed.secretKey.trim();
+          if (parsed.accessToken) return parsed.accessToken.trim();
+          if (parsed.accountId) return parsed.accountId.trim();
+        } catch {}
+      }
+    }
+
+    // Direct aliases check in integration_configs
+    if (p === 'cloudflare_api_token' || p === 'cloudflare_token') {
+      const cfRow = db.prepare("SELECT credentials_encrypted FROM integration_configs WHERE provider = 'cloudflare' AND is_active = 1").get() as any;
+      if (cfRow?.credentials_encrypted) {
+        const dec = decryptToken(cfRow.credentials_encrypted);
+        if (dec) {
+          try {
+            const parsed = JSON.parse(dec);
+            if (parsed.apiToken) return parsed.apiToken.trim();
+          } catch {}
+        }
+      }
+    }
+    if (p === 'cloudflare_account_id' || p === 'cloudflare_account') {
+      const cfRow = db.prepare("SELECT credentials_encrypted FROM integration_configs WHERE provider = 'cloudflare' AND is_active = 1").get() as any;
+      if (cfRow?.credentials_encrypted) {
+        const dec = decryptToken(cfRow.credentials_encrypted);
+        if (dec) {
+          try {
+            const parsed = JSON.parse(dec);
+            if (parsed.accountId) return parsed.accountId.trim();
+          } catch {}
+        }
+      }
+    }
+    if (p === 'fal_key' || p === 'fal') {
+      const falRow = db.prepare("SELECT credentials_encrypted FROM integration_configs WHERE provider = 'fal' AND is_active = 1").get() as any;
+      if (falRow?.credentials_encrypted) {
+        const dec = decryptToken(falRow.credentials_encrypted);
+        if (dec) {
+          try {
+            const parsed = JSON.parse(dec);
+            if (parsed.apiKey) return parsed.apiKey.trim();
+          } catch {}
+        }
+      }
+    }
+    if (p === 'pexels_api_key' || p === 'pexels') {
+      const pxRow = db.prepare("SELECT credentials_encrypted FROM integration_configs WHERE provider = 'pexels' AND is_active = 1").get() as any;
+      if (pxRow?.credentials_encrypted) {
+        const dec = decryptToken(pxRow.credentials_encrypted);
+        if (dec) {
+          try {
+            const parsed = JSON.parse(dec);
+            if (parsed.apiKey) return parsed.apiKey.trim();
+          } catch {}
+        }
+      }
+    }
+    if (p === 'pixabay_api_key' || p === 'pixabay') {
+      const pxRow = db.prepare("SELECT credentials_encrypted FROM integration_configs WHERE provider = 'pixabay' AND is_active = 1").get() as any;
+      if (pxRow?.credentials_encrypted) {
+        const dec = decryptToken(pxRow.credentials_encrypted);
+        if (dec) {
+          try {
+            const parsed = JSON.parse(dec);
+            if (parsed.apiKey) return parsed.apiKey.trim();
+          } catch {}
+        }
+      }
+    }
+
+    // 2. Check legacy api_credentials table
+    const row = db.prepare('SELECT api_key FROM api_credentials WHERE user_id = ? AND provider = ? AND is_active = 1').get(userId, p) as { api_key: string } | undefined;
     if (row && row.api_key && row.api_key.trim()) {
       return row.api_key.trim();
     }
@@ -916,7 +1133,13 @@ export function deductUserCredits(userId: string = DEFAULT_USER_ID, amount: numb
   return true;
 }
 
-export function grantUserCredits(userId: string, amount: number, type: string, description: string, projectId?: string): number {
+export function grantUserCredits(
+  userId: string,
+  amount: number,
+  type: string,
+  description: string,
+  projectId?: string | null
+): number {
   const db = getDb();
   const now = new Date().toISOString();
 
@@ -1563,6 +1786,374 @@ export function updatePersonalCreatorScene(
   const sql = `UPDATE personal_creator_scenes SET ${fields.join(', ')} WHERE id = ?`;
   const res = db.prepare(sql).run(...values);
   return res.changes > 0;
+}
+
+// -------------------------------------------------------------
+// Automated Daily SEO Blog System Database Helpers
+// -------------------------------------------------------------
+
+export interface DbBlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  category: string;
+  read_time: string;
+  publish_date: string;
+  author_name: string;
+  author_role: string;
+  author_avatar: string;
+  cover_image: string;
+  gradient: string;
+  tags_json: string;
+  featured: number;
+  content: string;
+  seo_title?: string;
+  seo_description?: string;
+  status: 'DRAFT' | 'SCHEDULED' | 'PUBLISHED' | 'ARCHIVED';
+  word_count: number;
+  published_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DbEditorialCalendarItem {
+  id: string;
+  day_index: number;
+  target_date?: string;
+  topic: string;
+  primary_keyword: string;
+  search_intent: string;
+  supporting_keywords_json: string;
+  target_audience: string;
+  proposed_title: string;
+  proposed_slug: string;
+  category: string;
+  research_sources_json: string;
+  status: 'SCHEDULED' | 'DRAFT_GENERATED' | 'APPROVED' | 'PUBLISHED' | 'SKIPPED';
+  post_id?: string;
+  published_at?: string;
+  error_message?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export function getPublishedDbBlogPosts(): DbBlogPost[] {
+  const db = getDb();
+  try {
+    return db.prepare("SELECT * FROM blog_posts WHERE status = 'PUBLISHED' ORDER BY datetime(published_at) DESC, datetime(created_at) DESC").all() as DbBlogPost[];
+  } catch (err: any) {
+    console.warn('[getPublishedDbBlogPosts] Warning:', err.message);
+    return [];
+  }
+}
+
+export function getDbBlogPostBySlug(slug: string): DbBlogPost | undefined {
+  const db = getDb();
+  try {
+    return db.prepare('SELECT * FROM blog_posts WHERE slug = ?').get(slug) as DbBlogPost | undefined;
+  } catch (err: any) {
+    console.warn('[getDbBlogPostBySlug] Warning:', err.message);
+    return undefined;
+  }
+}
+
+export function saveDbBlogPost(post: Partial<DbBlogPost> & { slug: string; title: string; content: string }): DbBlogPost {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const existing = getDbBlogPostBySlug(post.slug);
+  const postId = existing ? existing.id : (post.id || uuidv4());
+
+  const wordCount = post.word_count || post.content.trim().split(/\s+/).length;
+  const readTime = post.read_time || `${Math.max(1, Math.ceil(wordCount / 220))} min read`;
+  const publishDate = post.publish_date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const category = post.category || 'Guides';
+  const authorName = post.author_name || 'Rayyan Mustafa';
+  const authorRole = post.author_role || 'Founder & AI Architect';
+  const authorAvatar = post.author_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80';
+  const coverImage = post.cover_image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80';
+  const gradient = post.gradient || 'linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)';
+  const tagsJson = post.tags_json || JSON.stringify(['AI Video', 'YouTube Automation']);
+  const featured = post.featured ? 1 : 0;
+  const status = post.status || 'DRAFT';
+  const publishedAt = status === 'PUBLISHED' ? (post.published_at || now) : (existing?.published_at || null);
+  const excerpt = post.excerpt || post.content.replace(/^[#\s]+[^\n]+/m, '').trim().slice(0, 160) + '...';
+
+  if (existing) {
+    db.prepare(`
+      UPDATE blog_posts SET
+        title = ?,
+        excerpt = ?,
+        category = ?,
+        read_time = ?,
+        publish_date = ?,
+        author_name = ?,
+        author_role = ?,
+        author_avatar = ?,
+        cover_image = ?,
+        gradient = ?,
+        tags_json = ?,
+        featured = ?,
+        content = ?,
+        seo_title = ?,
+        seo_description = ?,
+        status = ?,
+        word_count = ?,
+        published_at = ?,
+        updated_at = ?
+      WHERE id = ?
+    `).run(
+      post.title,
+      excerpt,
+      category,
+      readTime,
+      publishDate,
+      authorName,
+      authorRole,
+      authorAvatar,
+      coverImage,
+      gradient,
+      tagsJson,
+      featured,
+      post.content,
+      post.seo_title || post.title,
+      post.seo_description || excerpt,
+      status,
+      wordCount,
+      publishedAt,
+      now,
+      postId
+    );
+  } else {
+    db.prepare(`
+      INSERT INTO blog_posts (
+        id, slug, title, excerpt, category, read_time, publish_date,
+        author_name, author_role, author_avatar, cover_image, gradient,
+        tags_json, featured, content, seo_title, seo_description,
+        status, word_count, published_at, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      postId,
+      post.slug,
+      post.title,
+      excerpt,
+      category,
+      readTime,
+      publishDate,
+      authorName,
+      authorRole,
+      authorAvatar,
+      coverImage,
+      gradient,
+      tagsJson,
+      featured,
+      post.content,
+      post.seo_title || post.title,
+      post.seo_description || excerpt,
+      status,
+      wordCount,
+      publishedAt,
+      now,
+      now
+    );
+  }
+
+  return getDbBlogPostBySlug(post.slug)!;
+}
+
+export function hasPublishedBlogOnDate(dateStr: string): boolean {
+  const db = getDb();
+  try {
+    // Matches YYYY-MM-DD prefix of published_at or created_at
+    const row = db.prepare(`
+      SELECT COUNT(*) as count FROM blog_posts 
+      WHERE status = 'PUBLISHED' 
+        AND (published_at LIKE ? OR publish_date LIKE ?)
+    `).get(`${dateStr}%`, `%${dateStr}%`) as { count: number } | undefined;
+    return !!row && row.count > 0;
+  } catch (err: any) {
+    console.warn('[hasPublishedBlogOnDate] Warning:', err.message);
+    return false;
+  }
+}
+
+export function getEditorialCalendar(): DbEditorialCalendarItem[] {
+  const db = getDb();
+  try {
+    return db.prepare('SELECT * FROM editorial_calendar ORDER BY day_index ASC').all() as DbEditorialCalendarItem[];
+  } catch (err: any) {
+    console.warn('[getEditorialCalendar] Warning:', err.message);
+    return [];
+  }
+}
+
+export function getEditorialItemByDay(dayIndex: number): DbEditorialCalendarItem | undefined {
+  const db = getDb();
+  try {
+    return db.prepare('SELECT * FROM editorial_calendar WHERE day_index = ?').get(dayIndex) as DbEditorialCalendarItem | undefined;
+  } catch (err: any) {
+    console.warn('[getEditorialItemByDay] Warning:', err.message);
+    return undefined;
+  }
+}
+
+export function getNextScheduledEditorialItem(): DbEditorialCalendarItem | undefined {
+  const db = getDb();
+  try {
+    return db.prepare("SELECT * FROM editorial_calendar WHERE status IN ('SCHEDULED', 'DRAFT_GENERATED', 'APPROVED') ORDER BY day_index ASC LIMIT 1").get() as DbEditorialCalendarItem | undefined;
+  } catch (err: any) {
+    console.warn('[getNextScheduledEditorialItem] Warning:', err.message);
+    return undefined;
+  }
+}
+
+export function seedEditorialCalendar(items: Omit<DbEditorialCalendarItem, 'id' | 'created_at' | 'updated_at'>[]): void {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const stmt = db.prepare(`
+    INSERT OR REPLACE INTO editorial_calendar (
+      id, day_index, target_date, topic, primary_keyword, search_intent,
+      supporting_keywords_json, target_audience, proposed_title, proposed_slug,
+      category, research_sources_json, status, post_id, published_at, error_message,
+      created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  const tx = db.transaction((rows: typeof items) => {
+    for (const r of rows) {
+      const existing = getEditorialItemByDay(r.day_index);
+      const id = existing ? existing.id : uuidv4();
+      stmt.run(
+        id,
+        r.day_index,
+        r.target_date || null,
+        r.topic,
+        r.primary_keyword,
+        r.search_intent,
+        r.supporting_keywords_json || '[]',
+        r.target_audience,
+        r.proposed_title,
+        r.proposed_slug,
+        r.category || 'Guides',
+        r.research_sources_json || '[]',
+        r.status || 'SCHEDULED',
+        r.post_id || null,
+        r.published_at || null,
+        r.error_message || null,
+        now,
+        now
+      );
+    }
+  });
+
+  tx(items);
+}
+
+export function updateEditorialCalendarItem(
+  id: string,
+  updates: Partial<DbEditorialCalendarItem>
+): boolean {
+  const db = getDb();
+  const fields: string[] = [];
+  const values: any[] = [];
+  const now = new Date().toISOString();
+
+  const allowedKeys: (keyof DbEditorialCalendarItem)[] = [
+    'target_date', 'topic', 'primary_keyword', 'search_intent',
+    'supporting_keywords_json', 'target_audience', 'proposed_title',
+    'proposed_slug', 'category', 'research_sources_json', 'status',
+    'post_id', 'published_at', 'error_message'
+  ];
+
+  for (const k of allowedKeys) {
+    if (updates[k] !== undefined) {
+      fields.push(`${k} = ?`);
+      values.push(updates[k]);
+    }
+  }
+
+  if (fields.length === 0) return false;
+
+  fields.push('updated_at = ?');
+  values.push(now);
+  values.push(id);
+
+  const res = db.prepare(`UPDATE editorial_calendar SET ${fields.join(', ')} WHERE id = ?`).run(...values);
+  return res.changes > 0;
+}
+
+// ============================================================
+// CHARACTER & VISUAL CONSISTENCY REGISTRY
+// ============================================================
+
+export interface DbProjectCharacter {
+  id: string;
+  user_id: string;
+  project_id?: string | null;
+  name: string;
+  description: string;
+  reference_image_url?: string | null;
+  gender?: string | null;
+  voice_id?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export function saveProjectCharacter(character: Omit<DbProjectCharacter, 'created_at' | 'updated_at'>): DbProjectCharacter {
+  const db = getDb();
+  const now = new Date().toISOString();
+  db.prepare(`
+    INSERT INTO project_characters (
+      id, user_id, project_id, name, description,
+      reference_image_url, gender, voice_id, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      project_id = excluded.project_id,
+      name = excluded.name,
+      description = excluded.description,
+      reference_image_url = excluded.reference_image_url,
+      gender = excluded.gender,
+      voice_id = excluded.voice_id,
+      updated_at = excluded.updated_at
+  `).run(
+    character.id,
+    character.user_id,
+    character.project_id || null,
+    character.name,
+    character.description,
+    character.reference_image_url || null,
+    character.gender || null,
+    character.voice_id || null,
+    now,
+    now
+  );
+
+  return {
+    ...character,
+    created_at: now,
+    updated_at: now,
+  };
+}
+
+export function getProjectCharacters(userId: string, projectId?: string): DbProjectCharacter[] {
+  const db = getDb();
+  if (projectId) {
+    return db.prepare(`
+      SELECT * FROM project_characters
+      WHERE user_id = ? AND (project_id = ? OR project_id IS NULL)
+      ORDER BY updated_at DESC
+    `).all(userId, projectId) as DbProjectCharacter[];
+  }
+  return db.prepare(`
+    SELECT * FROM project_characters
+    WHERE user_id = ?
+    ORDER BY updated_at DESC
+  `).all(userId) as DbProjectCharacter[];
+}
+
+export function getCharacterById(characterId: string): DbProjectCharacter | null {
+  const db = getDb();
+  return (db.prepare('SELECT * FROM project_characters WHERE id = ?').get(characterId) as DbProjectCharacter) || null;
 }
 
 // ============================================================

@@ -312,9 +312,20 @@ class DefaultAiProvider implements AiProvider {
     const scenes: GeneratedScene[] = [];
     let sceneIndex = 1;
 
-    // Scene 1: Hook (High-stakes dramatic visual staging directly illustrating the hook narration)
+    const totalSecs = params.targetLengthMinutes * 60;
+    const isUltraShort = totalSecs <= 25; // e.g. 15-second short
+    const isMediumShort = totalSecs > 25 && totalSecs <= 45; // e.g. 30-second short
+    const isShorts = params.targetLengthMinutes < 2;
+
+    // ── SCENE 1: HOOK (HERO SCENE #1) ────────────────────────
+    // Always the #1 highest retention priority for AI video generation
     const hookWords = script.hook.split(/\s+/).filter(Boolean).length;
-    const hookDuration = Math.max(6, Math.round(hookWords / 2.3));
+    const hookDuration = isUltraShort
+      ? Math.max(4, Math.min(5, Math.round(hookWords / 2.5)))
+      : isMediumShort
+      ? Math.max(5, Math.min(7, Math.round(hookWords / 2.4)))
+      : Math.max(6, Math.round(hookWords / 2.3));
+
     const hookStaging = stageSceneVisual({
       narration: script.hook,
       sceneIndex,
@@ -341,43 +352,58 @@ class DefaultAiProvider implements AiProvider {
       subtitleText: script.hook,
     });
 
-    // Scene 2: Introduction (Smooth transition establishing the narrative arc in the primary setting)
-    const introWords = script.introduction.split(/\s+/).filter(Boolean).length;
-    const introDuration = Math.max(10, Math.round(introWords / 2.3));
-    const introStaging = stageSceneVisual({
-      narration: script.introduction,
-      sceneIndex,
-      sectionName: 'Introduction',
-      bible,
-      globalStyle,
-      customCamera: 'Smooth wide-angle horizontal tracking shot revealing the environment',
-    });
-    const introPrompt = script.introVisualPrompt && !script.introVisualPrompt.startsWith('Wide cinematic')
-      ? script.introVisualPrompt
-      : introStaging.prompt;
+    // In ultra-short mode (15-second Shorts), skip separate Introduction scene to keep pacing ultra-punchy
+    if (!isUltraShort) {
+      // Scene 2: Introduction
+      const introWords = script.introduction.split(/\s+/).filter(Boolean).length;
+      const introDuration = isMediumShort
+        ? Math.max(6, Math.min(8, Math.round(introWords / 2.4)))
+        : Math.max(10, Math.round(introWords / 2.3));
 
-    scenes.push({
-      sceneIndex: sceneIndex++,
-      sectionName: 'Introduction',
-      narration: script.introduction,
-      visualPrompt: introPrompt,
-      visualSubject: script.introVisualSubject || introStaging.subject,
-      environment: introStaging.environment,
-      cameraMovement: introStaging.cameraMovement,
-      lighting: bible.lightingAndMood,
-      colorStyle: bible.colorGrade,
-      continuityNotes: `Maintains character and environment continuity from Scene 1 while broadening perspective`,
-      estimatedDurationSec: introDuration,
-      subtitleText: script.introduction,
-    });
+      const introStaging = stageSceneVisual({
+        narration: script.introduction,
+        sceneIndex,
+        sectionName: 'Introduction',
+        bible,
+        globalStyle,
+        customCamera: 'Smooth wide-angle horizontal tracking shot revealing the environment',
+      });
+      const introPrompt = script.introVisualPrompt && !script.introVisualPrompt.startsWith('Wide cinematic')
+        ? script.introVisualPrompt
+        : introStaging.prompt;
 
-    // Section Scenes: Story progression with explicit visual-narration synchronization and persistent anchors
+      scenes.push({
+        sceneIndex: sceneIndex++,
+        sectionName: 'Introduction',
+        narration: script.introduction,
+        visualPrompt: introPrompt,
+        visualSubject: script.introVisualSubject || introStaging.subject,
+        environment: introStaging.environment,
+        cameraMovement: introStaging.cameraMovement,
+        lighting: bible.lightingAndMood,
+        colorStyle: bible.colorGrade,
+        continuityNotes: `Maintains character and environment continuity from Scene 1 while broadening perspective`,
+        estimatedDurationSec: introDuration,
+        subtitleText: script.introduction,
+      });
+    }
+
+    // ── SECTION SCENES ────────────────────────────────────────
     for (let sIdx = 0; sIdx < script.sections.length; sIdx++) {
+      // For ultra-shorts, limit to first section only
+      if (isUltraShort && sIdx >= 1) break;
+
       const section = script.sections[sIdx];
       for (let subIdx = 0; subIdx < section.subsections.length; subIdx++) {
+        if (isUltraShort && subIdx >= 1) break;
+
         const sub = section.subsections[subIdx];
         const words = sub.narration.split(/\s+/).filter(Boolean).length;
-        const duration = sub.durationSec || Math.max(8, Math.round(words / 2.3));
+        const duration = isUltraShort
+          ? Math.max(6, Math.min(7, Math.round(words / 2.4)))
+          : isMediumShort
+          ? Math.max(8, Math.min(10, Math.round(words / 2.4)))
+          : sub.durationSec || Math.max(8, Math.round(words / 2.3));
 
         const subStaging = stageSceneVisual({
           narration: sub.narration,
@@ -415,39 +441,47 @@ class DefaultAiProvider implements AiProvider {
       }
     }
 
-    // Conclusion Scene (Inspiring resolution shot featuring the visual anchor in the primary setting)
-    const conclWords = script.conclusion.split(/\s+/).filter(Boolean).length;
-    const conclDuration = Math.max(10, Math.round(conclWords / 2.3));
-    const conclStaging = stageSceneVisual({
-      narration: script.conclusion,
-      sceneIndex,
-      sectionName: 'Conclusion',
-      bible,
-      globalStyle,
-      customCamera: 'Expansive wide-angle pull-out revealing full environment mastery',
-    });
-    const conclPrompt = script.conclusionVisualPrompt && !script.conclusionVisualPrompt.startsWith('Inspiring wide')
-      ? script.conclusionVisualPrompt
-      : conclStaging.prompt;
+    // In ultra-short or medium-short mode, skip standalone conclusion to stay within 15-30s limit
+    if (!isUltraShort && !isMediumShort) {
+      // Conclusion Scene
+      const conclWords = script.conclusion.split(/\s+/).filter(Boolean).length;
+      const conclDuration = Math.max(10, Math.round(conclWords / 2.3));
+      const conclStaging = stageSceneVisual({
+        narration: script.conclusion,
+        sceneIndex,
+        sectionName: 'Conclusion',
+        bible,
+        globalStyle,
+        customCamera: 'Expansive wide-angle pull-out revealing full environment mastery',
+      });
+      const conclPrompt = script.conclusionVisualPrompt && !script.conclusionVisualPrompt.startsWith('Inspiring wide')
+        ? script.conclusionVisualPrompt
+        : conclStaging.prompt;
 
-    scenes.push({
-      sceneIndex: sceneIndex++,
-      sectionName: 'Conclusion',
-      narration: script.conclusion,
-      visualPrompt: conclPrompt,
-      visualSubject: script.conclusionVisualSubject || conclStaging.subject,
-      environment: conclStaging.environment,
-      cameraMovement: conclStaging.cameraMovement,
-      lighting: bible.lightingAndMood,
-      colorStyle: bible.colorGrade,
-      continuityNotes: `Culmination of narrative arc, celebrating mastery in primary setting`,
-      estimatedDurationSec: conclDuration,
-      subtitleText: script.conclusion,
-    });
+      scenes.push({
+        sceneIndex: sceneIndex++,
+        sectionName: 'Conclusion',
+        narration: script.conclusion,
+        visualPrompt: conclPrompt,
+        visualSubject: script.conclusionVisualSubject || conclStaging.subject,
+        environment: conclStaging.environment,
+        cameraMovement: conclStaging.cameraMovement,
+        lighting: bible.lightingAndMood,
+        colorStyle: bible.colorGrade,
+        continuityNotes: `Culmination of narrative arc, celebrating mastery in primary setting`,
+        estimatedDurationSec: conclDuration,
+        subtitleText: script.conclusion,
+      });
+    }
 
-    // Call To Action Scene (Clean authoritative outro in the established setting)
+    // ── CALL TO ACTION SCENE ─────────────────────────────────
     const ctaWords = script.callToAction.split(/\s+/).filter(Boolean).length;
-    const ctaDuration = Math.max(6, Math.round(ctaWords / 2.3));
+    const ctaDuration = isUltraShort
+      ? Math.max(3, Math.min(4, Math.round(ctaWords / 2.5)))
+      : isMediumShort
+      ? Math.max(4, Math.min(5, Math.round(ctaWords / 2.4)))
+      : Math.max(6, Math.round(ctaWords / 2.3));
+
     const ctaStaging = stageSceneVisual({
       narration: script.callToAction,
       sceneIndex,
@@ -549,7 +583,6 @@ class DefaultAiProvider implements AiProvider {
     outroCta?: string,
     visualStyle: string = 'Cinematic High-Contrast'
   ): ScriptStructure {
-    const ctaText = outroCta || `If you found this breakdown valuable, subscribe to ${channelName}, like the video, and join the conversation in the comments below.`;
     const cleanTopic = topic.trim();
     const normalized = ` ${cleanTopic.toLowerCase().replace(/[^a-z0-9]/g, ' ')} `;
     const hasAnyWord = (words: string[]) => words.some((w) => normalized.includes(` ${w} `));
@@ -596,15 +629,26 @@ class DefaultAiProvider implements AiProvider {
       defaultEnv = 'Cutting-edge technology research laboratory with holographic interfaces';
     }
 
+    const totalSecs = targetLengthMinutes * 60;
+    const isUltraShort = totalSecs <= 25; // e.g. 15-second short
+    const isMediumShort = totalSecs > 25 && totalSecs <= 45; // e.g. 30-second short
     const isShorts = targetLengthMinutes < 2;
     const targetWordCount = Math.round(targetLengthMinutes * 138);
 
     // Dynamic chapter count based on duration
-    const numSections = isShorts
-      ? Math.max(2, Math.min(4, Math.round(targetLengthMinutes * 4)))
+    const numSections = isUltraShort
+      ? 1
+      : isMediumShort
+      ? 2
+      : isShorts
+      ? Math.max(2, Math.min(3, Math.round(targetLengthMinutes * 3)))
       : Math.min(12, Math.max(5, Math.round(targetLengthMinutes * 1.1)));
 
-    const sectionDuration = Math.max(15, Math.round((targetLengthMinutes * 60 - 40) / numSections));
+    const sectionDuration = isUltraShort
+      ? 6
+      : isMediumShort
+      ? 10
+      : Math.max(15, Math.round((targetLengthMinutes * 60 - 40) / numSections));
 
     // Dynamic topic-driven pillar generation matching user's requested topic and niche
     const generateTopicPillars = (topicStr: string, nicheStr: string, domainStr: string) => [
@@ -667,62 +711,89 @@ class DefaultAiProvider implements AiProvider {
       const partNum = i + 1;
 
       // In shorts mode, provide concise punchy narration; in long-form, provide full multi-sentence paragraphs
-      const narrationA = isShorts
+      const narrationA = isUltraShort
+        ? `Here is what you need to know about ${cleanTopic}: ${p.sub1}.`
+        : isShorts
         ? `Look closely at ${p.title}. When analyzing ${cleanTopic}, ${p.desc1.slice(0, 110)}.`
         : `${p.desc1}`;
 
-      const narrationB = isShorts
+      const narrationB = isUltraShort
+        ? `${p.sub2}.`
+        : isShorts
         ? `This leads directly to ${p.sub2}. ${p.desc2.slice(0, 100)}.`
         : `${p.desc2}`;
 
-      const sub1Duration = Math.max(8, Math.round((sectionDuration / 2) * 10) / 10);
-      const sub2Duration = Math.max(8, Math.round((sectionDuration / 2) * 10) / 10);
+      const sub1Duration = isUltraShort
+        ? 6
+        : isMediumShort
+        ? 9
+        : Math.max(8, Math.round((sectionDuration / 2) * 10) / 10);
+      const sub2Duration = isUltraShort
+        ? 6
+        : isMediumShort
+        ? 9
+        : Math.max(8, Math.round((sectionDuration / 2) * 10) / 10);
 
       const prompt1 = `${bible.protagonistOrAnchor} deeply engaged in ${p.sub1}: analyzing the core foundation of ${cleanTopic}, inside ${bible.primarySetting}. Slow steady cinematic push-in with shallow depth of field. ${bible.lightingAndMood}. ${bible.colorGrade}. 35mm anamorphic lens, 8k resolution, photorealistic film still, vertical 9:16.`;
       const prompt2 = `${bible.protagonistOrAnchor} executing ${p.sub2}: demonstrating critical mechanics of ${cleanTopic}, inside ${bible.primarySetting}. Smooth horizontal parallax tracking glide. ${bible.lightingAndMood}. ${bible.colorGrade}. 35mm anamorphic lens, 8k resolution, photorealistic film still, vertical 9:16.`;
 
+      const sectionSubs: any[] = [
+        {
+          subheading: p.sub1,
+          narration: narrationA,
+          visualPrompt: prompt1,
+          visualSubject: `${cleanTopic} - ${p.sub1}`,
+          environment: bible.primarySetting,
+          cameraMovement: 'Slow steady cinematic push-in with shallow depth of field',
+          lighting: bible.lightingAndMood,
+          colorStyle: bible.colorGrade,
+          continuityNotes: `Establishes dramatic visual continuity for Part ${partNum} featuring ${bible.protagonistOrAnchor.slice(0, 35)}...`,
+          durationSec: sub1Duration,
+        },
+      ];
+
+      if (!isShorts) {
+        sectionSubs.push({
+          subheading: p.sub2,
+          narration: narrationB,
+          visualPrompt: prompt2,
+          visualSubject: `${cleanTopic} - ${p.sub2}`,
+          environment: bible.primarySetting,
+          cameraMovement: 'Smooth horizontal parallax tracking glide',
+          lighting: bible.lightingAndMood,
+          colorStyle: bible.colorGrade,
+          continuityNotes: `Direct continuous transition from ${p.sub1} inside ${bible.primarySetting.slice(0, 35)}...`,
+          durationSec: sub2Duration,
+        });
+      }
+
       sections.push({
         heading: `Part ${partNum}: ${p.title}`,
-        subsections: [
-          {
-            subheading: p.sub1,
-            narration: narrationA,
-            visualPrompt: prompt1,
-            visualSubject: `${cleanTopic} - ${p.sub1}`,
-            environment: bible.primarySetting,
-            cameraMovement: 'Slow steady cinematic push-in with shallow depth of field',
-            lighting: bible.lightingAndMood,
-            colorStyle: bible.colorGrade,
-            continuityNotes: `Establishes dramatic visual continuity for Part ${partNum} featuring ${bible.protagonistOrAnchor.slice(0, 35)}...`,
-            durationSec: sub1Duration,
-          },
-          {
-            subheading: p.sub2,
-            narration: narrationB,
-            visualPrompt: prompt2,
-            visualSubject: `${cleanTopic} - ${p.sub2}`,
-            environment: bible.primarySetting,
-            cameraMovement: 'Smooth horizontal parallax tracking glide',
-            lighting: bible.lightingAndMood,
-            colorStyle: bible.colorGrade,
-            continuityNotes: `Direct continuous transition from ${p.sub1} inside ${bible.primarySetting.slice(0, 35)}...`,
-            durationSec: sub2Duration,
-          },
-        ],
+        subsections: sectionSubs,
       });
     }
 
-    const hookText = isShorts
+    const hookText = isUltraShort
+      ? `Did you know this about ${cleanTopic}? Watch until the end.`
+      : isShorts
       ? `What is the real secret behind ${cleanTopic}? In the next 60 seconds, everything you thought you knew changes.`
       : `What is the true power behind ${cleanTopic}? Across ${niche}, this breakthrough is reshaping how we understand ${domainFocus}. Here is the complete breakdown.`;
 
-    const introText = isShorts
+    const introText = isUltraShort
+      ? `Here is the key fact:`
+      : isShorts
       ? `Welcome to ${channelName}. Most people misunderstand ${cleanTopic}, but the actual mechanisms are far more fascinating.`
       : `Welcome back to ${channelName}. Today, we are conducting an in-depth analysis of ${cleanTopic}. What you are about to discover will give you a strategic advantage in ${niche}.`;
 
-    const conclusionText = isShorts
+    const conclusionText = isUltraShort
+      ? `Save this video for later.`
+      : isShorts
       ? `Understanding ${cleanTopic} is the key to mastering ${niche}. Apply these principles today.`
       : `The analysis of ${cleanTopic} proves how rapidly ${niche} is evolving. By understanding these core mechanisms, you stay ahead of the curve and position yourself for long-term success.`;
+
+    const ctaText = isUltraShort
+      ? `Follow for more.`
+      : outroCta || `If you found this breakdown valuable, subscribe to ${channelName}, like the video, and join the conversation in the comments below.`;
 
     const hookPrompt = `${bible.protagonistOrAnchor} confronting the pivotal reality of ${cleanTopic}, intense focused expression, set inside ${bible.primarySetting}. Dramatic slow forward push-in. ${bible.lightingAndMood}. ${bible.colorGrade}. 35mm anamorphic lens, 8k resolution, photorealistic, vertical 9:16.`;
     const introPrompt = `${bible.protagonistOrAnchor} introducing the masterclass framework on ${cleanTopic}, inside ${bible.primarySetting}. Wide-angle horizontal tracking glide. ${bible.lightingAndMood}. ${bible.colorGrade}. 35mm anamorphic lens, 8k resolution, vertical 9:16.`;

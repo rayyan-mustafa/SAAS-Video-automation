@@ -5,7 +5,6 @@ import { getFfmpegPath } from '@/lib/providers/videoProvider';
 import { execFile } from 'child_process';
 import util from 'util';
 import fs from 'fs';
-import path from 'path';
 import { verifyAdminToken } from '@/lib/security/adminAuth';
 
 const execFileAsync = util.promisify(execFile);

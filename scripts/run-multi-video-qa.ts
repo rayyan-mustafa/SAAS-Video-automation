@@ -44,7 +44,7 @@ async function waitForProjectCompletion(projectId: string, maxWaitMs = 120000): 
     const project = db.prepare('SELECT * FROM content_projects WHERE id = ?').get(projectId) as ContentProject | undefined;
     if (!project) throw new Error(`Project ${projectId} not found`);
 
-    if (project.status === 'COMPLETED' || (project.status as string) === 'READY') {
+    if ((project.status as string) === 'COMPLETED' || (project.status as string) === 'READY') {
       return project;
     }
     if (project.status === 'FAILED') {
@@ -189,14 +189,21 @@ async function main() {
     }
 
     // D. Final Output MP4 Inspection via FFprobe/FFmpeg
-    let mediaMeta: any = { durationSec: 0, videoCodec: 'unknown', audioCodec: 'unknown', resolution: 'unknown', isValid: false };
+    let mediaMeta = { durationSec: 0, videoCodec: 'unknown', audioCodec: 'unknown', resolution: 'unknown', isValid: false };
     let finalSizeBytes = 0;
 
     if (videoOutput && videoOutput.storage_key) {
       const finalLocalPath = storage.getFilePath(videoOutput.storage_key);
       if (fs.existsSync(finalLocalPath)) {
         finalSizeBytes = fs.statSync(finalLocalPath).size;
-        mediaMeta = await inspectMedia(finalLocalPath);
+        const inspected = await inspectMedia(finalLocalPath);
+        mediaMeta = {
+          durationSec: inspected.durationSec || 0,
+          videoCodec: inspected.videoCodec || 'unknown',
+          audioCodec: inspected.audioCodec || 'unknown',
+          resolution: inspected.resolution || 'unknown',
+          isValid: !!inspected.isValid,
+        };
       }
     }
 

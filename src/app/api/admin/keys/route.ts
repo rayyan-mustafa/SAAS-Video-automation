@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getAllApiCredentials, saveApiKey, DEFAULT_USER_ID } from '@/lib/db';
 import { verifyAdminToken } from '@/lib/security/adminAuth';
+import { IntegrationService } from '@/lib/config/integrationService';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,6 +65,17 @@ export async function POST(request: Request) {
       if (!update.key.includes('****') && !update.key.includes('••••')) {
         const success = saveApiKey(update.provider, update.key, DEFAULT_USER_ID);
         results[update.provider] = success;
+
+        // Also sync to IntegrationService for central AES-256-GCM encrypted persistence
+        try {
+          if (update.provider === 'cloudflare_api_token') {
+            IntegrationService.saveIntegration('cloudflare', { credentials: { apiToken: update.key } }, 'admin');
+          } else if (update.provider === 'cloudflare_account_id') {
+            IntegrationService.saveIntegration('cloudflare', { credentials: { accountId: update.key } }, 'admin');
+          } else {
+            IntegrationService.saveIntegration(update.provider, { credentials: { apiKey: update.key } }, 'admin');
+          }
+        } catch {}
       }
     }
 

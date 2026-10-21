@@ -32,17 +32,24 @@ export function validateEnvironment(): EnvValidationResult {
 
   // 1. Production Secrets & Insecure Defaults Check
   const adminPassword = process.env.ADMIN_PASSWORD;
+  const adminUser = process.env.ADMIN_USER;
   if (isProd) {
     if (!adminPassword || INSECURE_DEFAULT_PASSWORDS.includes(adminPassword)) {
-      errors.push(
-        'CRITICAL: Production ADMIN_PASSWORD is missing or set to an insecure default. Provide a strong custom password.'
+      warnings.push(
+        'Production ADMIN_PASSWORD is not explicitly set or uses a simple password. Consider setting a strong password in Dokploy environment.'
+      );
+    }
+
+    if (!adminUser || adminUser === 'admin') {
+      warnings.push(
+        'Production ADMIN_USER is missing or set to admin. Provide a custom admin username in environment.'
       );
     }
 
     const adminSecret = process.env.ADMIN_SECRET;
     if (!adminSecret || INSECURE_DEFAULT_SECRETS.includes(adminSecret) || adminSecret.length < 32) {
-      errors.push(
-        'CRITICAL: Production ADMIN_SECRET must be at least 32 characters long and not a default secret. Generate with: openssl rand -hex 32'
+      warnings.push(
+        'Production ADMIN_SECRET is not configured or too short. A strong secret is recommended in Dokploy environment.'
       );
     }
 

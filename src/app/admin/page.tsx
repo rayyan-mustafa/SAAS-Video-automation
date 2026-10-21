@@ -2,16 +2,21 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import IntegrationsManager from '@/components/admin/IntegrationsManager';
+import GatewaysManager from '@/components/admin/GatewaysManager';
+import AiModelsManager from '@/components/admin/AiModelsManager';
+import WebhooksManager from '@/components/admin/WebhooksManager';
+import LogsManager from '@/components/admin/LogsManager';
 
 export default function SuperAdminPage() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
-  const [username, setUsername] = useState('sanin5');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loggingIn, setLoggingIn] = useState(false);
 
   // Admin Navigation State
-  const [activeTab, setActiveTab] = useState<'users' | 'overview' | 'channels' | 'keys' | 'diagnostics'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'overview' | 'integrations' | 'gateways' | 'ai-models' | 'webhooks' | 'logs' | 'channels' | 'keys' | 'diagnostics'>('users');
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -476,10 +481,15 @@ export default function SuperAdminPage() {
         <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '12px', flexWrap: 'wrap' }}>
           {[
             { id: 'users', label: '👥 Users & Subscriptions' },
-            { id: 'overview', label: '📊 System Health & Stats' },
+            { id: 'overview', label: '📊 System Health' },
+            { id: 'integrations', label: '🔌 API Integrations' },
+            { id: 'gateways', label: '💳 Payment Gateways' },
+            { id: 'ai-models', label: '⚡ AI Models & Routing' },
+            { id: 'webhooks', label: '🔔 Webhooks & Events' },
+            { id: 'logs', label: '📜 Audit & Logs' },
             { id: 'channels', label: '🎬 Channels & Projects' },
-            { id: 'keys', label: '🔑 API Key Vault' },
-            { id: 'diagnostics', label: '⚡ Engine Diagnostics' },
+            { id: 'keys', label: '🔑 Key Vault' },
+            { id: 'diagnostics', label: '⚡ Diagnostics' },
           ].map((t) => (
             <button
               key={t.id}
@@ -593,8 +603,8 @@ export default function SuperAdminPage() {
                   <option value="ALL">All Plans (Tiers)</option>
                   <option value="STARTER">Starter Plan ($19)</option>
                   <option value="CREATOR">Creator Plan ($49)</option>
-                  <option value="SCALE">Scale Plan ($99)</option>
-                  <option value="AGENCY">Agency Plan ($249)</option>
+                  <option value="PRO">Pro Plan ($99)</option>
+                  <option value="AGENCY">Agency Plan ($299)</option>
                 </select>
 
                 <select
@@ -1451,6 +1461,41 @@ export default function SuperAdminPage() {
         )}
 
         {/* ======================================================== */}
+        {/* TAB: API INTEGRATIONS                                    */}
+        {/* ======================================================== */}
+        {activeTab === 'integrations' && (
+          <IntegrationsManager onNotify={(m) => setMsg(m)} />
+        )}
+
+        {/* ======================================================== */}
+        {/* TAB: PAYMENT GATEWAYS                                    */}
+        {/* ======================================================== */}
+        {activeTab === 'gateways' && (
+          <GatewaysManager onNotify={(m) => setMsg(m)} />
+        )}
+
+        {/* ======================================================== */}
+        {/* TAB: AI MODELS & ROUTING                                 */}
+        {/* ======================================================== */}
+        {activeTab === 'ai-models' && (
+          <AiModelsManager onNotify={(m) => setMsg(m)} />
+        )}
+
+        {/* ======================================================== */}
+        {/* TAB: WEBHOOKS & EVENTS                                   */}
+        {/* ======================================================== */}
+        {activeTab === 'webhooks' && (
+          <WebhooksManager onNotify={(m) => setMsg(m)} />
+        )}
+
+        {/* ======================================================== */}
+        {/* TAB: AUDIT & LOGS                                        */}
+        {/* ======================================================== */}
+        {activeTab === 'logs' && (
+          <LogsManager onNotify={(m) => setMsg(m)} />
+        )}
+
+        {/* ======================================================== */}
         {/* TAB 4: API KEY VAULT                                     */}
         {/* ======================================================== */}
         {activeTab === 'keys' && (
@@ -1523,7 +1568,7 @@ export default function SuperAdminPage() {
                   { id: 'veo', name: 'Google Veo 3.1 Video API', desc: 'Google DeepMind photorealistic 1080p generative video engine (Requires Pay-as-you-go Gemini key)' },
                   { id: 'fal', name: 'FAL.ai Video Engine (Wan 2.1 / Kling / LTX)', desc: 'Cloud GPU generative video models (Wan 2.1 14B, Kling 2.1, LTX-Video)' },
                   { id: 'runway', name: 'Runway Gen-3 / Gen-4 Alpha', desc: 'Hollywood-grade generative AI motion video synthesis engine' },
-                  { id: 'sora', name: 'OpenAI Sora / Video Engine', desc: 'OpenAI photorealistic physics text-to-video generative AI' },
+                  { id: 'sora', name: 'OpenAI Sora / Video Engine (Deprecated / Preview)', desc: 'OpenAI text-to-video (Experimental/Preview — falls back to Veo / Wan 2.1 / motion stills)' },
                   { id: 'luma', name: 'Luma Dream Machine (Ray 2)', desc: 'Cinematic camera motion and realistic physics text-to-video' },
                 ].map((p) => {
                   const isConfigured = !!credentials[p.id];

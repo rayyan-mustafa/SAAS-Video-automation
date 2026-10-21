@@ -205,42 +205,39 @@ export class FfmpegCompositor {
       }
     }
 
-    // Direct clip copy fallback if serverless FFmpeg binary execution is restricted
-    if (!fs.existsSync(finalFilePath) || (await fs.promises.stat(finalFilePath)).size === 0) {
+    // Validate that the output file exists and has content
+    if (!fs.existsSync(finalFilePath)) {
+      // If serverless binary restriction, try valid clip copy
       const firstValidClip = clipFilePaths.find((p) => fs.existsSync(p));
-      if (firstValidClip) {
+      if (firstValidClip && (await fs.promises.stat(firstValidClip)).size > 5000) {
         await fs.promises.copyFile(firstValidClip, finalFilePath);
       } else {
-        const minimalMp4Header = Buffer.from([
-          0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d,
-          0x00, 0x00, 0x02, 0x00, 0x69, 0x73, 0x6f, 0x6d, 0x69, 0x73, 0x6f, 0x32,
-          0x61, 0x76, 0x63, 0x31, 0x6d, 0x70, 0x34, 0x31
-        ]);
-        await fs.promises.writeFile(finalFilePath, minimalMp4Header);
+        throw new Error(`FFmpeg composition failed to produce final MP4 for project ${projectId}.`);
       }
     }
 
-    const stat = fs.existsSync(finalFilePath) ? await fs.promises.stat(finalFilePath) : { size: 10240 };
-    let durationSec = totalDurationSec || 60;
+    const stat = await fs.promises.stat(finalFilePath);
+    if (stat.size < 5000) {
+      throw new Error(`FFmpeg composition resulted in corrupted/incomplete output file (${stat.size} bytes).`);
+    }
 
-    try {
-      if (fs.existsSync(finalFilePath)) {
-        const meta = await inspectMedia(finalFilePath);
-        if (meta.durationSec && meta.durationSec > 0) {
-          durationSec = meta.durationSec;
-        }
-      }
-    } catch {}
+    // Inspect media with FFprobe / FFmpeg
+    const meta = await inspectMedia(finalFilePath);
+    if (!meta.isValid && stat.size < 10000) {
+      throw new Error(`FFmpeg output validation failed: Invalid video streams or duration.`);
+    }
+
+    const durationSec = meta.durationSec && meta.durationSec > 0 ? meta.durationSec : totalDurationSec;
 
     return {
       storageKey: finalKey,
       url: storage.getUrl(finalKey),
       filePath: finalFilePath,
       durationSec,
-      resolution: targetResolution,
+      resolution: meta.resolution || targetResolution,
       filesizeBytes: stat.size,
-      videoCodec: 'h264',
-      audioCodec: 'aac',
+      videoCodec: meta.videoCodec || 'h264',
+      audioCodec: meta.audioCodec || 'aac',
     };
   }
 }
