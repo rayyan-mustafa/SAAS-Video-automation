@@ -89,7 +89,11 @@ export class FfmpegCompositor {
 
     if (subtitleFilePath && fs.existsSync(subtitleFilePath)) {
       const safeSubPath = subtitleFilePath.replace(/\\/g, '/').replace(/:/g, '\\:');
-      videoFilter += `,subtitles='${safeSubPath}':force_style='FontSize=22,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=3,Outline=2,Shadow=0,MarginV=40'`;
+      if (subtitleFilePath.endsWith('.ass')) {
+        videoFilter += `,ass='${safeSubPath}'`;
+      } else {
+        videoFilter += `,subtitles='${safeSubPath}':force_style='FontSize=22,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=3,Outline=2,Shadow=0,MarginV=40'`;
+      }
     }
 
     const encodingTimeout = Math.max(300000, Math.round(totalDurationSec * 2000));
@@ -239,6 +243,69 @@ export class FfmpegCompositor {
       videoCodec: meta.videoCodec || 'h264',
       audioCodec: meta.audioCodec || 'aac',
     };
+  }
+
+  /**
+   * Concat audio files together into a single master audio track and return exact duration.
+   */
+  async concatAudioFiles(params: {
+    audioPaths: string[];
+    outputPath: string;
+  }): Promise<{ durationSec: number; outputPath: string }> {
+    const { audioPaths, outputPath } = params;
+    if (audioPaths.length === 0) {
+      throw new Error('No audio paths provided to concatenate.');
+    }
+    const outDir = path.dirname(outputPath);
+    if (!fs.existsSync(outDir)) {
+      fs.mkdirSync(outDir, { recursive: true });
+    }
+
+    if (audioPaths.length === 1) {
+      await fs.promises.copyFile(audioPaths[0], outputPath);
+      const meta = await inspectMedia(outputPath);
+      return { durationSec: meta.durationSec || 0, outputPath };
+    }
+
+    const ffmpegPath = getFfmpegPath();
+    const tempDir = path.dirname(outputPath);
+    const concatListPath = path.join(tempDir, `audio_concat_${Date.now()}_${Math.random().toString(36).substring(7)}.txt`);
+    const concatContent = audioPaths
+      .filter((p) => fs.existsSync(p))
+      .map((p) => `file '${p.replace(/\\/g, '/')}'`)
+      .join('\n');
+
+    await fs.promises.writeFile(concatListPath, concatContent, 'utf8');
+
+    try {
+      // Concatenate audio streams
+      await execFileAsync(
+        ffmpegPath,
+        ['-y', '-f', 'concat', '-safe', '0', '-i', concatListPath, '-c:a', 'libmp3lame', '-q:a', '2', outputPath],
+        { timeout: 30000 }
+      );
+    } catch (err: any) {
+      console.warn('[FfmpegCompositor] Concat audio re-encode failed, trying stream copy:', err.message);
+      try {
+        await execFileAsync(
+          ffmpegPath,
+          ['-y', '-f', 'concat', '-safe', '0', '-i', concatListPath, '-c', 'copy', outputPath],
+          { timeout: 30000 }
+        );
+      } catch (copyErr: any) {
+        // Fallback: concatenate MP3 buffers directly (valid for MPEG audio frames)
+        const buffers = await Promise.all(audioPaths.map((p) => fs.promises.readFile(p)));
+        const combined = Buffer.concat(buffers);
+        await fs.promises.writeFile(outputPath, combined);
+      }
+    } finally {
+      if (fs.existsSync(concatListPath)) {
+        await fs.promises.unlink(concatListPath).catch(() => {});
+      }
+    }
+
+    const meta = await inspectMedia(outputPath);
+    return { durationSec: meta.durationSec || 0, outputPath };
   }
 }
 

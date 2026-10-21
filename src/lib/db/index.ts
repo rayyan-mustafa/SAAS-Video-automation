@@ -238,6 +238,9 @@ export function getDb(): Database.Database {
     safeAddColumn('content_projects', 'generation_mode', "TEXT NOT NULL DEFAULT 'text-to-video'");
     safeAddColumn('content_projects', 'character_id', 'TEXT');
     safeAddColumn('content_projects', 'reference_image_url', 'TEXT');
+    safeAddColumn('video_scenes', 'audio_storage_key', 'TEXT');
+    safeAddColumn('video_scenes', 'audio_duration_sec', 'REAL');
+    safeAddColumn('video_scenes', 'visual_tier', "TEXT DEFAULT 'motion_still'");
     safeAddColumn('user_sessions', 'session_token', 'TEXT');
     safeAddColumn('user_sessions', 'user_agent', 'TEXT');
     safeAddColumn('user_sessions', 'ip_address', 'TEXT');
@@ -758,7 +761,7 @@ export interface ContentProject {
   platform: string;
   visibility: 'PRIVATE' | 'UNLISTED' | 'PUBLIC';
   status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
-  current_stage: 'SCRIPT' | 'VOICE' | 'SCENES' | 'VIDEO' | 'SUBTITLES' | 'FINAL_VIDEO' | 'THUMBNAIL';
+  current_stage: 'PLAN' | 'SCRIPT' | 'VOICE' | 'SCENES' | 'VIDEO' | 'SUBTITLES' | 'FINAL_VIDEO' | 'THUMBNAIL';
   error_message?: string | null;
   scheduled_at?: string | null;
   published_at?: string | null;
@@ -791,6 +794,9 @@ export interface VideoScene {
   estimated_duration_sec: number;
   subtitle_text: string;
   quality_report_json?: string | null;
+  audio_storage_key?: string | null;
+  audio_duration_sec?: number | null;
+  visual_tier?: string | null;
   created_at: string;
 }
 
@@ -798,7 +804,7 @@ export interface GeneratedAsset {
   id: string;
   project_id: string;
   scene_id?: string | null;
-  asset_type: 'script' | 'clip' | 'audio' | 'subtitles' | 'final_video' | 'thumbnail';
+  asset_type: 'plan' | 'script' | 'clip' | 'audio' | 'scene_audio' | 'subtitles' | 'final_video' | 'thumbnail';
   storage_key: string;
   url: string;
   duration_sec?: number | null;
@@ -809,7 +815,7 @@ export interface GeneratedAsset {
 export interface VideoJob {
   id: string;
   project_id: string;
-  stage: 'SCRIPT' | 'VOICE' | 'SCENES' | 'VIDEO' | 'SUBTITLES' | 'FINAL_VIDEO' | 'THUMBNAIL';
+  stage: 'PLAN' | 'SCRIPT' | 'VOICE' | 'SCENES' | 'VIDEO' | 'SUBTITLES' | 'FINAL_VIDEO' | 'THUMBNAIL';
   status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
   error_message?: string | null;
   started_at?: string | null;

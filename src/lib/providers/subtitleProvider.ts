@@ -28,6 +28,11 @@ export interface SubtitleProvider {
   }): Promise<Array<{ sceneIndex: number; durationSec: number }> | null>;
   generateSrt(cues: SubtitleCue[]): string;
   generateVtt(cues: SubtitleCue[]): string;
+  generateAss(
+    cues: SubtitleCue[],
+    stylePreset?: 'Viral Kinetic' | 'Clean Sans' | 'High-Contrast Neon' | string,
+    aspectRatio?: '9:16' | '16:9'
+  ): string;
 }
 
 class DefaultSubtitleProvider implements SubtitleProvider {
@@ -301,6 +306,78 @@ class DefaultSubtitleProvider implements SubtitleProvider {
       })
       .join('\n');
     return header + body;
+  }
+
+  generateAss(
+    cues: SubtitleCue[],
+    stylePreset: 'Viral Kinetic' | 'Clean Sans' | 'High-Contrast Neon' | string = 'Viral Kinetic',
+    aspectRatio: '9:16' | '16:9' = '9:16'
+  ): string {
+    const isVertical = aspectRatio === '9:16';
+    const resX = isVertical ? 1080 : 1920;
+    const resY = isVertical ? 1920 : 1080;
+    // Safe vertical margin: top >= 180px, bottom >= 320px for 9:16 vertical video
+    const marginV = isVertical ? 340 : 80;
+
+    let styleName = 'ViralKinetic';
+    const lower = (stylePreset || '').toLowerCase();
+    if (lower.includes('clean')) {
+      styleName = 'CleanSans';
+    } else if (lower.includes('neon')) {
+      styleName = 'HighContrastNeon';
+    }
+
+    const header = [
+      '[Script Info]',
+      'ScriptType: v4.00+',
+      `PlayResX: ${resX}`,
+      `PlayResY: ${resY}`,
+      'ScaledBorderAndShadow: yes',
+      '',
+      '[V4+ Styles]',
+      'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',
+      `Style: ViralKinetic,Arial Black,72,&H0000FFFF,&H00FFFFFF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,6,3,2,60,60,${marginV},1`,
+      `Style: CleanSans,Inter,64,&H00FFFFFF,&H0000FFFF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,5,2,2,60,60,${marginV},1`,
+      `Style: HighContrastNeon,Impact,76,&H0000FF00,&H0000FFFF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,7,4,2,60,60,${marginV},1`,
+      '',
+      '[Events]',
+      'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',
+    ].join('\n');
+
+    const lines = cues.map((cue) => {
+      const startAss = this.formatAssTime(cue.startTimeSec);
+      const endAss = this.formatAssTime(cue.endTimeSec);
+      const durationCs = Math.max(10, Math.round((cue.endTimeSec - cue.startTimeSec) * 100));
+
+      // Divide durationCs across words for karaoke highlight
+      const rawWords = cue.text.replace(/\n/g, ' ').split(/\s+/).filter(Boolean);
+      let karaokeText = '';
+      if (rawWords.length > 0) {
+        const perWordCs = Math.max(5, Math.floor(durationCs / rawWords.length));
+        karaokeText = rawWords
+          .map((w, idx) => {
+            const cs = idx === rawWords.length - 1 ? (durationCs - perWordCs * (rawWords.length - 1)) : perWordCs;
+            return `{\\k${cs}}${w}`;
+          })
+          .join(' ');
+      } else {
+        karaokeText = cue.text;
+      }
+
+      return `Dialogue: 0,${startAss},${endAss},${styleName},,0,0,0,,${karaokeText}`;
+    });
+
+    return `${header}\n${lines.join('\n')}\n`;
+  }
+
+  private formatAssTime(seconds: number): string {
+    const totalMs = Math.floor(seconds * 1000);
+    const hrs = Math.floor(totalMs / 3600000);
+    const mins = Math.floor((totalMs % 3600000) / 60000);
+    const secs = Math.floor((totalMs % 60000) / 1000);
+    const cs = Math.floor((totalMs % 1000) / 10);
+
+    return `${hrs}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(cs).padStart(2, '0')}`;
   }
 
   private splitIntoPhrases(text: string): string[] {

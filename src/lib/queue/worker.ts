@@ -14,14 +14,16 @@ import { resolveGlobalVisualStyle } from '../video/visualStyles';
 import { AspectRatio } from '../providers/video-provider.types';
 import { EngineError } from '../video/engineErrors';
 import { issuePriceDeltaRefund, calculatePriceDeltaRefund } from '../billing/refundEngine';
+import { generateVideoPlan } from '../video/planGenerator';
+import { resolveLengthBand, isWithinBandLimit } from '../video/lengthBands';
 
-export type PipelineStage = 'SCRIPT' | 'SCENES' | 'VIDEO' | 'VOICE' | 'SUBTITLES' | 'FINAL_VIDEO' | 'THUMBNAIL';
+export type PipelineStage = 'PLAN' | 'VOICE' | 'SCENES' | 'VIDEO' | 'SUBTITLES' | 'FINAL_VIDEO' | 'THUMBNAIL';
 
 export const PIPELINE_STAGES: PipelineStage[] = [
-  'SCRIPT',
+  'PLAN',
+  'VOICE',
   'SCENES',
   'VIDEO',
-  'VOICE',
   'SUBTITLES',
   'FINAL_VIDEO',
   'THUMBNAIL',
@@ -119,10 +121,11 @@ export class VideoPipelineWorker {
       }
     }
 
-    // Determine starting index
+    // Determine starting index (redirect legacy SCRIPT to PLAN)
     let startIndex = 0;
     if (fromStage) {
-      const stageIdx = PIPELINE_STAGES.indexOf(fromStage);
+      const normalizedStage = (fromStage as string) === 'SCRIPT' ? 'PLAN' : fromStage;
+      const stageIdx = PIPELINE_STAGES.indexOf(normalizedStage as PipelineStage);
       if (stageIdx >= 0) {
         startIndex = stageIdx;
       }
@@ -274,23 +277,35 @@ export class VideoPipelineWorker {
     const now = new Date().toISOString();
 
     switch (stage) {
-      case 'SCRIPT': {
-        const { script, fullNarration } = await aiProvider.generateScript({
-          channelName: channel.name,
-          niche: channel.niche,
-          language: project.language || channel.language,
+      case 'PLAN':
+      case ('SCRIPT' as any): {
+        const planResult = await generateVideoPlan({
           topic: project.topic,
+          niche: channel.niche,
+          channelName: channel.name,
           targetLengthMinutes: project.target_length_minutes,
+          language: project.language || channel.language,
           visualStyle: channel.visual_style,
-          introStyle: channel.intro_style,
-          outroCta: channel.outro_cta,
-          contentRules: channel.content_rules,
         });
 
-        const scriptKey = `scripts/${project.id}/script.json`;
-        const res = await storage.putObject(scriptKey, JSON.stringify(script, null, 2), 'application/json');
+        const planKey = `plans/${project.id}/plan.json`;
+        const res = await storage.putObject(planKey, JSON.stringify(planResult, null, 2), 'application/json');
 
-        db.prepare("DELETE FROM generated_assets WHERE project_id = ? AND asset_type = 'script'").run(project.id);
+        // Store script.json for backward compatibility
+        const scriptKey = `scripts/${project.id}/script.json`;
+        await storage.putObject(scriptKey, JSON.stringify({
+          title: planResult.title,
+          hook: planResult.scenes[0]?.narration || '',
+          introduction: planResult.scenes[1]?.narration || '',
+          sections: planResult.scenes.slice(2, -2).map((s, idx) => ({
+            title: `Section ${idx + 1}`,
+            subsections: [{ subtitle: s.subtitleText || '', narration: s.narration }]
+          })),
+          conclusion: planResult.scenes[planResult.scenes.length - 2]?.narration || '',
+          callToAction: planResult.scenes[planResult.scenes.length - 1]?.narration || '',
+        }, null, 2), 'application/json');
+
+        db.prepare("DELETE FROM generated_assets WHERE project_id = ? AND asset_type IN ('script', 'plan')").run(project.id);
         db.prepare(
           `INSERT INTO generated_assets (id, project_id, asset_type, storage_key, url, metadata_json, created_at)
            VALUES (?, ?, ?, ?, ?, ?, ?)`
@@ -300,137 +315,21 @@ export class VideoPipelineWorker {
           'script',
           res.key,
           res.url,
-          JSON.stringify({ fullNarration, title: script.title }),
+          JSON.stringify({ fullNarration: planResult.fullNarration, title: planResult.title, framework: planResult.framework }),
           now
         );
-        break;
-      }
 
-      case 'VOICE': {
-        let scriptAsset = db
-          .prepare("SELECT * FROM generated_assets WHERE project_id = ? AND asset_type = 'script' ORDER BY created_at DESC LIMIT 1")
-          .get(project.id) as GeneratedAsset | undefined;
-
-        if (!scriptAsset) {
-          await this.executeStage('SCRIPT', project, channel);
-          scriptAsset = db
-            .prepare("SELECT * FROM generated_assets WHERE project_id = ? AND asset_type = 'script' ORDER BY created_at DESC LIMIT 1")
-            .get(project.id) as GeneratedAsset | undefined;
-        }
-
-        let scriptData = scriptAsset ? await storage.getObject(scriptAsset.storage_key) : null;
-        if (!scriptData) {
-          await this.executeStage('SCRIPT', project, channel);
-          scriptAsset = db
-            .prepare("SELECT * FROM generated_assets WHERE project_id = ? AND asset_type = 'script' ORDER BY created_at DESC LIMIT 1")
-            .get(project.id) as GeneratedAsset | undefined;
-          scriptData = scriptAsset ? await storage.getObject(scriptAsset.storage_key) : null;
-        }
-
-        if (!scriptData) {
-          throw new Error('Script data could not be retrieved');
-        }
-
-        const script: ScriptStructure = JSON.parse(scriptData.toString('utf8'));
-        const narrationParts: string[] = [script.hook, script.introduction];
-        for (const section of script.sections) {
-          for (const sub of section.subsections) {
-            narrationParts.push(sub.narration);
-          }
-        }
-        narrationParts.push(script.conclusion);
-        narrationParts.push(script.callToAction);
-        const fullNarration = narrationParts.join('\n\n');
-
-        const voiceRes = await voiceProvider.generateVoiceover({
-          text: fullNarration,
-          voiceName: channel.voice,
-          voiceSpeed: channel.voice_speed,
-          language: project.language || channel.language,
-          projectId: project.id,
-        });
-
-        const audioKey = `audio/${project.id}/narration.${voiceRes.format}`;
-        const audioAsset = await storage.putObject(audioKey, voiceRes.audioBuffer, `audio/${voiceRes.format}`);
-
-        db.prepare("DELETE FROM generated_assets WHERE project_id = ? AND asset_type = 'audio'").run(project.id);
-
-        db.prepare(
-          `INSERT INTO generated_assets (id, project_id, asset_type, storage_key, url, duration_sec, metadata_json, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-        ).run(
-          uuidv4(),
-          project.id,
-          'audio',
-          audioAsset.key,
-          audioAsset.url,
-          voiceRes.durationSec,
-          JSON.stringify({ voice: channel.voice, voiceSpeed: channel.voice_speed, format: voiceRes.format }),
-          now
-        );
-        break;
-      }
-
-      case 'SCENES': {
-        let scriptAsset = db
-          .prepare("SELECT * FROM generated_assets WHERE project_id = ? AND asset_type = 'script' ORDER BY created_at DESC LIMIT 1")
-          .get(project.id) as GeneratedAsset | undefined;
-
-        if (!scriptAsset) {
-          await this.executeStage('SCRIPT', project, channel);
-          scriptAsset = db
-            .prepare("SELECT * FROM generated_assets WHERE project_id = ? AND asset_type = 'script' ORDER BY created_at DESC LIMIT 1")
-            .get(project.id) as GeneratedAsset | undefined;
-        }
-
-        let scriptData = scriptAsset ? await storage.getObject(scriptAsset.storage_key) : null;
-        if (!scriptData) {
-          await this.executeStage('SCRIPT', project, channel);
-          scriptAsset = db
-            .prepare("SELECT * FROM generated_assets WHERE project_id = ? AND asset_type = 'script' ORDER BY created_at DESC LIMIT 1")
-            .get(project.id) as GeneratedAsset | undefined;
-          scriptData = scriptAsset ? await storage.getObject(scriptAsset.storage_key) : null;
-        }
-
-        if (!scriptData) {
-          throw new Error('Script content could not be read from storage');
-        }
-
-        const audioAsset = db
-          .prepare("SELECT * FROM generated_assets WHERE project_id = ? AND asset_type = 'audio' ORDER BY created_at DESC LIMIT 1")
-          .get(project.id) as GeneratedAsset | undefined;
-
-        const actualAudioDuration = audioAsset?.duration_sec || (project.target_length_minutes * 60);
-
-        const script: ScriptStructure = JSON.parse(scriptData.toString('utf8'));
-        const scenes = await aiProvider.generateScenes({
-          script,
-          niche: channel.niche,
-          language: project.language || channel.language,
-          targetLengthMinutes: project.target_length_minutes,
-          visualStyle: channel.visual_style,
-        });
-
-        // Calibrate scene durations to exactly match true audio duration
-        const totalEstimatedDuration = scenes.reduce((sum, s) => sum + s.estimatedDurationSec, 0);
-        const durationRatio = totalEstimatedDuration > 0 ? actualAudioDuration / totalEstimatedDuration : 1.0;
-
-        for (const scene of scenes) {
-          scene.estimatedDurationSec = Math.max(4, Math.round(scene.estimatedDurationSec * durationRatio * 10) / 10);
-        }
-
-        // Clear any previous scenes if retrying
+        // Populate video_scenes table directly from PLAN
         db.prepare('DELETE FROM video_scenes WHERE project_id = ?').run(project.id);
-
         const insertSceneStmt = db.prepare(
           `INSERT INTO video_scenes (
             id, project_id, scene_index, narration, visual_prompt, 
             visual_subject, environment, camera_movement, lighting, color_style, continuity_notes, 
-            estimated_duration_sec, subtitle_text, created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            estimated_duration_sec, subtitle_text, visual_tier, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         );
 
-        for (const scene of scenes) {
+        for (const scene of planResult.scenes) {
           insertSceneStmt.run(
             uuidv4(),
             project.id,
@@ -445,8 +344,127 @@ export class VideoPipelineWorker {
             scene.continuityNotes || null,
             scene.estimatedDurationSec,
             scene.subtitleText,
+            (scene as any).visualTier || 'motion_still',
             now
           );
+        }
+        break;
+      }
+
+      case 'VOICE': {
+        let scenes = db
+          .prepare('SELECT * FROM video_scenes WHERE project_id = ? ORDER BY scene_index ASC')
+          .all(project.id) as VideoScene[];
+
+        if (scenes.length === 0) {
+          await this.executeStage('PLAN', project, channel);
+          scenes = db
+            .prepare('SELECT * FROM video_scenes WHERE project_id = ? ORDER BY scene_index ASC')
+            .all(project.id) as VideoScene[];
+        }
+
+        if (scenes.length === 0) {
+          throw new EngineError('NO_VALID_AUDIO', `No scenes found for voice synthesis in project ${project.id}`);
+        }
+
+        const audioDir = path.dirname(storage.getFilePath(`audio/${project.id}/placeholder.txt`));
+        if (!fs.existsSync(audioDir)) fs.mkdirSync(audioDir, { recursive: true });
+
+        const segmentPaths: string[] = [];
+        let totalMeasuredSec = 0;
+
+        for (const scene of scenes) {
+          const voiceRes = await voiceProvider.generateVoiceover({
+            text: scene.narration,
+            voiceName: channel.voice,
+            voiceSpeed: channel.voice_speed,
+            language: project.language || channel.language,
+            projectId: project.id,
+          });
+
+          if (!voiceRes.audioBuffer || voiceRes.audioBuffer.length < 500) {
+            throw new EngineError('NO_VALID_AUDIO', `Scene ${scene.scene_index} voice generation returned empty buffer`);
+          }
+
+          const sceneAudioKey = `audio/${project.id}/scene_${scene.scene_index}.${voiceRes.format}`;
+          await storage.putObject(sceneAudioKey, voiceRes.audioBuffer, `audio/${voiceRes.format}`);
+          const segmentPath = storage.getFilePath(sceneAudioKey);
+          segmentPaths.push(segmentPath);
+
+          // Update video_scenes with exact measured duration from audio
+          const sceneDuration = voiceRes.durationSec > 0 ? voiceRes.durationSec : 4;
+          totalMeasuredSec += sceneDuration;
+
+          db.prepare(
+            `UPDATE video_scenes 
+             SET audio_storage_key = ?, audio_duration_sec = ?, estimated_duration_sec = ?
+             WHERE id = ?`
+          ).run(sceneAudioKey, sceneDuration, sceneDuration, scene.id);
+        }
+
+        // Assemble master narration track
+        const masterKey = `audio/${project.id}/narration.mp3`;
+        const masterPath = storage.getFilePath(masterKey);
+        const { durationSec: masterDuration } = await ffmpegCompositor.concatAudioFiles({
+          audioPaths: segmentPaths,
+          outputPath: masterPath,
+        });
+
+        const finalAudioDuration = masterDuration > 0 ? masterDuration : totalMeasuredSec;
+
+        // Band-overflow guard check
+        const targetDuration = project.target_length_minutes || 1;
+        if (!isWithinBandLimit(targetDuration, finalAudioDuration)) {
+          const bandConfig = resolveLengthBand(targetDuration);
+          throw new EngineError(
+            'BAND_OVERFLOW',
+            `Master audio duration (${finalAudioDuration.toFixed(1)}s) exceeds max limit for band [${bandConfig.label}] (${bandConfig.maxDurationSec}s + 0.5s tolerance). Auto-refund triggered.`
+          );
+        }
+
+        db.prepare("DELETE FROM generated_assets WHERE project_id = ? AND asset_type = 'audio'").run(project.id);
+        db.prepare(
+          `INSERT INTO generated_assets (id, project_id, asset_type, storage_key, url, duration_sec, metadata_json, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        ).run(
+          uuidv4(),
+          project.id,
+          'audio',
+          masterKey,
+          storage.getUrl(masterKey),
+          finalAudioDuration,
+          JSON.stringify({ voice: channel.voice, voiceSpeed: channel.voice_speed, segmentCount: segmentPaths.length }),
+          now
+        );
+        break;
+      }
+
+      case 'SCENES': {
+        let scenes = db
+          .prepare('SELECT * FROM video_scenes WHERE project_id = ? ORDER BY scene_index ASC')
+          .all(project.id) as VideoScene[];
+
+        if (scenes.length === 0) {
+          await this.executeStage('PLAN', project, channel);
+          scenes = db
+            .prepare('SELECT * FROM video_scenes WHERE project_id = ? ORDER BY scene_index ASC')
+            .all(project.id) as VideoScene[];
+        }
+
+        // Ensure each scene duration matches true audio duration if voice stage has run
+        const audioAsset = db
+          .prepare("SELECT * FROM generated_assets WHERE project_id = ? AND asset_type = 'audio' ORDER BY created_at DESC LIMIT 1")
+          .get(project.id) as GeneratedAsset | undefined;
+
+        if (audioAsset && audioAsset.duration_sec && audioAsset.duration_sec > 0) {
+          const totalEstimated = scenes.reduce((sum, s) => sum + (s.audio_duration_sec || s.estimated_duration_sec || 4), 0);
+          if (totalEstimated > 0 && Math.abs(totalEstimated - audioAsset.duration_sec) > 1.0) {
+            const ratio = audioAsset.duration_sec / totalEstimated;
+            for (const s of scenes) {
+              const adjusted = Math.max(2, Math.round((s.estimated_duration_sec || 4) * ratio * 10) / 10);
+              db.prepare('UPDATE video_scenes SET estimated_duration_sec = ? WHERE id = ?').run(adjusted, s.id);
+            }
+          }
         }
         break;
       }
@@ -634,26 +652,46 @@ export class VideoPipelineWorker {
           .all(project.id) as VideoScene[];
 
         if (scenes.length === 0) {
-          await this.executeStage('SCENES', project, channel);
+          await this.executeStage('PLAN', project, channel);
           scenes = db.prepare('SELECT * FROM video_scenes WHERE project_id = ? ORDER BY scene_index ASC').all(project.id) as VideoScene[];
         }
+
+        let projectAspectRatio: AspectRatio = '9:16';
+        try {
+          if ((project as any).aspect_ratio) {
+            projectAspectRatio = (project as any).aspect_ratio as AspectRatio;
+          } else if (project.metadata_json) {
+            const meta = JSON.parse(project.metadata_json);
+            if (meta.aspectRatio) projectAspectRatio = meta.aspectRatio;
+            else if (project.target_length_minutes >= 2) projectAspectRatio = '16:9';
+          } else if (project.target_length_minutes >= 2) {
+            projectAspectRatio = '16:9';
+          }
+        } catch {}
 
         const cues = subtitleProvider.generateCues(
           scenes.map((s) => ({
             sceneIndex: s.scene_index,
-            estimatedDurationSec: s.estimated_duration_sec,
-            subtitleText: s.subtitle_text,
+            estimatedDurationSec: s.audio_duration_sec || s.estimated_duration_sec || 4,
+            subtitleText: s.subtitle_text || s.narration,
           }))
         );
 
         const srtContent = subtitleProvider.generateSrt(cues);
         const vttContent = subtitleProvider.generateVtt(cues);
+        const assContent = subtitleProvider.generateAss(
+          cues,
+          channel.subtitle_style,
+          projectAspectRatio === '16:9' ? '16:9' : '9:16'
+        );
 
         const srtKey = `subtitles/${project.id}/captions.srt`;
         const vttKey = `subtitles/${project.id}/captions.vtt`;
+        const assKey = `subtitles/${project.id}/captions.ass`;
 
         const srtAsset = await storage.putObject(srtKey, srtContent, 'text/plain');
         await storage.putObject(vttKey, vttContent, 'text/vtt');
+        await storage.putObject(assKey, assContent, 'text/x-ssa');
 
         db.prepare("DELETE FROM generated_assets WHERE project_id = ? AND asset_type = 'subtitles'").run(project.id);
 
@@ -666,7 +704,7 @@ export class VideoPipelineWorker {
           'subtitles',
           srtAsset.key,
           srtAsset.url,
-          JSON.stringify({ cueCount: cues.length, vttKey, style: channel.subtitle_style }),
+          JSON.stringify({ cueCount: cues.length, vttKey, assKey, style: channel.subtitle_style }),
           now
         );
         break;
@@ -715,7 +753,24 @@ export class VideoPipelineWorker {
 
         const clipPaths = clipAssets.map((c) => storage.getFilePath(c.storage_key));
         let audioPath = storage.getFilePath(audioAsset.storage_key);
-        const subPath = subAsset ? storage.getFilePath(subAsset.storage_key) : undefined;
+        let subPath: string | undefined = undefined;
+        if (subAsset) {
+          try {
+            const meta = subAsset.metadata_json ? JSON.parse(subAsset.metadata_json) : {};
+            if (meta.assKey) {
+              const testAss = storage.getFilePath(meta.assKey);
+              if (fs.existsSync(testAss)) {
+                subPath = testAss;
+              }
+            }
+          } catch {}
+          if (!subPath && subAsset.storage_key) {
+            const defaultSub = storage.getFilePath(subAsset.storage_key);
+            if (fs.existsSync(defaultSub)) {
+              subPath = defaultSub;
+            }
+          }
+        }
 
         // Guaranteed audio verification on disk
         let audioValid = false;

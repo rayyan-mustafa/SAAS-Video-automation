@@ -5,6 +5,7 @@ export type EngineErrorCode =
   | 'UNVERIFIED_MODEL'
   | 'BUDGET_EXCEEDED'
   | 'PROMPT_MODERATION_FAILED'
+  | 'BAND_OVERFLOW'
   | 'STAGE_EXECUTION_FAILED';
 
 export class EngineError extends Error {

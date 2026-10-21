@@ -5,6 +5,7 @@ import util from 'util';
 import { storage, getTempDir } from '../storage';
 import { inspectMedia, getFfmpegPath } from './videoProvider';
 import { getApiKey } from '../db';
+import { EngineError } from '../video/engineErrors';
 
 const execFileAsync = util.promisify(execFile);
 
@@ -529,20 +530,23 @@ $synth.Dispose()
       }
     }
 
-    // 2. Try Microsoft Edge Neural TTS (Free Sandbox dev mode)
+    // 2. Try Microsoft Edge Neural TTS (Free Sandbox dev mode only)
     if (!finalBuffer || finalBuffer.length < 500) {
+      if (process.env.NODE_ENV === 'production' && process.env.ALLOW_DEV_TTS !== '1') {
+        throw new EngineError('STAGE_EXECUTION_FAILED', 'Licensed Azure Cognitive Speech API credentials required in production mode');
+      }
       try {
         finalBuffer = await this.synthesizeWithMsEdgeTTS(cleanText, params.voiceName, params.language);
         if (finalBuffer && finalBuffer.length > 500) {
-          selectedEngine = 'Microsoft Edge Neural';
-          console.log(`[VoiceProvider] Synthesized voiceover via Microsoft Edge Neural TTS (${finalBuffer.length} bytes, mapped voice: ${this.resolveEdgeVoice(params.voiceName, params.language)})`);
+          selectedEngine = 'Microsoft Edge Neural Sandbox';
+          console.log(`[VoiceProvider] Synthesized voiceover via Microsoft Edge Neural Sandbox (${finalBuffer.length} bytes, mapped voice: ${this.resolveEdgeVoice(params.voiceName, params.language)})`);
         }
       } catch (err: any) {
         console.warn(`[VoiceProvider] Microsoft Edge TTS failed (${err.message}). Trying Google Neural Stream...`);
       }
     }
 
-    // 2. Try Google Speech Neural Stream (Universal 100% available fallback)
+    // 2. Try Google Speech Neural Stream (Universal fallback)
     if (!finalBuffer || finalBuffer.length < 500) {
       try {
         finalBuffer = await this.synthesizeWithGoogleTTS(cleanText, params.language || 'en');
@@ -565,10 +569,9 @@ $synth.Dispose()
       } catch {}
     }
 
-    // 4. Last resort: FFmpeg silent fallback audio
+    // 4. Fail closed: Throw typed EngineError if all voice engines fail
     if (!finalBuffer || finalBuffer.length < 500) {
-      console.error('[VoiceProvider] CRITICAL: All voice engines failed. Using silent audio fallback.');
-      finalBuffer = await this.generateSilentAudioBuffer(estimatedDuration);
+      throw new EngineError('NO_VALID_AUDIO', 'All voice synthesis engines failed to produce valid audio.');
     }
 
     // Probe real duration with FFmpeg

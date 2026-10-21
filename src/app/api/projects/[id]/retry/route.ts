@@ -19,7 +19,7 @@ export async function POST(request: Request, { params }: { params: any }) {
     const db = getDb();
     const now = new Date().toISOString();
 
-    let retryStage: PipelineStage = 'SCRIPT';
+    let retryStage: PipelineStage = 'PLAN';
     let singleStageOnly = false;
     let bodyTopic: string | null = null;
 
@@ -29,7 +29,9 @@ export async function POST(request: Request, { params }: { params: any }) {
         if (body.topic && typeof body.topic === 'string') {
           bodyTopic = body.topic.trim().substring(0, 500);
         }
-        if (body.stage && PIPELINE_STAGES.includes(body.stage)) {
+        if (body.stage === 'SCRIPT') {
+          retryStage = 'PLAN';
+        } else if (body.stage && PIPELINE_STAGES.includes(body.stage)) {
           retryStage = body.stage;
         }
         if (typeof body.singleStageOnly === 'boolean') {
