@@ -528,6 +528,7 @@ export class VideoPipelineWorker {
                 colorStyle: scene.color_style || undefined,
                 continuityNotes: scene.continuity_notes || undefined,
                 aspectRatio: projectAspectRatio,
+                visualTier: (scene as any).visual_tier || 'motion_still',
               } as any);
 
               if (clips && clips.length > 0) {

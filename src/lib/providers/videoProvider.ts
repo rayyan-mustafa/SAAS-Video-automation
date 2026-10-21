@@ -11,8 +11,10 @@ import { cloudflareVideoProvider } from './cloudflareVideoProvider';
 import { veoVideoProvider } from './veoVideoProvider';
 import { runwayVideoProvider } from './runwayVideoProvider';
 import { lumaVideoProvider } from './lumaVideoProvider';
-import { characterManager } from '../video/characterManager';
 import { EngineError } from '../video/engineErrors';
+import { graphicRenderer } from '../video/graphicRenderer';
+import { motionStillRenderer } from '../video/motionStillRenderer';
+import { characterManager } from '../video/characterManager';
 
 const execFileAsync = util.promisify(execFile);
 
@@ -208,6 +210,55 @@ class DefaultVideoProvider implements VideoProvider {
       aspectRatio = '9:16',
       visualMediaMode = 'auto',
     } = params;
+
+    const requestedTier = (params as any).visualTier || visualMediaMode;
+
+    // 1. Direct Graphic Card Dispatch (Stat callouts, headlines, key takeaways)
+    if (requestedTier === 'graphic') {
+      const statMatch = visualPrompt.match(/\b(\d+(\.\d+)?%|\$\d+(\.\d+)?[MBKmbk]?|\d+x|\d+\s*(million|billion|thousand))\b/i);
+      const statText = statMatch ? statMatch[0].toUpperCase() : 'KEY METRIC';
+      const res = await graphicRenderer.renderGraphicCard({
+        projectId,
+        sceneIndex,
+        statOrHeadline: statText,
+        subText: visualPrompt,
+        badge: niche ? niche.toUpperCase() : 'KEY METRIC',
+        durationSec,
+        aspectRatio: aspectRatio === '16:9' ? '16:9' : '9:16',
+      });
+      return [{
+        clipIndex: 1,
+        storageKey: res.storageKey,
+        url: res.url,
+        filePath: res.filePath,
+        durationSec: res.durationSec,
+        tier: 'graphic',
+        visualTier: 'graphic',
+      } as any];
+    }
+
+    // 2. Direct Motion Still Dispatch (Zoompan / Ken Burns)
+    if (requestedTier === 'motion_still') {
+      const motionType = sceneIndex % 2 === 0 ? 'zoom_in' : 'zoom_out';
+      const res = await motionStillRenderer.renderMotionStill({
+        projectId,
+        sceneIndex,
+        durationSec,
+        promptDescription: visualPrompt,
+        motionType,
+        aspectRatio: aspectRatio === '16:9' ? '16:9' : '9:16',
+      });
+      return [{
+        clipIndex: 1,
+        storageKey: res.storageKey,
+        url: res.url,
+        filePath: res.filePath,
+        durationSec: res.durationSec,
+        tier: 'motion_still',
+        visualTier: 'motion_still',
+      } as any];
+    }
+
     const clips: GeneratedClip[] = [];
 
     const isServerless = process.env.VERCEL === '1' || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
@@ -237,76 +288,100 @@ class DefaultVideoProvider implements VideoProvider {
       'Smooth centering dolly push with stable tracking',
     ];
 
-    for (let cIdx = 0; cIdx < clipDurations.length; cIdx++) {
-      const clipDuration = clipDurations[cIdx];
-      const clipKey = `clips/${projectId}/scene_${sceneIndex}_clip_${cIdx + 1}.mp4`;
-      const localFilePath = storage.getFilePath(clipKey);
-      const fileDir = path.dirname(localFilePath);
-      if (!fs.existsSync(fileDir)) {
-        fs.mkdirSync(fileDir, { recursive: true });
-      }
-
-      // Generate distinct visual prompt variation for each sub-clip
-      const cameraSubStyle = subClipAngles[(sceneIndex + cIdx) % subClipAngles.length];
-      const subPrompt = cIdx === 0
-        ? visualPrompt
-        : `${visualPrompt}, shot variation: ${cameraSubStyle}`;
-
-      await this.generateVideoClip({
-        prompt: subPrompt,
-        durationSec: clipDuration,
-        outputPath: localFilePath,
-        sceneIndex,
-        clipIndex: cIdx + 1,
-        niche,
-        visualStyle,
-        cameraMovement: cameraSubStyle,
-        lighting,
-        colorStyle,
-        continuityNotes,
-        aspectRatio,
-        visualMediaMode,
-        projectId,
-        sceneId,
-        topic: (params as any).topic,
-      } as any);
-
-      // Ensure valid clip file on disk and probe actual duration
-      if (!fs.existsSync(localFilePath)) {
-        throw new EngineError(
-          'NO_VALID_CLIPS',
-          `Video clip generation produced no output file for Scene ${sceneIndex} Clip ${cIdx + 1}`
-        );
-      }
-
-      const fileStat = await fs.promises.stat(localFilePath);
-      if (fileStat.size < 1000) {
-        throw new EngineError(
-          'NO_VALID_CLIPS',
-          `Video clip file for Scene ${sceneIndex} Clip ${cIdx + 1} is corrupted (${fileStat.size} bytes)`
-        );
-      }
-
-      let actualDuration = clipDuration;
-      try {
-        const meta = await inspectMedia(localFilePath);
-        if (meta.durationSec > 0) {
-          actualDuration = Math.round(meta.durationSec * 10) / 10;
+    try {
+      for (let cIdx = 0; cIdx < clipDurations.length; cIdx++) {
+        const clipDuration = clipDurations[cIdx];
+        const clipKey = `clips/${projectId}/scene_${sceneIndex}_clip_${cIdx + 1}.mp4`;
+        const localFilePath = storage.getFilePath(clipKey);
+        const fileDir = path.dirname(localFilePath);
+        if (!fs.existsSync(fileDir)) {
+          fs.mkdirSync(fileDir, { recursive: true });
         }
-      } catch (probeErr: any) {
-        console.warn(`[VideoProvider] Probe media warning for Scene ${sceneIndex} Clip ${cIdx + 1}: ${probeErr.message}`);
+
+        // Generate distinct visual prompt variation for each sub-clip
+        const cameraSubStyle = subClipAngles[(sceneIndex + cIdx) % subClipAngles.length];
+        const subPrompt = cIdx === 0
+          ? visualPrompt
+          : `${visualPrompt}, shot variation: ${cameraSubStyle}`;
+
+        await this.generateVideoClip({
+          prompt: subPrompt,
+          durationSec: clipDuration,
+          outputPath: localFilePath,
+          sceneIndex,
+          clipIndex: cIdx + 1,
+          niche,
+          visualStyle,
+          cameraMovement: cameraSubStyle,
+          lighting,
+          colorStyle,
+          continuityNotes,
+          aspectRatio,
+          visualMediaMode,
+          projectId,
+          sceneId,
+          topic: (params as any).topic,
+        } as any);
+
+        // Ensure valid clip file on disk and probe actual duration
+        if (!fs.existsSync(localFilePath)) {
+          throw new EngineError(
+            'NO_VALID_CLIPS',
+            `Video clip generation produced no output file for Scene ${sceneIndex} Clip ${cIdx + 1}`
+          );
+        }
+
+        const fileStat = await fs.promises.stat(localFilePath);
+        if (fileStat.size < 1000) {
+          throw new EngineError(
+            'NO_VALID_CLIPS',
+            `Video clip file for Scene ${sceneIndex} Clip ${cIdx + 1} is corrupted (${fileStat.size} bytes)`
+          );
+        }
+
+        let actualDuration = clipDuration;
+        try {
+          const meta = await inspectMedia(localFilePath);
+          if (meta.durationSec > 0) {
+            actualDuration = Math.round(meta.durationSec * 10) / 10;
+          }
+        } catch (probeErr: any) {
+          console.warn(`[VideoProvider] Probe media warning for Scene ${sceneIndex} Clip ${cIdx + 1}: ${probeErr.message}`);
+        }
+
+        clips.push({
+          clipIndex: cIdx + 1,
+          durationSec: actualDuration,
+          storageKey: clipKey,
+          url: storage.getUrl(clipKey),
+          filePath: localFilePath,
+          tier: 'ai_clip',
+          visualTier: 'ai_clip',
+        } as any);
       }
 
-      clips.push({
-        clipIndex: cIdx + 1,
-        durationSec: actualDuration,
-        storageKey: clipKey,
-        url: storage.getUrl(clipKey),
-        filePath: localFilePath,
+      return clips;
+    } catch (aiErr: any) {
+      console.warn(`[VideoProvider] ⚡ AI Clip generation failed for Scene ${sceneIndex}: ${aiErr.message}. Downgrading to motion_still with price-delta refund.`);
+      const res = await motionStillRenderer.renderMotionStill({
+        projectId,
+        sceneIndex,
+        durationSec,
+        promptDescription: visualPrompt,
+        motionType: 'zoom_in',
+        aspectRatio: aspectRatio === '16:9' ? '16:9' : '9:16',
       });
+      return [{
+        clipIndex: 1,
+        storageKey: res.storageKey,
+        url: res.url,
+        filePath: res.filePath,
+        durationSec: res.durationSec,
+        tier: 'motion_still',
+        visualTier: 'motion_still',
+        downgraded: true,
+      } as any];
     }
-
-    return clips;
   }
 
   async generateVideoClip(params: {
