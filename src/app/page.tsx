@@ -159,7 +159,7 @@ export default function HomePage() {
   const [quickTopic, setQuickTopic] = useState('');
   const [selectedFormat, setSelectedFormat] = useState<string>('explainer');
   const [voiceModel, setVoiceModel] = useState('Adam (Deep, Narrator)');
-  const [backgroundFootage, setBackgroundFootage] = useState('Minecraft Parkour');
+  const [backgroundFootage, setBackgroundFootage] = useState('Cinematic AI (Veo 3.1 / Kling / Wan)');
   const [durationMode, setDurationMode] = useState<'shorts' | 'longform'>('shorts');
   const [duration, setDuration] = useState<number>(45);
   const [autoCaptions, setAutoCaptions] = useState(true);
@@ -184,7 +184,7 @@ export default function HomePage() {
   const [remixVoice, setRemixVoice] = useState('Adam (Deep, Narrator)');
   const [remixSubmitting, setRemixSubmitting] = useState(false);
 
-  const topicInputRef = useRef<HTMLInputElement | null>(null);
+  const topicInputRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
 
   // Greeting by time of day
   const getGreeting = () => {
@@ -389,7 +389,7 @@ export default function HomePage() {
     setQuickTopic('');
     setSelectedFormat('explainer');
     setVoiceModel('Adam (Deep, Narrator)');
-    setBackgroundFootage('Minecraft Parkour');
+    setBackgroundFootage('Cinematic AI (Veo 3.1 / Kling / Wan)');
     setDuration(45);
     setAutoCaptions(true);
     setAutoUpload(false);
@@ -491,8 +491,12 @@ export default function HomePage() {
       }
 
       const data = await res.json();
-      toast.success('Video queued for synthesis! Tracking progress below.');
-      await fetchDashboardData();
+      toast.success('AI Video Draft created! Opening Timeline Studio... 🎬');
+      if (data.projectId) {
+        router.push(`/content/${data.projectId}`);
+      } else {
+        await fetchDashboardData();
+      }
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -869,12 +873,30 @@ export default function HomePage() {
         {/* ── LEFT COLUMN: CREATION SETTINGS, SMART SUMMARY & IDEAS ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
-          {/* New Automation Panel (Exact match for reference design) */}
-          <div className="autora-panel">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
-              <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', margin: 0 }}>
-                New Automation
-              </h2>
+          {/* Prompt-to-Video Engine Panel (InVideo AI / Runway class workflow) */}
+          <div className="autora-panel" style={{ position: 'relative', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div>
+                <h2 style={{ fontSize: '17px', fontWeight: 800, color: '#ffffff', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>⚡ Prompt-to-Video Engine</span>
+                  <span style={{
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    background: 'rgba(168, 85, 247, 0.15)',
+                    border: '1px solid rgba(168, 85, 247, 0.3)',
+                    color: '#c084fc',
+                    padding: '2px 8px',
+                    borderRadius: '9999px'
+                  }}>
+                    Agentic Studio (WP8 / WP5)
+                  </span>
+                </h2>
+                <p style={{ fontSize: '12px', color: '#71717a', margin: '4px 0 0' }}>
+                  One prompt → Multi-scene storyboard cut → Interactive Timeline Editor
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={handleResetConfig}
@@ -893,62 +915,109 @@ export default function HomePage() {
             </div>
 
             <form onSubmit={handleGenerateShort} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              {/* Video Topic or Script Input */}
+              {/* Comprehensive Video Prompt Textarea */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#a1a1aa', marginBottom: '8px' }}>
-                  Video Topic or Script
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    id="creator-topic-input"
-                    ref={topicInputRef}
-                    type="text"
-                    value={quickTopic}
-                    onChange={(e) => setQuickTopic(e.target.value)}
-                    placeholder="Enter a video topic or headline (e.g. Top 5 mysterious places in the world...)"
-                    className="autora-input autora-hero-input"
-                    style={{
-                      width: '100%',
-                      background: '#13141a',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px',
-                      padding: '12px 42px 12px 14px',
-                      color: '#ffffff',
-                      fontSize: '13px',
-                      outline: 'none',
-                    }}
-                    aria-label="Video Topic or Script"
-                  />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <label htmlFor="creator-topic-input" style={{ fontSize: '12px', fontWeight: 700, color: '#e4e4e7' }}>
+                    AI Video Prompt (Describe topic, visuals, pacing & tone)
+                  </label>
                   <button
                     type="button"
                     onClick={handleSurpriseMe}
-                    title="Randomize viral topic"
                     style={{
-                      position: 'absolute',
-                      right: '10px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#a1a1aa',
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '6px',
+                      color: '#c084fc',
                       cursor: 'pointer',
-                      fontSize: '16px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      padding: '3px 8px',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
+                      gap: '4px'
                     }}
-                    aria-label="Randomize topic"
+                    aria-label="Randomize viral concept prompt"
                   >
-                    🎲
+                    <span>🎲 Surprise Me</span>
                   </button>
+                </div>
+                <div style={{ position: 'relative' }}>
+                  <textarea
+                    id="creator-topic-input"
+                    ref={topicInputRef as any}
+                    rows={4}
+                    value={quickTopic}
+                    onChange={(e) => setQuickTopic(e.target.value)}
+                    placeholder="Describe your video in detail... (e.g. A 45-second high-retention documentary exploring how quantum computers will break RSA encryption. Fast pacing, dark cyberpunk aesthetic, high-contrast visuals, dramatic narrator voice, and clear subtitle captions)..."
+                    className="autora-input"
+                    style={{
+                      width: '100%',
+                      background: '#111216',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      borderRadius: '10px',
+                      padding: '14px',
+                      color: '#ffffff',
+                      fontSize: '13px',
+                      lineHeight: '1.5',
+                      resize: 'vertical',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                    aria-label="AI Video Prompt"
+                  />
+                </div>
+
+                {/* Prompt Enhancer Quick-Chips */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
+                  <span style={{ fontSize: '11px', color: '#71717a', alignSelf: 'center', marginRight: '4px' }}>
+                    Add Enhancers:
+                  </span>
+                  {[
+                    { label: '⚡ High-Impact Hook', append: ', starts with a shocking 3-second hook question' },
+                    { label: '🌌 4K Generative AI', append: ', photorealistic cinematic visuals with slow dramatic camera motion' },
+                    { label: '📊 Data & Stats', append: ', backed by verified data, research numbers and crisp motion graphics' },
+                    { label: '🎙️ Deep Docu-Tone', append: ', serious investigative documentary narration style' },
+                    { label: '📱 Viral Retention', append: ', ultra high-tempo scene transitions every 3 to 4 seconds' },
+                  ].map((chip, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        setQuickTopic((prev) => (prev ? prev.trim() + chip.append : chip.label.replace(/^.*? /, '')));
+                        toast.info(`Added enhancer: ${chip.label}`);
+                      }}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '6px',
+                        color: '#a1a1aa',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        padding: '4px 8px',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = 'rgba(168, 85, 247, 0.4)';
+                        e.currentTarget.style.color = '#ffffff';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                        e.currentTarget.style.color = '#a1a1aa';
+                      }}
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Row with Voice & Style Dropdowns */}
+              {/* Row with Voice & Modern Visual Engine Presets */}
               <div className="autora-form-row">
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#a1a1aa', marginBottom: '6px' }}>
-                    AI Voice Model
+                  <label htmlFor="voice-select" style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#a1a1aa', marginBottom: '6px' }}>
+                    AI Narrator Voice
                   </label>
                   <select
                     id="voice-select"
@@ -957,31 +1026,31 @@ export default function HomePage() {
                     onChange={(e) => setVoiceModel(e.target.value)}
                     aria-label="AI Voice Model"
                   >
-                    <option value="Adam (Deep, Narrator)">Adam (Deep, Narrator)</option>
-                    <option value="Rachel (Energetic, Viral)">Rachel (Energetic, Viral)</option>
-                    <option value="Antony (Documentary)">Antony (Documentary)</option>
-                    <option value="Bella (Warm, Friendly)">Bella (Warm, Friendly)</option>
-                    <option value="Josh (Dramatic Storyteller)">Josh (Dramatic Storyteller)</option>
+                    <option value="Adam (Deep, Narrator)">Adam (Deep, Storyteller)</option>
+                    <option value="Rachel (Energetic, Viral)">Rachel (Energetic, High-Paced)</option>
+                    <option value="Antony (Documentary)">Antony (Investigative Documentary)</option>
+                    <option value="Bella (Warm, Friendly)">Bella (Warm, Conversational)</option>
+                    <option value="Josh (Dramatic Storyteller)">Josh (Dramatic Cinematic)</option>
                   </select>
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#a1a1aa', marginBottom: '6px' }}>
-                    Background Footage
+                  <label htmlFor="style-select" style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#a1a1aa', marginBottom: '6px' }}>
+                    Visual Synthesis Engine & Preset
                   </label>
                   <select
                     id="style-select"
                     className="autora-select"
                     value={backgroundFootage}
                     onChange={(e) => setBackgroundFootage(e.target.value)}
-                    aria-label="Background Footage"
+                    aria-label="Visual Style Engine"
                   >
-                    <option value="Minecraft Parkour">Minecraft Parkour</option>
-                    <option value="Subway Surfers Gameplay">Subway Surfers</option>
-                    <option value="Satisfying Kinetic / Slime">Satisfying Slime</option>
-                    <option value="GTA 5 Mega Ramp Stunts">GTA 5 Mega Ramp</option>
-                    <option value="cinematic">Cinematic 4K Deep Space</option>
-                    <option value="Relaxing Nature Drone">Nature Cinematic</option>
+                    <option value="Cinematic AI (Veo 3.1 / Kling / Wan)">Cinematic AI (Veo 3.1 / Kling / Wan)</option>
+                    <option value="Photorealistic Studio Documentary">Photorealistic Studio Documentary</option>
+                    <option value="Cyberpunk & Dark High-Tech">Cyberpunk & Dark High-Tech</option>
+                    <option value="Minimalist Motion Graphics & Typography">Minimalist Motion Graphics & Typography</option>
+                    <option value="Hyper-Real Nature & Aerial Drone 4K">Hyper-Real Nature & Drone 4K</option>
+                    <option value="Satisfying Kinetic / Slime">Satisfying Kinetic & Motion Flow</option>
                   </select>
                 </div>
               </div>
@@ -1227,7 +1296,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Big Generate Short Button matching reference */}
+              {/* Big Generate Short & Open Timeline Button */}
               <button
                 id="generate-video-btn"
                 type="submit"
@@ -1235,8 +1304,8 @@ export default function HomePage() {
                 style={{
                   width: '100%',
                   padding: '14px',
-                  background: '#ffffff',
-                  color: '#09090b',
+                  background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
+                  color: '#ffffff',
                   border: 'none',
                   borderRadius: '10px',
                   fontWeight: 800,
@@ -1247,21 +1316,21 @@ export default function HomePage() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  boxShadow: '0 4px 14px rgba(255, 255, 255, 0.2)',
+                  boxShadow: '0 4px 16px rgba(168, 85, 247, 0.35)',
                   transition: 'all 0.15s ease'
                 }}
               >
                 {creating ? (
                   <>
-                    <div className="autora-spinner" style={{ borderColor: 'rgba(0,0,0,0.2)', borderTopColor: '#000', width: '16px', height: '16px' }} />
-                    <span>Dispatching Job...</span>
+                    <div className="autora-spinner" style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff', width: '16px', height: '16px' }} />
+                    <span>Synthesizing Video Draft & Loading Timeline...</span>
                   </>
                 ) : (
                   <>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <polygon points="5 3 19 12 5 21 5 3" />
                     </svg>
-                    <span>Generate Short</span>
+                    <span>✨ Generate Video Draft & Open Timeline Studio →</span>
                   </>
                 )}
               </button>
@@ -1501,6 +1570,24 @@ export default function HomePage() {
                   <span style={{ color: (activeRendering.current_stage || '').toUpperCase() === 'FINAL_VIDEO' ? '#22c55e' : '#71717a' }}>
                     ○ Render
                   </span>
+                </div>
+
+                {/* Direct Link into Studio / Timeline */}
+                <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid rgba(255, 255, 255, 0.06)', display: 'flex', justifyContent: 'flex-end' }}>
+                  <Link
+                    href={`/content/${activeRendering.id}`}
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      color: '#c084fc',
+                      textDecoration: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <span>Open Live Storyboard & Timeline Studio →</span>
+                  </Link>
                 </div>
               </div>
             ) : (

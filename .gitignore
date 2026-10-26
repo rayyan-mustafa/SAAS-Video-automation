@@ -43,4 +43,15 @@ browser-qa-results.json
 screenshot-*.png
 qa-screenshots/
 mobile-ux-audit-results.json
+/output-videos/
+public/output-*.mp4
+*.mp3
+
+# Ad-hoc scratch & one-off test scripts
+scripts/*.cjs
+scripts/*.mjs
+scripts/test-playwright-roam.ts
+scripts/test-prompt-to-timeline.ts
+scripts/capture-timeline-studio.ts
+
 
