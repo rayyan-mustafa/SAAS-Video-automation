@@ -73,9 +73,10 @@ export function validateEnvironment(): EnvValidationResult {
   const hasGemini = !!(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
   const hasOpenRouter = !!process.env.OPENROUTER_API_KEY;
   const hasOpenAI = !!process.env.OPENAI_API_KEY;
+  const hasCloudflare = !!(process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN);
 
-  if (!hasGemini && !hasOpenRouter && !hasOpenAI) {
-    errors.push('No AI script generation provider is configured. Set GEMINI_API_KEY or OPENROUTER_API_KEY.');
+  if (!hasGemini && !hasOpenRouter && !hasOpenAI && !hasCloudflare) {
+    errors.push('No AI script generation provider is configured. Set GEMINI_API_KEY, OPENROUTER_API_KEY, or CLOUDFLARE_API_TOKEN.');
   }
 
   // 4. Stripe Payments Configuration

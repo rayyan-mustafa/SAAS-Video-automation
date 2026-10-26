@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { getDb, getApiKey } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
+import { isCloudflareConfigured, runCloudflareJson } from '@/lib/providers/cloudflareAiClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -81,7 +82,37 @@ OUTPUT FORMAT: Return strictly a valid JSON array of 5 title strings, with no ma
 Example: ["Title 1", "Title 2", "Title 3", "Title 4", "Title 5"]
 `;
 
-    if (apiKey) {
+    // 2a. Try Cloudflare Workers AI
+    if (isCloudflareConfigured()) {
+      try {
+        const cfRes = await runCloudflareJson<any>(
+          '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+          {
+            messages: [
+              { role: 'system', content: 'You are an elite YouTube viral title engineer. You output only a JSON array of strings.' },
+              { role: 'user', content: promptText },
+            ],
+            response_format: { type: 'json_object' },
+            temperature: 0.7,
+          },
+          { timeoutMs: 15000 }
+        );
+
+        let data = cfRes?.response || cfRes;
+        if (typeof data === 'string') {
+          const clean = data.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
+          data = JSON.parse(clean);
+        }
+        const list = Array.isArray(data) ? data : data?.titles || data?.angles;
+        if (Array.isArray(list) && list.length > 0) {
+          generatedAngles = list.slice(0, 5).map((t: any) => String(t).trim());
+        }
+      } catch (cfErr: any) {
+        console.warn('[Competitor Cloudflare AI Warning]:', cfErr.message);
+      }
+    }
+
+    if (generatedAngles.length === 0 && apiKey) {
       try {
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
           method: 'POST',

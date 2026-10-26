@@ -76,6 +76,30 @@ export const KNOWN_INTEGRATIONS: Record<string, IntegrationDefinition> = {
     ],
   },
 
+  cloudflare_text: {
+    provider: 'cloudflare_text',
+    category: 'ai_text',
+    displayName: 'Cloudflare Workers AI (LLMs)',
+    description: 'Serverless Meta Llama 3.3 70B, Google Gemma 4 26B, Llama 4 Scout, and DeepSeek R1',
+    defaultSettings: {
+      defaultModel: '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+      temperature: 0.7,
+      maxOutputTokens: 8192,
+    },
+    supportedModels: [
+      '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+      '@cf/google/gemma-4-26b-a4b-it',
+      '@cf/meta/llama-4-scout-17b-16e-instruct',
+      '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
+      '@cf/ibm/granite-4.0-h-micro',
+    ],
+    credentialFields: [
+      { key: 'accountId', label: 'Cloudflare Account ID', placeholder: 'aac50d67f3ec9133524158d1379bce23', type: 'text', required: true, envFallbackKey: 'CLOUDFLARE_ACCOUNT_ID' },
+      { key: 'apiToken', label: 'Cloudflare API Token', placeholder: 'cfat_...', type: 'password', required: true, envFallbackKey: 'CLOUDFLARE_API_TOKEN' },
+      { key: 'gatewayId', label: 'AI Gateway ID (Optional)', placeholder: 'autora-gateway', type: 'text', required: false, envFallbackKey: 'CLOUDFLARE_AI_GATEWAY_ID' },
+    ],
+  },
+
   // AI Video Diffusion
   fal: {
     provider: 'fal',
@@ -100,16 +124,23 @@ export const KNOWN_INTEGRATIONS: Record<string, IntegrationDefinition> = {
   cloudflare: {
     provider: 'cloudflare',
     category: 'ai_video',
-    displayName: 'Cloudflare Workers AI',
-    description: 'Serverless MiniMax Video-01 and Flux 1 Schnell neural video synthesis',
+    displayName: 'Cloudflare Workers AI (Visual & Video)',
+    description: 'FLUX.1 [schnell] keyframes with 60fps Ken Burns pan/zoom, SDXL Lightning, and MiniMax video',
     defaultSettings: {
-      defaultModel: '@cf/minimax/video-01',
+      defaultModel: '@cf/black-forest-labs/flux-1-schnell',
+      fallbackModel: '@cf/bytedance/stable-diffusion-xl-lightning',
       imageModel: '@cf/black-forest-labs/flux-1-schnell',
     },
-    supportedModels: ['@cf/minimax/video-01', '@cf/black-forest-labs/flux-1-schnell'],
+    supportedModels: [
+      '@cf/black-forest-labs/flux-1-schnell',
+      '@cf/bytedance/stable-diffusion-xl-lightning',
+      '@cf/stabilityai/stable-diffusion-xl-base-1.0',
+      '@cf/minimax/video-01',
+    ],
     credentialFields: [
-      { key: 'accountId', label: 'Cloudflare Account ID', placeholder: '14312a5d4555742372b860ffcbcb116a', type: 'text', required: true, envFallbackKey: 'CLOUDFLARE_ACCOUNT_ID' },
-      { key: 'apiToken', label: 'Cloudflare API Token', placeholder: 'v_v0k571...', type: 'password', required: true, envFallbackKey: 'CLOUDFLARE_API_TOKEN' },
+      { key: 'accountId', label: 'Cloudflare Account ID', placeholder: 'aac50d67f3ec9133524158d1379bce23', type: 'text', required: true, envFallbackKey: 'CLOUDFLARE_ACCOUNT_ID' },
+      { key: 'apiToken', label: 'Cloudflare API Token', placeholder: 'cfat_...', type: 'password', required: true, envFallbackKey: 'CLOUDFLARE_API_TOKEN' },
+      { key: 'gatewayId', label: 'AI Gateway ID (Optional)', placeholder: 'autora-gateway', type: 'text', required: false, envFallbackKey: 'CLOUDFLARE_AI_GATEWAY_ID' },
     ],
   },
   veo: {
@@ -238,6 +269,30 @@ export const KNOWN_INTEGRATIONS: Record<string, IntegrationDefinition> = {
     supportedModels: ['eleven_multilingual_v2', 'eleven_turbo_v2_5', 'eleven_monolingual_v1'],
     credentialFields: [
       { key: 'apiKey', label: 'ElevenLabs API Key', placeholder: 'xi-...', type: 'password', required: true, envFallbackKey: 'ELEVENLABS_API_KEY' },
+    ],
+  },
+  cloudflare_voice: {
+    provider: 'cloudflare_voice',
+    category: 'voice',
+    displayName: 'Cloudflare Workers AI Voice (Aura-2 & MeloTTS)',
+    description: 'Deepgram Aura-2 English natural pacing speech and MeloTTS multilingual synthesis',
+    defaultSettings: {
+      defaultVoice: 'cf-aura-asteria',
+    },
+    supportedModels: [
+      'cf-aura-asteria',
+      'cf-aura-orion',
+      'cf-aura-arcas',
+      'cf-aura-luna',
+      'cf-melotts-en',
+      'cf-melotts-es',
+      'cf-melotts-fr',
+      'cf-melotts-zh',
+      'cf-melotts-ja',
+    ],
+    credentialFields: [
+      { key: 'accountId', label: 'Cloudflare Account ID', placeholder: 'aac50d67f3ec9133524158d1379bce23', type: 'text', required: true, envFallbackKey: 'CLOUDFLARE_ACCOUNT_ID' },
+      { key: 'apiToken', label: 'Cloudflare API Token', placeholder: 'cfat_...', type: 'password', required: true, envFallbackKey: 'CLOUDFLARE_API_TOKEN' },
     ],
   },
 
@@ -402,6 +457,14 @@ export class IntegrationService {
       }
     }
 
+    // Inherit Cloudflare credentials across specialized providers
+    if (norm === 'cloudflare_text' || norm === 'cloudflare_voice') {
+      const baseCf = this.getDecryptedCredentials('cloudflare');
+      if (!result.accountId && baseCf.accountId) result.accountId = baseCf.accountId;
+      if (!result.apiToken && baseCf.apiToken) result.apiToken = baseCf.apiToken;
+      if (!result.gatewayId && baseCf.gatewayId) result.gatewayId = baseCf.gatewayId;
+    }
+
     setInCache(cacheKey, result);
     return result;
   }
@@ -421,13 +484,17 @@ export class IntegrationService {
     if (creds.accountId && norm.includes('account')) return creds.accountId;
 
     // Check direct aliases
-    if (norm === 'cloudflare_api_token') {
+    if (norm === 'cloudflare_api_token' || norm === 'cloudflare') {
       const cf = this.getDecryptedCredentials('cloudflare');
       return cf.apiToken || process.env.CLOUDFLARE_API_TOKEN || null;
     }
     if (norm === 'cloudflare_account_id' || norm === 'cloudflare_account') {
       const cf = this.getDecryptedCredentials('cloudflare');
       return cf.accountId || process.env.CLOUDFLARE_ACCOUNT_ID || null;
+    }
+    if (norm === 'cloudflare_gateway_id' || norm === 'cloudflare_ai_gateway_id') {
+      const cf = this.getDecryptedCredentials('cloudflare');
+      return cf.gatewayId || process.env.CLOUDFLARE_AI_GATEWAY_ID || null;
     }
     if (norm === 'fal_key' || norm === 'fal') {
       const fal = this.getDecryptedCredentials('fal');

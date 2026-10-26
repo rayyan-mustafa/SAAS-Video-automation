@@ -1,56 +1,43 @@
 import fs from 'fs';
 import path from 'path';
-import { getApiKey } from '../db';
 import { VideoGenerationProvider, ClipGenerationParams, ClipGenerationResult, AspectRatio } from './video-provider.types';
+import { EngineError } from '../video/engineErrors';
+import { motionStillRenderer, MotionType } from '../video/motionStillRenderer';
+import { getTempDir } from '../storage';
+import { isCloudflareConfigured, runCloudflareBinary, getCloudflareCredentials } from './cloudflareAiClient';
 
 /**
- * Cloudflare Workers AI Video Generation Provider
+ * Cloudflare Workers AI Video Generation & Motion Keyframe Provider
  * 
- * Uses Cloudflare's hosted MiniMax Hailuo models for text-to-video generation:
- * - Primary: @cf/minimax/hailuo-2.3 (high quality)
- * - Fallback: @cf/minimax/hailuo-2.3-fast (faster, slightly lower quality)
+ * Pipeline:
+ * 1. Primary: @cf/black-forest-labs/flux-1-schnell (Ultra-fast 4-step high-res generation)
+ * 2. Fallback 1: @cf/bytedance/stable-diffusion-xl-lightning (4-step SDXL)
+ * 3. Fallback 2: @cf/stabilityai/stable-diffusion-xl-base-1.0 (20-step base SDXL)
+ * 4. Fallback 3: @cf/minimax/video-01 (Direct generative video if enabled)
  * 
- * Leverages the existing Cloudflare account credentials.
- * Free tier: 10,000 Neurons/day (roughly 2-5 video generations).
+ * Takes the generated high-fidelity keyframe image and renders a 60fps cinematic
+ * Ken Burns dynamic motion MP4 video clip matching the exact durationSec and aspectRatio.
+ * 
+ * Honest Failure Contract (WP0):
+ * If credentials are missing or models fail, throws structured EngineError.
+ * Never returns mock/fake URLs or creates dummy files.
  */
 
+const CF_MODEL_FLUX_SCHNELL = '@cf/black-forest-labs/flux-1-schnell';
+const CF_MODEL_SDXL_LIGHTNING = '@cf/bytedance/stable-diffusion-xl-lightning';
+const CF_MODEL_SDXL_BASE = '@cf/stabilityai/stable-diffusion-xl-base-1.0';
 const CF_MODEL_HAILUO = '@cf/minimax/hailuo-2.3';
-const CF_MODEL_HAILUO_FAST = '@cf/minimax/hailuo-2.3-fast';
-
-interface CloudflareAiResponse {
-  success: boolean;
-  result?: {
-    video?: string; // base64 encoded video
-    url?: string; // direct URL
-    task_id?: string; // for async polling
-  };
-  errors?: Array<{ code: number; message: string }>;
-  messages?: Array<{ message: string }>;
-}
-
-interface CloudflareTaskStatus {
-  success: boolean;
-  result?: {
-    status: 'pending' | 'processing' | 'completed' | 'failed';
-    video?: string;
-    url?: string;
-    error?: string;
-  };
-  errors?: Array<{ code: number; message: string }>;
-}
 
 export class CloudflareVideoProvider implements VideoGenerationProvider {
   readonly id = 'cloudflare-minimax-video';
-  readonly name = 'Cloudflare Workers AI (MiniMax Hailuo 2.3)';
+  readonly name = 'Cloudflare Workers AI (FLUX.1 Schnell & Motion Still)';
 
   isConfigured(): boolean {
-    const token = this.getToken();
-    const accountId = this.getAccountId();
-    return !!(token && accountId && token.length > 10 && accountId.length > 5);
+    return isCloudflareConfigured();
   }
 
   supportsImageToVideo(): boolean {
-    return false;
+    return true;
   }
 
   supportsCharacterReference(): boolean {
@@ -61,234 +48,200 @@ export class CloudflareVideoProvider implements VideoGenerationProvider {
     return false;
   }
 
-  private getToken(): string | null {
-    return getApiKey('cloudflare_api_token') || process.env.CLOUDFLARE_API_TOKEN || null;
-  }
-
-  private getAccountId(): string | null {
-    return getApiKey('cloudflare_account_id') || process.env.CLOUDFLARE_ACCOUNT_ID || null;
-  }
-
   private formatPrompt(params: ClipGenerationParams): string {
     const {
       prompt,
       aspectRatio,
-      visualStyle = 'cinematic',
+      visualStyle = 'Cinematic High-Contrast',
       cameraMovement,
       lighting,
       colorStyle,
+      environment,
     } = params;
 
     const parts = [
       prompt.trim(),
-      cameraMovement ? `Camera movement: ${cameraMovement}` : 'Smooth cinematic camera motion',
-      lighting ? `Lighting: ${lighting}` : 'Cinematic atmospheric lighting',
-      colorStyle ? `Color palette: ${colorStyle}` : '',
-      `Style: ${visualStyle}, photorealistic, high fidelity, detailed`,
-      aspectRatio === '9:16' ? 'Vertical portrait video' : 'Horizontal widescreen video',
+      environment ? `Setting: ${environment}` : '',
+      cameraMovement ? `Camera: ${cameraMovement}` : 'Cinematic directional camera motion',
+      lighting ? `Lighting: ${lighting}` : 'Atmospheric volumetric lighting with deep shadows',
+      colorStyle ? `Color grade: ${colorStyle}` : '35mm anamorphic film color grading',
+      `Style: ${visualStyle}, 8k photorealistic, hyper-detailed, award-winning cinematography`,
+      aspectRatio === '9:16' ? 'Vertical 9:16 composition' : 'Widescreen 16:9 composition',
     ];
 
     return parts.filter(Boolean).join('. ');
   }
 
-  /**
-   * Call Cloudflare Workers AI to generate video
-   */
-  private async callCfAi(
-    token: string,
-    accountId: string,
-    model: string,
-    prompt: string,
-    aspectRatio: AspectRatio,
-    durationSec: number
-  ): Promise<CloudflareAiResponse> {
-    const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`;
-
-    const body: Record<string, any> = {
-      prompt,
-      num_frames: Math.min(81, Math.max(25, Math.round(durationSec * 16))),
-    };
-
-    // Add aspect ratio if the model supports it
-    if (aspectRatio === '9:16') {
-      body.aspect_ratio = '9:16';
-      body.width = 720;
-      body.height = 1280;
-    } else {
-      body.aspect_ratio = '16:9';
-      body.width = 1280;
-      body.height = 720;
+  private resolveMotionType(cameraMovement?: string): MotionType {
+    if (!cameraMovement) return 'zoom_in';
+    const lower = cameraMovement.toLowerCase();
+    if (lower.includes('out') || lower.includes('pull') || lower.includes('wide') || lower.includes('crane')) {
+      return 'zoom_out';
     }
-
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(180000), // 3 minute timeout for video gen
-    });
-
-    if (!res.ok) {
-      const errText = await res.text().catch(() => '');
-      throw new Error(`Cloudflare AI returned HTTP ${res.status}: ${errText.substring(0, 300)}`);
+    if (lower.includes('pan') || lower.includes('track') || lower.includes('glide') || lower.includes('dolly right')) {
+      return 'pan_right';
     }
-
-    // Check if response is JSON (metadata) or binary (direct video)
-    const contentType = res.headers.get('content-type') || '';
-    
-    if (contentType.includes('video/') || contentType.includes('octet-stream')) {
-      // Direct binary video response
-      const arrayBuf = await res.arrayBuffer();
-      return {
-        success: true,
-        result: {
-          video: Buffer.from(arrayBuf).toString('base64'),
-        },
-      };
+    if (lower.includes('subtle') || lower.includes('pulse') || lower.includes('breathe') || lower.includes('static')) {
+      return 'subtle_pulse';
     }
-
-    return await res.json() as CloudflareAiResponse;
-  }
-
-  /**
-   * Poll for async task completion
-   */
-  private async pollTask(
-    token: string,
-    accountId: string,
-    taskId: string,
-    maxWaitMs: number = 180000
-  ): Promise<string> {
-    const startTime = Date.now();
-    const pollUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/tasks/${taskId}`;
-
-    while (Date.now() - startTime < maxWaitMs) {
-      await new Promise(resolve => setTimeout(resolve, 5000)); // Poll every 5s
-
-      try {
-        const res = await fetch(pollUrl, {
-          headers: { 'Authorization': `Bearer ${token}` },
-        });
-
-        if (!res.ok) continue;
-
-        const data = await res.json() as CloudflareTaskStatus;
-
-        if (data.result?.status === 'completed') {
-          if (data.result.video) return data.result.video;
-          if (data.result.url) {
-            // Download from URL
-            const dlRes = await fetch(data.result.url);
-            const buf = await dlRes.arrayBuffer();
-            return Buffer.from(buf).toString('base64');
-          }
-          throw new Error('Completed but no video data');
-        }
-
-        if (data.result?.status === 'failed') {
-          throw new Error(`Task failed: ${data.result.error || 'Unknown'}`);
-        }
-
-        console.log(`[CloudflareVideoProvider] Task ${taskId}: ${data.result?.status || 'processing'} (${Math.round((Date.now() - startTime) / 1000)}s)`);
-      } catch (err: any) {
-        if (err.message.includes('Task failed')) throw err;
-        console.warn(`[CloudflareVideoProvider] Poll error: ${err.message}`);
-      }
-    }
-
-    throw new Error(`Cloudflare video generation timed out after ${maxWaitMs / 1000}s`);
+    return 'zoom_in';
   }
 
   async generateClip(params: ClipGenerationParams): Promise<ClipGenerationResult> {
-    const token = this.getToken();
-    const accountId = this.getAccountId();
-    if (!token || !accountId) {
-      throw new Error('Cloudflare credentials not configured');
+    if (!this.isConfigured()) {
+      throw new EngineError(
+        'STAGE_EXECUTION_FAILED',
+        'Cloudflare Workers AI credentials missing or unconfigured. Set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN.'
+      );
     }
 
     const prompt = this.formatPrompt(params);
-    const targetDuration = Math.min(6, Math.max(3, Math.round(params.durationSec || 5)));
+    const targetDuration = Math.max(2, Math.round((params.durationSec || 4) * 10) / 10);
+    const aspectRatio: AspectRatio = params.aspectRatio || '9:16';
+    const projectId = params.projectId || 'proj_cf_' + Date.now();
+    const tempDir = getTempDir(projectId);
 
-    console.log(`[CloudflareVideoProvider] Generating AI video for Scene ${params.sceneIndex} (${targetDuration}s)...`);
+    console.log(`[CloudflareVideoProvider] Generating visual clip for Scene ${params.sceneIndex} (${targetDuration}s, ${aspectRatio})...`);
 
-    const modelsToTry = [CF_MODEL_HAILUO, CF_MODEL_HAILUO_FAST];
+    let keyframeBuffer: Buffer | null = null;
+    let selectedModel = '';
     let lastError = '';
 
-    for (const model of modelsToTry) {
-      try {
-        console.log(`[CloudflareVideoProvider] Trying model: ${model}`);
+    // Model sequence: FLUX.1 Schnell -> SDXL Lightning -> SDXL Base
+    const imageModels = [
+      { id: CF_MODEL_FLUX_SCHNELL, steps: 4 },
+      { id: CF_MODEL_SDXL_LIGHTNING, steps: 4 },
+      { id: CF_MODEL_SDXL_BASE, steps: 20 },
+    ];
 
-        const response = await this.callCfAi(
-          token,
-          accountId,
-          model,
-          prompt,
-          params.aspectRatio || '9:16',
-          targetDuration
+    for (const entry of imageModels) {
+      try {
+        console.log(`[CloudflareVideoProvider] Generating keyframe via ${entry.id}...`);
+        keyframeBuffer = await runCloudflareBinary(
+          entry.id,
+          {
+            prompt,
+            num_steps: entry.steps,
+            steps: entry.steps,
+          },
+          { timeoutMs: 60_000 }
         );
 
-        if (!response.success) {
-          const errMsg = response.errors?.map(e => e.message).join(', ') || 'Unknown error';
-          throw new Error(`Cloudflare AI error: ${errMsg}`);
+        if (keyframeBuffer && keyframeBuffer.length > 5000) {
+          selectedModel = entry.id;
+          console.log(`[CloudflareVideoProvider] Keyframe rendered successfully (${keyframeBuffer.length} bytes) via ${entry.id}.`);
+          break;
         }
-
-        let videoBase64: string | undefined;
-
-        if (response.result?.video) {
-          videoBase64 = response.result.video;
-        } else if (response.result?.url) {
-          // Download from provided URL
-          const dlRes = await fetch(response.result.url, { signal: AbortSignal.timeout(60000) });
-          if (!dlRes.ok) throw new Error(`Failed to download: HTTP ${dlRes.status}`);
-          const buf = await dlRes.arrayBuffer();
-          videoBase64 = Buffer.from(buf).toString('base64');
-        } else if (response.result?.task_id) {
-          // Async task — poll for completion
-          videoBase64 = await this.pollTask(token, accountId, response.result.task_id);
-        }
-
-        if (!videoBase64) {
-          throw new Error('No video data in Cloudflare response');
-        }
-
-        // Write video to disk
-        const videoBuf = Buffer.from(videoBase64, 'base64');
-        if (videoBuf.length < 5000) {
-          throw new Error(`Video data too small: ${videoBuf.length} bytes`);
-        }
-
-        const dir = path.dirname(params.outputPath);
-        if (!fs.existsSync(dir)) {
-          fs.mkdirSync(dir, { recursive: true });
-        }
-
-        await fs.promises.writeFile(params.outputPath, videoBuf);
-        console.log(`[CloudflareVideoProvider] ✅ AI video saved: ${params.outputPath} (${(videoBuf.length / 1024 / 1024).toFixed(2)} MB)`);
-
-        return {
-          filePath: params.outputPath,
-          durationSec: targetDuration,
-          providerId: this.id,
-          metadata: {
-            model,
-            aspectRatio: params.aspectRatio,
-            prompt,
-          },
-        };
       } catch (err: any) {
         lastError = err.message;
-        console.warn(`[CloudflareVideoProvider] Model ${model} failed: ${err.message}`);
-
-        // If rate-limited (429), don't try the next model — it'll also be limited
+        console.warn(`[CloudflareVideoProvider] Model ${entry.id} failed: ${err.message}`);
         if (err.message.includes('429') || err.message.includes('rate')) {
           break;
         }
       }
     }
 
-    throw new Error(`Cloudflare video generation failed. Last error: ${lastError}`);
+    // Direct generative video model fallback if image models did not succeed
+    if (!keyframeBuffer) {
+      const creds = getCloudflareCredentials();
+      try {
+        console.log(`[CloudflareVideoProvider] Attempting direct video model: ${CF_MODEL_HAILUO}...`);
+        const videoRes = await fetch(
+          `https://api.cloudflare.com/client/v4/accounts/${creds.accountId}/ai/run/${CF_MODEL_HAILUO}`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${creds.apiToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              prompt,
+              num_frames: Math.min(81, Math.max(25, Math.round(targetDuration * 16))),
+              aspect_ratio: aspectRatio,
+            }),
+            signal: AbortSignal.timeout(120_000),
+          }
+        );
+
+        if (videoRes.ok) {
+          const contentType = videoRes.headers.get('content-type') || '';
+          if (contentType.includes('video/') || contentType.includes('octet-stream')) {
+            const arrayBuf = await videoRes.arrayBuffer();
+            const videoBuf = Buffer.from(arrayBuf);
+            if (videoBuf.length > 10000) {
+              const dir = path.dirname(params.outputPath);
+              if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+              await fs.promises.writeFile(params.outputPath, videoBuf);
+              return {
+                filePath: params.outputPath,
+                durationSec: targetDuration,
+                providerId: this.id,
+                metadata: { model: CF_MODEL_HAILUO, aspectRatio, prompt },
+              };
+            }
+          }
+        }
+      } catch (hailuoErr: any) {
+        lastError = hailuoErr.message;
+      }
+    }
+
+    // Fail closed if no keyframe or video could be synthesized
+    if (!keyframeBuffer || keyframeBuffer.length < 5000) {
+      throw new EngineError(
+        'NO_VALID_CLIPS',
+        `Cloudflare Workers AI visual generation failed across all models. Last error: ${lastError || 'Empty buffer'}`
+      );
+    }
+
+    // Save keyframe to disk temporarily for FFmpeg motion still compilation
+    const rand = Math.random().toString(36).substring(2, 8);
+    const tempKeyframePath = path.join(tempDir, `cf_keyframe_${params.sceneIndex}_${rand}.png`);
+    await fs.promises.writeFile(tempKeyframePath, keyframeBuffer);
+
+    try {
+      const motionType = this.resolveMotionType(params.cameraMovement);
+      const motionResult = await motionStillRenderer.renderMotionStill({
+        projectId,
+        sceneIndex: params.sceneIndex,
+        durationSec: targetDuration,
+        sourceImagePath: tempKeyframePath,
+        promptDescription: prompt,
+        motionType,
+        aspectRatio: aspectRatio === '16:9' ? '16:9' : '9:16',
+      });
+
+      // Ensure target output path has the resulting video
+      if (fs.existsSync(motionResult.filePath)) {
+        const outDir = path.dirname(params.outputPath);
+        if (!fs.existsSync(outDir)) {
+          fs.mkdirSync(outDir, { recursive: true });
+        }
+        if (path.resolve(motionResult.filePath) !== path.resolve(params.outputPath)) {
+          await fs.promises.copyFile(motionResult.filePath, params.outputPath);
+        }
+
+        console.log(`[CloudflareVideoProvider] ✅ Motion video rendered: ${params.outputPath} (${targetDuration}s, ${selectedModel})`);
+
+        return {
+          filePath: params.outputPath,
+          durationSec: targetDuration,
+          providerId: this.id,
+          metadata: {
+            model: selectedModel,
+            aspectRatio,
+            motionType,
+            prompt,
+          },
+        };
+      } else {
+        throw new Error('Motion still compilation did not produce output video.');
+      }
+    } finally {
+      if (fs.existsSync(tempKeyframePath)) {
+        await fs.promises.unlink(tempKeyframePath).catch(() => {});
+      }
+    }
   }
 }
 

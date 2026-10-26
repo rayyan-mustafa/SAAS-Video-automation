@@ -157,6 +157,49 @@ export class OriginalityRadar {
       },
     };
   }
+
+  /**
+   * Computes semantic cosine similarity using Cloudflare Workers AI BGE-M3 Multilingual Embeddings.
+   * Falls back to token Jaccard similarity if Cloudflare is not configured or fails.
+   */
+  public async computeSemanticSimilarityWithBgeM3(a: string, b: string): Promise<number> {
+    const { isCloudflareConfigured, runCloudflareJson } = await import('../providers/cloudflareAiClient');
+    if (!isCloudflareConfigured() || !a?.trim() || !b?.trim()) {
+      return this.calculateTextSimilarity(a, b);
+    }
+
+    try {
+      const res = await runCloudflareJson<any>('@cf/baai/bge-m3', {
+        text: [a.trim(), b.trim()],
+      });
+
+      const vectors = res?.data || res;
+      if (Array.isArray(vectors) && vectors.length >= 2 && Array.isArray(vectors[0]) && Array.isArray(vectors[1])) {
+        const vA: number[] = vectors[0];
+        const vB: number[] = vectors[1];
+        let dot = 0;
+        let normA = 0;
+        let normB = 0;
+        for (let i = 0; i < vA.length; i++) {
+          dot += vA[i] * vB[i];
+          normA += vA[i] * vA[i];
+          normB += vB[i] * vB[i];
+        }
+        if (normA > 0 && normB > 0) {
+          const sim = dot / (Math.sqrt(normA) * Math.sqrt(normB));
+          return Math.max(0, Math.min(1, Math.round(sim * 100) / 100));
+        }
+      }
+    } catch (err: any) {
+      console.warn(`[OriginalityRadar] BGE-M3 semantic similarity check bypassed (${err.message})`);
+    }
+
+    return this.calculateTextSimilarity(a, b);
+  }
 }
 
 export const originalityRadar = new OriginalityRadar();
+
+export async function computeSemanticSimilarityWithBgeM3(a: string, b: string): Promise<number> {
+  return originalityRadar.computeSemanticSimilarityWithBgeM3(a, b);
+}

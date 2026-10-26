@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit } from '@/lib/auth';
+import { isCloudflareConfigured, runCloudflareJson } from '@/lib/providers/cloudflareAiClient';
 
 // 5 Proven YouTube & TikTok Hook Frameworks
 const FRAMEWORKS = [
@@ -68,9 +69,49 @@ export async function POST(req: NextRequest) {
 
     let hooks: Array<{ hook: string; framework: string; score: number; retentionEst: string }> = [];
 
-    if (frameworkId === 'all') {
-      // Pick one from each framework
-      FRAMEWORKS.forEach((fw, idx) => {
+    if (isCloudflareConfigured()) {
+      try {
+        const cfResult = await runCloudflareJson<any>(
+          '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
+          {
+            messages: [
+              {
+                role: 'system',
+                content: 'You are an elite viral YouTube & TikTok hook retention engineer. Return a JSON object with schema: {"hooks": [{"hook": string, "framework": string, "score": number, "retentionEst": string}]}. Return 5 diverse, high-impact hooks.',
+              },
+              {
+                role: 'user',
+                content: `Generate 5 viral hooks for the topic: "${topic}".`,
+              },
+            ],
+            response_format: { type: 'json_object' },
+            temperature: 0.7,
+          },
+          { timeoutMs: 15_000 }
+        );
+
+        let data = cfResult?.response || cfResult;
+        if (typeof data === 'string') {
+          const clean = data.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
+          data = JSON.parse(clean);
+        }
+        if (Array.isArray(data?.hooks) && data.hooks.length > 0) {
+          hooks = data.hooks.slice(0, 5).map((h: any, i: number) => ({
+            hook: String(h.hook || ''),
+            framework: String(h.framework || FRAMEWORKS[i % FRAMEWORKS.length].name),
+            score: typeof h.score === 'number' ? h.score : 90 + i * 2,
+            retentionEst: String(h.retentionEst || `${80 + i * 3}% retention`),
+          }));
+        }
+      } catch (cfErr: any) {
+        console.warn('[GenerateHook] Cloudflare Workers AI fallback to algorithmic generation:', cfErr.message);
+      }
+    }
+
+    if (hooks.length === 0) {
+      if (frameworkId === 'all') {
+        // Pick one from each framework
+        FRAMEWORKS.forEach((fw, idx) => {
         const generated = fw.generate(topic);
         const selected = generated[Math.floor(Math.random() * generated.length)];
         hooks.push({
@@ -89,6 +130,7 @@ export async function POST(req: NextRequest) {
         score: 91 + i * 2,
         retentionEst: `${82 + i * 4}% retention`,
       }));
+    }
     }
 
     return NextResponse.json({

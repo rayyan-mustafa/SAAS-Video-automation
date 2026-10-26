@@ -1,4 +1,4 @@
-import { getApiKey } from '../db';
+import { isCloudflareConfigured, runCloudflareJson } from './cloudflareAiClient';
 
 export interface SubtitleCue {
   index: number;
@@ -53,10 +53,7 @@ class DefaultSubtitleProvider implements SubtitleProvider {
       return this.transcriptionCache.get(cacheKey)!;
     }
 
-    const accountId = getApiKey('cloudflare_account_id') || process.env.CLOUDFLARE_ACCOUNT_ID;
-    const apiToken = getApiKey('cloudflare') || getApiKey('cloudflare_api_token') || process.env.CLOUDFLARE_API_TOKEN;
-
-    if (!accountId || !apiToken || !audioBuffer || audioBuffer.length < 1000) {
+    if (!isCloudflareConfigured() || !audioBuffer || audioBuffer.length < 1000) {
       return [];
     }
 
@@ -67,37 +64,26 @@ class DefaultSubtitleProvider implements SubtitleProvider {
 
       for (const model of models) {
         try {
-          const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`;
-          const res = await fetch(url, {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${apiToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              audio: base64Audio,
-              task: 'transcribe',
-              language: language.substring(0, 2),
-              vad_filter: true,
-            }),
+          const res = await runCloudflareJson<any>(model, {
+            audio: base64Audio,
+            task: 'transcribe',
+            language: language.substring(0, 2),
+            vad_filter: true,
           });
 
-          if (res.ok) {
-            const data = await res.json();
-            if (data.success && data.result) {
-              let words: WhisperWord[] = [];
-              if (Array.isArray(data.result.segments)) {
-                words = data.result.segments.flatMap((s: any) => s.words || []);
-              }
-              if (words.length === 0 && Array.isArray(data.result.words)) {
-                words = data.result.words;
-              }
+          if (res) {
+            let words: WhisperWord[] = [];
+            if (Array.isArray(res.segments)) {
+              words = res.segments.flatMap((s: any) => s.words || []);
+            }
+            if (words.length === 0 && Array.isArray(res.words)) {
+              words = res.words;
+            }
 
-              if (words.length > 0) {
-                console.log(`[SubtitleProvider] Whisper successfully returned ${words.length} words via ${model}.`);
-                this.transcriptionCache.set(cacheKey, words);
-                return words;
-              }
+            if (words.length > 0) {
+              console.log(`[SubtitleProvider] Whisper successfully returned ${words.length} words via ${model}.`);
+              this.transcriptionCache.set(cacheKey, words);
+              return words;
             }
           }
         } catch (modelErr: any) {

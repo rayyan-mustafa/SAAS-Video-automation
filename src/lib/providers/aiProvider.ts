@@ -1,5 +1,6 @@
 import { ProjectMetadata, getApiKey } from '../db';
 import { resolveGlobalVisualStyle, applyGlobalStyleToPrompt } from '../video/visualStyles';
+import { isCloudflareConfigured, runCloudflareJson } from './cloudflareAiClient';
 
 export interface ProductionBible {
   topic: string;
@@ -240,14 +241,26 @@ class DefaultAiProvider implements AiProvider {
 
     let script: ScriptStructure | null = null;
 
-    // 1. Try OpenRouter if configured in DB or ENV
-    const openRouterKey = getApiKey('openrouter') || process.env.OPENROUTER_API_KEY;
-    if (openRouterKey) {
+    // 0. Try Cloudflare Workers AI if configured in DB or ENV
+    if (isCloudflareConfigured()) {
       try {
-        const res = await this.generateScriptWithOpenRouter(params, openRouterKey);
+        const res = await this.generateScriptWithCloudflare(params);
         script = res.script;
       } catch (err: any) {
-        console.warn(`[AiProvider] OpenRouter generation failed (${err.message}). Trying fallback...`);
+        console.warn(`[AiProvider] Cloudflare Workers AI generation failed (${err.message}). Trying fallback...`);
+      }
+    }
+
+    // 1. Try OpenRouter if configured in DB or ENV
+    if (!script) {
+      const openRouterKey = getApiKey('openrouter') || process.env.OPENROUTER_API_KEY;
+      if (openRouterKey) {
+        try {
+          const res = await this.generateScriptWithOpenRouter(params, openRouterKey);
+          script = res.script;
+        } catch (err: any) {
+          console.warn(`[AiProvider] OpenRouter generation failed (${err.message}). Trying fallback...`);
+        }
       }
     }
 
@@ -1193,6 +1206,87 @@ You must return valid JSON strictly conforming to this schema:
 
     const fullNarration = narrationParts.join('\n\n');
     return { script: parsed, fullNarration };
+  }
+
+  private async generateScriptWithCloudflare(params: {
+    channelName: string;
+    niche: string;
+    language: string;
+    topic: string;
+    targetLengthMinutes: number;
+    visualStyle?: string;
+    introStyle?: string;
+    outroCta?: string;
+    contentRules?: string;
+  }): Promise<{ script: ScriptStructure; fullNarration: string }> {
+    const prompt = this.buildMasterPrompt(params);
+    const models = [
+      '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+      '@cf/google/gemma-4-26b-a4b-it',
+      '@cf/meta/llama-4-scout-17b-16e-instruct',
+    ];
+
+    let lastError = '';
+    for (const model of models) {
+      try {
+        console.log(`[AiProvider] Generating script via Cloudflare Workers AI (${model})...`);
+        const result = await runCloudflareJson<any>(
+          model,
+          {
+            messages: [
+              {
+                role: 'system',
+                content: 'You are an award-winning documentary director and video scriptwriter. You strictly output valid JSON matching the requested schema without markdown code blocks.',
+              },
+              { role: 'user', content: prompt },
+            ],
+            response_format: { type: 'json_object' },
+            temperature: 0.7,
+            max_tokens: 8192,
+          },
+          { timeoutMs: 90_000 }
+        );
+
+        let rawContent = result?.response || result?.choices?.[0]?.message?.content || result;
+        if (!rawContent) {
+          throw new Error('Cloudflare Workers AI returned empty payload');
+        }
+
+        let parsed: ScriptStructure;
+        if (typeof rawContent === 'object' && rawContent.title && rawContent.sections) {
+          parsed = rawContent as ScriptStructure;
+        } else {
+          let cleaned = typeof rawContent === 'string' ? rawContent.trim() : JSON.stringify(rawContent);
+          if (cleaned.startsWith('```json')) {
+            cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+          } else if (cleaned.startsWith('```')) {
+            cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+          }
+          parsed = JSON.parse(cleaned);
+        }
+
+        if (!parsed || !parsed.sections || !Array.isArray(parsed.sections)) {
+          throw new Error('Parsed script is missing valid sections array');
+        }
+
+        const narrationParts: string[] = [parsed.hook || '', parsed.introduction || ''];
+        for (const sec of parsed.sections) {
+          for (const sub of sec.subsections || []) {
+            narrationParts.push(sub.narration || '');
+          }
+        }
+        narrationParts.push(parsed.conclusion || '');
+        narrationParts.push(parsed.callToAction || '');
+
+        const fullNarration = narrationParts.filter(Boolean).join('\n\n');
+        return { script: parsed, fullNarration };
+      } catch (err: any) {
+        lastError = err.message;
+        console.warn(`[AiProvider] Cloudflare model ${model} failed: ${err.message}`);
+      }
+    }
+
+    throw new Error(`Cloudflare Workers AI script generation failed: ${lastError}`);
   }
 }
 

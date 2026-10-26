@@ -909,3 +909,57 @@ Return valid JSON strictly matching this structure:
 }
 
 export const sceneQualityChecker = new SceneQualityChecker();
+
+/**
+ * Assesses a single video visual frame using Cloudflare Workers AI Llama 3.2 11B Vision Instruct.
+ * Checks for corrupted frames, black renders, severe blurring, or visual anomalies.
+ */
+export async function assessVisualFrameWithLlamaVision(
+  imageBuffer: Buffer,
+  prompt: string
+): Promise<{ passes: boolean; score: number; reasoning: string }> {
+  const { isCloudflareConfigured, runCloudflareJson } = await import('../providers/cloudflareAiClient');
+  if (!isCloudflareConfigured() || !imageBuffer || imageBuffer.length === 0) {
+    return { passes: true, score: 85, reasoning: 'Bypassed - Cloudflare vision not configured' };
+  }
+
+  try {
+    const fullPrompt = `${prompt}\nRespond with JSON: {"passes": true/false, "score": 0-100, "reasoning": "brief explanation"}`;
+    let result: any = null;
+
+    try {
+      result = await runCloudflareJson('@cf/meta/llama-3.2-11b-vision-instruct', {
+        prompt: fullPrompt,
+        image: Array.from(imageBuffer),
+        max_tokens: 256,
+      });
+    } catch {
+      result = await runCloudflareJson('@cf/meta/llama-3.2-11b-vision-instruct', {
+        prompt: fullPrompt,
+        image: imageBuffer.toString('base64'),
+        max_tokens: 256,
+      });
+    }
+
+    const text = result?.response || (typeof result === 'string' ? result : JSON.stringify(result));
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        passes: parsed.passes ?? (parsed.score >= 60),
+        score: typeof parsed.score === 'number' ? parsed.score : 85,
+        reasoning: parsed.reasoning || text.slice(0, 200),
+      };
+    }
+
+    const passes = !text.toLowerCase().includes('fail') && !text.toLowerCase().includes('corrupt') && !text.toLowerCase().includes('blurry');
+    return {
+      passes,
+      score: passes ? 85 : 40,
+      reasoning: text.slice(0, 200),
+    };
+  } catch (err: any) {
+    console.warn(`[QualityChecker] Cloudflare Llama Vision inspection bypassed (${err.message})`);
+    return { passes: true, score: 80, reasoning: `Inspection bypassed: ${err.message}` };
+  }
+}

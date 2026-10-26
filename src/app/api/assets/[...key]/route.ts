@@ -529,7 +529,28 @@ export async function GET(request: NextRequest, { params }: { params: any }) {
     }
 
     const ext = path.extname(key).toLowerCase();
+
+    // 1. Direct R2 CDN redirect if public domain is configured
+    if (process.env.R2_PUBLIC_URL && process.env.R2_PUBLIC_URL.startsWith('http')) {
+      const edgeUrl = `${process.env.R2_PUBLIC_URL.replace(/\/+$/, '')}/${key.replace(/^\/+/, '')}`;
+      return NextResponse.redirect(edgeUrl, 302);
+    }
+
     let filePath = storage.getFilePath(key);
+
+    // 2. If file is not yet cached locally, check R2 remote storage
+    if (!fs.existsSync(filePath) && storage.name === 'r2') {
+      try {
+        const remoteBuf = await storage.getObject(key);
+        if (remoteBuf && remoteBuf.length > 0) {
+          const dir = path.dirname(filePath);
+          if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+          await fs.promises.writeFile(filePath, remoteBuf);
+        }
+      } catch (r2Err) {
+        console.warn(`[AssetsAPI] R2 fetch error for ${key}:`, r2Err);
+      }
+    }
 
     // Resolve real project final video if requested by project ID or legacy path
     if (ext === '.mp4' && !fs.existsSync(filePath)) {

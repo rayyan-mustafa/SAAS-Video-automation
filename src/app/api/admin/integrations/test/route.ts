@@ -102,13 +102,15 @@ export async function POST(request: Request) {
         break;
       }
 
-      case 'cloudflare': {
-        const accountId = creds.accountId || IntegrationService.getDecryptedKey('cloudflare_account_id');
-        const apiToken = creds.apiToken || IntegrationService.getDecryptedKey('cloudflare_api_token');
+      case 'cloudflare':
+      case 'cloudflare_text':
+      case 'cloudflare_voice': {
+        const accountId = creds.accountId || IntegrationService.getDecryptedKey('cloudflare_account_id') || process.env.CLOUDFLARE_ACCOUNT_ID;
+        const apiToken = creds.apiToken || IntegrationService.getDecryptedKey('cloudflare_api_token') || process.env.CLOUDFLARE_API_TOKEN;
         if (!accountId || !apiToken) {
           throw new Error('Both Cloudflare Account ID and API Token are required.');
         }
-        testUrl = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}/tokens/verify`;
+        testUrl = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}/ai/models/search?per_page=5`;
         testHeaders['Authorization'] = `Bearer ${apiToken}`;
         break;
       }

@@ -1,10 +1,35 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { getApiKey } from '@/lib/db';
+import { isCloudflareConfigured, runCloudflareJson } from '@/lib/providers/cloudflareAiClient';
 
 export const dynamic = 'force-dynamic';
 
 async function executeAiLlmPrompt(systemPrompt: string, userPrompt: string): Promise<string | null> {
+  // 0. Try Cloudflare Workers AI (Ultra-fast edge inference)
+  if (isCloudflareConfigured()) {
+    try {
+      const res = await runCloudflareJson<any>(
+        '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+        {
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+          temperature: 0.7,
+          max_tokens: 600,
+        },
+        { timeoutMs: 15000 }
+      );
+      const text = res?.response || res?.choices?.[0]?.message?.content || (typeof res === 'string' ? res : null);
+      if (text && typeof text === 'string' && text.trim()) {
+        return text.trim();
+      }
+    } catch (e: any) {
+      console.warn('[Copilot] Cloudflare Workers AI error:', e.message);
+    }
+  }
+
   // 1. Try Gemini
   const geminiKey = getApiKey('gemini');
   if (geminiKey) {

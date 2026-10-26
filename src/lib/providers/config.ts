@@ -8,6 +8,7 @@ export type ProviderStatus = 'CONFIGURED' | 'NOT_CONFIGURED' | 'FAILED';
 
 export interface ProviderHealthReport {
   gemini: { status: ProviderStatus; details: string };
+  cloudflare?: { status: ProviderStatus; details: string };
   video: { status: ProviderStatus; provider: string; details: string };
   tts: { status: ProviderStatus; provider: string; details: string };
   r2: { status: ProviderStatus; details: string };
@@ -23,6 +24,7 @@ export async function checkProvidersHealth(): Promise<ProviderHealthReport> {
 
   const report: ProviderHealthReport = {
     gemini: { status: 'NOT_CONFIGURED', details: 'No GEMINI_API_KEY provided; using built-in intelligent multi-niche script engine.' },
+    cloudflare: { status: 'NOT_CONFIGURED', details: 'Cloudflare credentials not set; using local/external fallbacks.' },
     video: {
       status: 'CONFIGURED',
       provider: activeVideoEngine,
@@ -55,6 +57,25 @@ export async function checkProvidersHealth(): Promise<ProviderHealthReport> {
       }
     } catch (err: any) {
       report.gemini = { status: 'FAILED', details: `Gemini ping failed: ${err.message}` };
+    }
+  }
+
+  // 1b. Check Cloudflare Workers AI
+  const cfAccountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const cfToken = process.env.CLOUDFLARE_API_TOKEN;
+  if (cfAccountId && cfToken) {
+    try {
+      const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${cfAccountId}/ai/models/search?per_page=1`, {
+        headers: { Authorization: `Bearer ${cfToken}` },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (res.ok) {
+        report.cloudflare = { status: 'CONFIGURED', details: 'Cloudflare Workers AI active and verified.' };
+      } else {
+        report.cloudflare = { status: 'FAILED', details: `Cloudflare returned status ${res.status}` };
+      }
+    } catch (err: any) {
+      report.cloudflare = { status: 'FAILED', details: `Cloudflare ping failed: ${err.message}` };
     }
   }
 

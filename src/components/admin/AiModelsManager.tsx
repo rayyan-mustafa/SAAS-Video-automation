@@ -329,6 +329,33 @@ export default function AiModelsManager({ onNotify }: AiModelsManagerProps) {
                 <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '10px' }}>
                   {p.description}
                 </div>
+
+                {p.supportedModels.length > 0 && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#cbd5e1', marginBottom: '4px' }}>
+                      Active Voice Model:
+                    </label>
+                    <select
+                      value={p.settings?.defaultModel || p.supportedModels[0]}
+                      onChange={(e) => handleUpdateModel(p.provider, e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '7px 10px',
+                        borderRadius: '6px',
+                        background: '#0e131f',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        color: '#10b981',
+                        fontSize: '12px',
+                      }}
+                    >
+                      {p.supportedModels.map((m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
 
               {!p.isPrimary && (

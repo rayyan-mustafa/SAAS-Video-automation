@@ -6,6 +6,7 @@ import { storage, getTempDir } from '../storage';
 import { inspectMedia, getFfmpegPath } from './videoProvider';
 import { getApiKey } from '../db';
 import { EngineError } from '../video/engineErrors';
+import { isCloudflareConfigured, runCloudflareBinary } from './cloudflareAiClient';
 
 const execFileAsync = util.promisify(execFile);
 
@@ -390,6 +391,74 @@ class MultiEngineVoiceProvider implements VoiceProvider {
     return Buffer.concat(bufs);
   }
 
+  // Engine: Cloudflare Workers AI Voice (Deepgram Aura-2 & MeloTTS)
+  public async synthesizeWithCloudflareTTS(text: string, voiceName?: string, language?: string): Promise<Buffer> {
+    if (!isCloudflareConfigured()) {
+      throw new Error('Cloudflare Workers AI credentials not configured');
+    }
+
+    const cleanVoice = (voiceName || '').trim().toLowerCase();
+    const isMelo = cleanVoice.startsWith('cf-melotts-') || (language && language.toLowerCase().substring(0, 2) !== 'en');
+
+    // Aura-2 speaker map: asteria, arcas, orion, luna, stella
+    let auraSpeaker = 'asteria';
+    if (cleanVoice.includes('orion')) auraSpeaker = 'orion';
+    else if (cleanVoice.includes('arcas')) auraSpeaker = 'arcas';
+    else if (cleanVoice.includes('luna')) auraSpeaker = 'luna';
+    else if (cleanVoice.includes('stella')) auraSpeaker = 'stella';
+    else if (cleanVoice.includes('asteria')) auraSpeaker = 'asteria';
+
+    const meloLang = cleanVoice.replace(/^cf-melotts-/, '') || (language ? language.toLowerCase().substring(0, 2) : 'en');
+
+    // Split text into paragraphs/chunks under 1200 chars for low-latency synthesis
+    const paragraphs = text.split(/\n\n+/).filter(Boolean);
+    const chunks: string[] = [];
+    let currentChunk = '';
+    for (const p of paragraphs) {
+      if ((currentChunk + '\n\n' + p).length > 1200 && currentChunk.trim()) {
+        chunks.push(currentChunk.trim());
+        currentChunk = p;
+      } else {
+        currentChunk += (currentChunk ? '\n\n' : '') + p;
+      }
+    }
+    if (currentChunk.trim()) chunks.push(currentChunk.trim());
+
+    const audioBuffers: Buffer[] = [];
+    const model = isMelo ? '@cf/myshell-ai/melotts' : '@cf/deepgram/aura-2-en';
+
+    for (const chunk of chunks) {
+      const payload: Record<string, unknown> = isMelo
+        ? { prompt: chunk, lang: meloLang }
+        : { text: chunk, speaker: auraSpeaker };
+
+      try {
+        const audioBuf = await runCloudflareBinary(model, payload, { timeoutMs: 45_000 });
+        if (audioBuf && audioBuf.length >= 200) {
+          audioBuffers.push(audioBuf);
+        }
+      } catch (err: any) {
+        // Fallback to Aura-1 if Aura-2 errors or vice-versa
+        if (!isMelo && model === '@cf/deepgram/aura-2-en') {
+          try {
+            const fallbackBuf = await runCloudflareBinary('@cf/deepgram/aura-1', payload, { timeoutMs: 45_000 });
+            if (fallbackBuf && fallbackBuf.length >= 200) {
+              audioBuffers.push(fallbackBuf);
+              continue;
+            }
+          } catch {}
+        }
+        throw err;
+      }
+    }
+
+    if (audioBuffers.length === 0) {
+      throw new Error(`Cloudflare Workers AI TTS (${model}) returned empty audio`);
+    }
+
+    return Buffer.concat(audioBuffers);
+  }
+
   // Engine 3: Windows Native Speech Synthesizer (Offline fallback on Windows)
   private async synthesizeWithWindowsSAPI(text: string, voiceSpeed?: string): Promise<Buffer> {
     if (process.platform !== 'win32') {
@@ -502,20 +571,48 @@ $synth.Dispose()
     let finalBuffer: Buffer | null = null;
     let selectedEngine = 'none';
 
-    // 0. Try ElevenLabs if configured
-    try {
-      finalBuffer = await this.synthesizeWithElevenLabs(cleanText, params.voiceName);
-      if (finalBuffer && finalBuffer.length > 500) {
-        selectedEngine = 'ElevenLabs';
-        console.log(`[VoiceProvider] Synthesized voiceover via ElevenLabs (${finalBuffer.length} bytes, voice: ${params.voiceName || 'default'})`);
-      }
-    } catch (err: any) {
-      if (getApiKey('elevenlabs') || process.env.ELEVENLABS_API_KEY) {
-        console.warn(`[VoiceProvider] ElevenLabs synthesis failed (${err.message}). Falling back to Azure Speech...`);
+    // Priority 0a: Cloudflare TTS if explicitly requested via cf- prefix
+    if (params.voiceName?.startsWith('cf-') && isCloudflareConfigured()) {
+      try {
+        finalBuffer = await this.synthesizeWithCloudflareTTS(cleanText, params.voiceName, params.language);
+        if (finalBuffer && finalBuffer.length > 500) {
+          selectedEngine = 'Cloudflare Workers AI TTS';
+          console.log(`[VoiceProvider] Synthesized voiceover via Cloudflare Workers AI TTS (${finalBuffer.length} bytes, voice: ${params.voiceName})`);
+        }
+      } catch (err: any) {
+        console.warn(`[VoiceProvider] Cloudflare TTS failed (${err.message}). Falling back to standard priority...`);
       }
     }
 
-    // 1. Try Azure Cognitive Speech API (Licensed Commercial Enterprise Voice Tier)
+    // 0. Try ElevenLabs if configured
+    if (!finalBuffer || finalBuffer.length < 500) {
+      try {
+        finalBuffer = await this.synthesizeWithElevenLabs(cleanText, params.voiceName);
+        if (finalBuffer && finalBuffer.length > 500) {
+          selectedEngine = 'ElevenLabs';
+          console.log(`[VoiceProvider] Synthesized voiceover via ElevenLabs (${finalBuffer.length} bytes, voice: ${params.voiceName || 'default'})`);
+        }
+      } catch (err: any) {
+        if (getApiKey('elevenlabs') || process.env.ELEVENLABS_API_KEY) {
+          console.warn(`[VoiceProvider] ElevenLabs synthesis failed (${err.message}). Falling back...`);
+        }
+      }
+    }
+
+    // 1. Try Cloudflare Workers AI TTS (Deepgram Aura-2 & MeloTTS) if configured
+    if ((!finalBuffer || finalBuffer.length < 500) && isCloudflareConfigured()) {
+      try {
+        finalBuffer = await this.synthesizeWithCloudflareTTS(cleanText, params.voiceName, params.language);
+        if (finalBuffer && finalBuffer.length > 500) {
+          selectedEngine = 'Cloudflare Workers AI TTS';
+          console.log(`[VoiceProvider] Synthesized voiceover via Cloudflare Workers AI TTS (${finalBuffer.length} bytes)`);
+        }
+      } catch (err: any) {
+        console.warn(`[VoiceProvider] Cloudflare Workers AI TTS failed (${err.message}). Falling back to Azure Speech...`);
+      }
+    }
+
+    // 2. Try Azure Cognitive Speech API (Licensed Commercial Enterprise Voice Tier)
     if (!finalBuffer || finalBuffer.length < 500) {
       try {
         finalBuffer = await this.synthesizeWithAzureSpeech(cleanText, params.voiceName, params.language);
@@ -530,10 +627,10 @@ $synth.Dispose()
       }
     }
 
-    // 2. Try Microsoft Edge Neural TTS (Free Sandbox dev mode only)
+    // 3. Try Microsoft Edge Neural TTS (Free Sandbox dev mode only)
     if (!finalBuffer || finalBuffer.length < 500) {
-      if (process.env.NODE_ENV === 'production' && process.env.ALLOW_DEV_TTS !== '1') {
-        throw new EngineError('STAGE_EXECUTION_FAILED', 'Licensed Azure Cognitive Speech API credentials required in production mode');
+      if (process.env.NODE_ENV === 'production' && process.env.ALLOW_DEV_TTS !== '1' && !isCloudflareConfigured()) {
+        throw new EngineError('STAGE_EXECUTION_FAILED', 'Licensed Azure Cognitive Speech API or Cloudflare Workers AI credentials required in production mode');
       }
       try {
         finalBuffer = await this.synthesizeWithMsEdgeTTS(cleanText, params.voiceName, params.language);

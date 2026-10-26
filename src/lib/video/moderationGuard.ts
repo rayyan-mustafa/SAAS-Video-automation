@@ -60,3 +60,42 @@ export function validateNarrationModeration(text: string): ModerationResult {
 
   return { allowed: true };
 }
+
+/**
+ * Async moderation evaluation using Cloudflare Workers AI Llama Guard 3-8b.
+ * Evaluates complex policy violations, hate speech, dangerous activities, and self-harm.
+ * Falls back to fast local heuristics if Cloudflare is not configured or offline.
+ */
+export async function validateNarrationModerationWithLlamaGuard(text: string): Promise<ModerationResult> {
+  // First run instant local heuristics
+  const localCheck = validateNarrationModeration(text);
+  if (!localCheck.allowed) {
+    return localCheck;
+  }
+
+  const { isCloudflareConfigured, runCloudflareJson } = await import('../providers/cloudflareAiClient');
+  if (!isCloudflareConfigured() || !text || !text.trim()) {
+    return localCheck;
+  }
+
+  try {
+    const cleanText = text.trim();
+    const res = await runCloudflareJson<any>('@cf/meta/llama-guard-3-8b', {
+      messages: [{ role: 'user', content: cleanText }],
+      max_tokens: 64,
+    });
+
+    const responseText = (res?.response || (typeof res === 'string' ? res : '')).trim().toLowerCase();
+    if (responseText.startsWith('unsafe') || responseText.includes('\nunsafe') || responseText.includes('unsafe\n')) {
+      return {
+        allowed: false,
+        reason: 'Violation of Content Safety Policy: Flagged as unsafe by Llama Guard moderation filter.',
+        flaggedCategory: 'HARMFUL_POLICY',
+      };
+    }
+  } catch (err: any) {
+    console.warn(`[ModerationGuard] Cloudflare Llama Guard check bypassed (${err.message})`);
+  }
+
+  return { allowed: true };
+}

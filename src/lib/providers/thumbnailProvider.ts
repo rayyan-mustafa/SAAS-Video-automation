@@ -5,6 +5,7 @@ import fs from 'fs';
 import { getFfmpegPath } from './videoProvider';
 import { storage, getTempDir } from '../storage';
 import { getApiKey } from '../db';
+import { isCloudflareConfigured, runCloudflareBinary } from './cloudflareAiClient';
 
 const execFileAsync = util.promisify(execFile);
 
@@ -111,35 +112,24 @@ class DefaultThumbnailProvider implements ThumbnailProvider {
     const safeNiche = sanitize(niche.toUpperCase());
 
     // 1. Try Generating Real AI Image via Cloudflare Workers AI for Thumbnail
-    const cfToken = getApiKey('cloudflare_api_token') || process.env.CLOUDFLARE_API_TOKEN;
-    const cfAccountId = getApiKey('cloudflare_account_id') || process.env.CLOUDFLARE_ACCOUNT_ID;
-
     let generatedAiThumb = false;
     const rand = Math.random().toString(36).substring(2, 7);
     const tempAiThumbPath = path.join(tempDir, `cf_thumb_${rand}.jpg`);
 
-    if (cfToken && cfAccountId) {
+    if (isCloudflareConfigured()) {
       try {
         const thumbPrompt = `cinematic YouTube thumbnail for ${title}, ${niche}, ultra high definition photo, dramatic lighting, 8k resolution, award winning`;
-        const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${cfAccountId}/ai/run/@cf/black-forest-labs/flux-1-schnell`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${cfToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ prompt: thumbPrompt }),
+        const imgBuf = await runCloudflareBinary('@cf/black-forest-labs/flux-1-schnell', {
+          prompt: thumbPrompt,
+          steps: 4,
         });
 
-        if (res.ok) {
-          const data: any = await res.json();
-          if (data.result?.image) {
-            const imgBuf = Buffer.from(data.result.image, 'base64');
-            await fs.promises.writeFile(tempAiThumbPath, imgBuf);
-            generatedAiThumb = true;
-          }
+        if (imgBuf && imgBuf.length > 5000) {
+          await fs.promises.writeFile(tempAiThumbPath, imgBuf);
+          generatedAiThumb = true;
         }
       } catch (cfErr: any) {
-        console.warn(`[ThumbnailProvider] Cloudflare AI Image generation error (${cfErr.message}).`);
+        console.warn(`[ThumbnailProvider] Cloudflare AI Image generation error (${cfErr.message}). Falling back to procedural...`);
       }
     }
 
@@ -237,6 +227,13 @@ class DefaultThumbnailProvider implements ThumbnailProvider {
           await fs.promises.writeFile(outputPath, Buffer.from(svg));
         }
       }
+    }
+
+    if (fs.existsSync(outputPath)) {
+      try {
+        const fileData = await fs.promises.readFile(outputPath);
+        await storage.putObject(outputKey, fileData, 'image/png');
+      } catch {}
     }
 
     const stat = fs.existsSync(outputPath) ? await fs.promises.stat(outputPath) : { size: 10240 };

@@ -1,4 +1,5 @@
 import { getApiKey } from '../db';
+import { isCloudflareConfigured, runCloudflareJson } from './cloudflareAiClient';
 
 export interface NarrativeFramework {
   id: string;
@@ -290,6 +291,37 @@ Audience: ${audience}
 Style: ${style} (Presenter-led ${style.toLowerCase()})
 Framework: ${framework.name} (${framework.description})
 Length: ~${lengthMinutes} minutes`;
+
+    // 0. Try Cloudflare Workers AI
+    if (isCloudflareConfigured()) {
+      try {
+        const cfResult = await runCloudflareJson<any>(
+          '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+          {
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
+            ],
+            response_format: { type: 'json_object' },
+            temperature: 0.7,
+            max_tokens: 4000,
+          },
+          { timeoutMs: 60_000 }
+        );
+
+        const cfText = cfResult?.response || cfResult?.choices?.[0]?.message?.content || cfResult;
+        if (cfText) {
+          const parsed = typeof cfText === 'object' ? cfText : this.parseCleanJson(cfText);
+          if (parsed && parsed.scenes && parsed.scenes.length > 0) {
+            const res = this.finalizeScriptData(parsed, topic);
+            res.narrativeFramework = framework;
+            return res;
+          }
+        }
+      } catch (err: any) {
+        console.warn('[PersonalCreatorScriptService] Cloudflare Workers AI call failed, trying fallback:', err.message);
+      }
+    }
 
     // 1. Try OpenRouter DeepSeek
     if (openRouterKey) {
