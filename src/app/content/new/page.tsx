@@ -159,6 +159,10 @@ function CreateVideoWizardContent() {
   const [modalError, setModalError] = useState<string | null>(null);
   const [justClonedVoice, setJustClonedVoice] = useState<UserVoice | null>(null);
 
+  // Pro Voice Upgrade Modal State
+  const [showProVoiceModal, setShowProVoiceModal] = useState(false);
+  const [pendingProVoice, setPendingProVoice] = useState<VoicePreset | null>(null);
+
   // Recording & Upload State
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -179,6 +183,8 @@ function CreateVideoWizardContent() {
   const modalCardRef = useRef<HTMLDivElement | null>(null);
 
   const isFree = userPlan === 'free';
+  const freeVoices = AUTORA_VOICE_CATALOG.filter((v) => v.tier === 'free');
+  const proVoices = AUTORA_VOICE_CATALOG.filter((v) => v.tier === 'paid');
 
   useEffect(() => {
     fetchUserData();
@@ -187,11 +193,12 @@ function CreateVideoWizardContent() {
 
   // Handle modal keyboard accessibility & body scroll lock
   useEffect(() => {
-    if (showCloneModal) {
+    if (showCloneModal || showProVoiceModal) {
       document.body.style.overflow = 'hidden';
       const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape' && modalState !== 'cloning') {
-          closeModalSafely();
+        if (e.key === 'Escape') {
+          if (showCloneModal && modalState !== 'cloning') closeModalSafely();
+          if (showProVoiceModal) setShowProVoiceModal(false);
         }
       };
       window.addEventListener('keydown', handleKeyDown);
@@ -202,7 +209,7 @@ function CreateVideoWizardContent() {
     } else {
       document.body.style.overflow = '';
     }
-  }, [showCloneModal, modalState]);
+  }, [showCloneModal, showProVoiceModal, modalState]);
 
   // Clean up media streams and object URLs on unmount
   useEffect(() => {
@@ -583,6 +590,16 @@ function CreateVideoWizardContent() {
       toast.warning('Please enter your ElevenLabs Voice ID');
       return;
     }
+
+    // Pro Voice Gate: If free tier user tries to generate with an ElevenLabs Pro voice, show conversion modal
+    const isProVoiceSelected = proVoices.some((pv) => pv.id === selectedVoice);
+    if (isFree && isProVoiceSelected) {
+      const selectedPreset = proVoices.find((pv) => pv.id === selectedVoice) || proVoices[0];
+      setPendingProVoice(selectedPreset);
+      setShowProVoiceModal(true);
+      return;
+    }
+
     if (creating) return;
 
     try {
@@ -643,9 +660,6 @@ function CreateVideoWizardContent() {
       setCreating(false);
     }
   };
-
-  const freeVoices = AUTORA_VOICE_CATALOG.filter((v) => v.tier === 'free');
-  const proVoices = AUTORA_VOICE_CATALOG.filter((v) => v.tier === 'paid');
 
   return (
     <div style={{ maxWidth: '780px', margin: '0 auto', padding: '20px 16px 60px' }}>
@@ -1169,14 +1183,21 @@ function CreateVideoWizardContent() {
                       aria-checked={isSelected}
                       tabIndex={0}
                       onClick={() => {
-                        setSelectedVoice(v.id);
                         if (isFree) {
-                          toast.info('⭐ You selected an ElevenLabs Pro Voice. On Free Demo, audio will preview standard Aura-2 until upgrading.');
+                          setPendingProVoice(v);
+                          setShowProVoiceModal(true);
+                          return;
                         }
+                        setSelectedVoice(v.id);
                       }}
                       onKeyDown={(e) => {
                         if (e.key === ' ' || e.key === 'Enter') {
                           e.preventDefault();
+                          if (isFree) {
+                            setPendingProVoice(v);
+                            setShowProVoiceModal(true);
+                            return;
+                          }
                           setSelectedVoice(v.id);
                         }
                       }}
@@ -2008,6 +2029,261 @@ function CreateVideoWizardContent() {
           </div>
         </div>
       )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          ELEVENLABS PRO VOICE CONVERSION MODAL
+      ───────────────────────────────────────────────────────────── */}
+      {showProVoiceModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pro-voice-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowProVoiceModal(false);
+            }
+          }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(10px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '16px',
+          }}
+        >
+          <div
+            style={{
+              background: '#121215',
+              border: '1px solid rgba(168, 85, 247, 0.35)',
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '520px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              padding: '28px 24px',
+              boxShadow: '0 25px 50px -12px rgba(168, 85, 247, 0.25)',
+              position: 'relative',
+              boxSizing: 'border-box',
+            }}
+          >
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setShowProVoiceModal(false)}
+              aria-label="Close upgrade modal"
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'transparent',
+                border: 'none',
+                color: '#a1a1aa',
+                fontSize: '18px',
+                cursor: 'pointer',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                lineHeight: 1,
+              }}
+            >
+              ✕
+            </button>
+
+            {/* Modal Header */}
+            <div style={{ marginBottom: '18px' }}>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%)',
+                  border: '1px solid rgba(168, 85, 247, 0.4)',
+                  borderRadius: '20px',
+                  padding: '4px 12px',
+                  marginBottom: '12px',
+                }}
+              >
+                <span style={{ fontSize: '13px' }}>⭐</span>
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    color: '#c084fc',
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Creator & Pro Exclusive
+                </span>
+              </div>
+              <h2
+                id="pro-voice-modal-title"
+                style={{
+                  fontSize: '22px',
+                  fontWeight: 800,
+                  color: '#ffffff',
+                  margin: '0 0 8px 0',
+                  letterSpacing: '-0.02em',
+                  lineHeight: 1.3,
+                }}
+              >
+                Unlock ElevenLabs Ultra-Realistic Voices on Creator or Pro
+              </h2>
+              <p style={{ fontSize: '13px', color: '#a1a1aa', margin: 0, lineHeight: 1.5 }}>
+                You selected <strong style={{ color: '#fff' }}>{pendingProVoice?.name || 'an ElevenLabs Pro Voice'}</strong>. Studio voiceovers feature human-grade pacing, natural emotional inflections, and dramatic pauses that skyrocket viewer retention.
+              </p>
+            </div>
+
+            {/* Audio Preview Spotlight */}
+            {pendingProVoice && (
+              <div
+                style={{
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '10px',
+                  padding: '14px',
+                  marginBottom: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
+                  <div
+                    style={{
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '18px',
+                      color: '#fff',
+                      flexShrink: 0,
+                    }}
+                  >
+                    🎙️
+                  </div>
+                  <div style={{ overflow: 'hidden' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {pendingProVoice.name}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#a1a1aa' }}>
+                      ElevenLabs Turbo v2.5 &bull; {pendingProVoice.category.toUpperCase()}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={(e) => handlePlaySample(e, pendingProVoice.previewAudioUrl, pendingProVoice.id)}
+                  style={{
+                    background: playingVoiceId === pendingProVoice.id ? '#a855f7' : 'rgba(168, 85, 247, 0.2)',
+                    border: '1px solid rgba(168, 85, 247, 0.4)',
+                    color: '#fff',
+                    borderRadius: '6px',
+                    padding: '8px 14px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    flexShrink: 0,
+                  }}
+                >
+                  <span>{playingVoiceId === pendingProVoice.id ? '⏸' : '▶'}</span>
+                  <span>{playingVoiceId === pendingProVoice.id ? 'Pause' : 'Listen Sample'}</span>
+                </button>
+              </div>
+            )}
+
+            {/* Value Highlights */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', color: '#e4e4e7', lineHeight: 1.4 }}>
+                <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>
+                <div>
+                  <strong>42% Higher Retention:</strong> Ultra-realistic voice timbre and natural breath pauses keep audiences glued on TikTok & YouTube Shorts.
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', color: '#e4e4e7', lineHeight: 1.4 }}>
+                <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>
+                <div>
+                  <strong>No Watermarks:</strong> Remove the &ldquo;Created with Autora.ai&rdquo; watermark on all exported videos.
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', color: '#e4e4e7', lineHeight: 1.4 }}>
+                <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>
+                <div>
+                  <strong>1-Click Direct Publishing:</strong> Auto-schedule and post directly to YouTube, TikTok, Instagram & Facebook.
+                </div>
+              </div>
+            </div>
+
+            {/* CTAs */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowProVoiceModal(false);
+                  router.push('/pricing');
+                }}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '15px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(168, 85, 247, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  minHeight: '48px',
+                }}
+              >
+                <span>Upgrade to Creator or Pro ➔</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedVoice('cf-aura-orion');
+                  setShowProVoiceModal(false);
+                  toast.info('Switched to free Deepgram Aura-2 voice. You can create your demo video now!');
+                }}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  background: 'transparent',
+                  color: '#a1a1aa',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  minHeight: '40px',
+                }}
+              >
+                Keep using Free Aura-2 Voice
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
