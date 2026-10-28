@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { getCurrentUser } from '@/lib/auth';
-import { getApiKey, addUserVoice, UserVoice } from '@/lib/db';
+import { getApiKey, addUserVoice, UserVoice, getUserCredits } from '@/lib/db';
 import { storage, getTempDir } from '@/lib/storage';
 import { inspectMedia } from '@/lib/providers/videoProvider';
 
@@ -21,6 +21,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'Authentication required. Please log in.' },
         { status: 401 }
+      );
+    }
+
+    // 2. Pro Tier Plan Gate: Voice cloning is an exclusive feature of Pro Automation Plan
+    const userCredits = getUserCredits(user.id);
+    const tier = (userCredits?.tier || 'FREE').toUpperCase();
+    const isPro = tier === 'PRO' || tier === 'SCALE' || user.role === 'ADMIN' || user.role === 'admin';
+    if (!isPro) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Voice Cloning Studio is exclusive to Pro Automation Plan members. Please upgrade your plan to clone custom voices.',
+          upgradeRequired: true,
+        },
+        { status: 403 }
       );
     }
 

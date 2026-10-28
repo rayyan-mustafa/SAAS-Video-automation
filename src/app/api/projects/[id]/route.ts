@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { getDb, DEFAULT_USER_ID, ContentProject, VideoScene, GeneratedAsset, VideoJob, VideoOutput, OAuthConnection } from '@/lib/db';
+import { getDb, DEFAULT_USER_ID, ContentProject, VideoScene, GeneratedAsset, VideoJob, VideoOutput, OAuthConnection, getUserCredits } from '@/lib/db';
 import { PIPELINE_STAGES } from '@/lib/queue/worker';
 import { getCurrentUser } from '@/lib/auth';
 import { aiProvider } from '@/lib/providers/aiProvider';
@@ -260,8 +260,12 @@ export async function GET(request: Request, { params }: { params: any }) {
       } catch {}
     }
 
+    const credits = getUserCredits(userId);
+
     return NextResponse.json({
       project,
+      userTier: (credits?.tier || 'FREE').toUpperCase(),
+      userCredits: credits?.balance || 0,
       stages,
       scenes,
       assets,

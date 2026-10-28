@@ -1381,8 +1381,24 @@ export function checkAndConsumeFreeEdit(
 
 export function getMonthlyVideoUsage(userId: string = DEFAULT_USER_ID): { used: number; limit: number; remaining: number } {
   const db = getDb();
-  const LIMIT = 30;
+  let limit = 1;
   try {
+    const credits = getUserCredits(userId);
+    const tier = (credits?.tier || 'FREE').toUpperCase();
+    const isDemo = tier === 'FREE' || credits?.subscription_status === 'DEMO';
+
+    if (isDemo) {
+      limit = 1;
+    } else if (tier === 'STARTER') {
+      limit = 15;
+    } else if (tier === 'CREATOR') {
+      limit = 30;
+    } else if (tier === 'PRO' || tier === 'SCALE') {
+      limit = 60;
+    } else {
+      limit = 1;
+    }
+
     // Count non-failed projects created in the current calendar month
     // Zero-Waste Policy: Failed generation runs do NOT consume quota
     const row = db.prepare(`
@@ -1394,12 +1410,12 @@ export function getMonthlyVideoUsage(userId: string = DEFAULT_USER_ID): { used: 
     const used = row?.count ?? 0;
     return {
       used,
-      limit: LIMIT,
-      remaining: Math.max(0, LIMIT - used),
+      limit,
+      remaining: Math.max(0, limit - used),
     };
   } catch (err) {
     console.warn('[getMonthlyVideoUsage] Error querying monthly usage:', err);
-    return { used: 0, limit: LIMIT, remaining: LIMIT };
+    return { used: 0, limit, remaining: limit };
   }
 }
 

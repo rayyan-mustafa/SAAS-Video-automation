@@ -9,6 +9,7 @@ import {
   GeneratedAsset,
   saveSceneHistory,
   checkAndConsumeFreeEdit,
+  getUserCredits,
 } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { videoProvider } from '@/lib/providers/videoProvider';
@@ -44,14 +45,6 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const scene = db
-      .prepare('SELECT * FROM video_scenes WHERE project_id = ? AND (id = ? OR scene_index = ?)')
-      .get(projectId, sceneId, Number(sceneId)) as VideoScene | undefined;
-
-    if (!scene) {
-      return NextResponse.json({ error: 'Scene not found' }, { status: 404 });
-    }
-
     const body = await req.json();
     const { targetTier, visualPrompt, statLabel, statValue } = body;
 
@@ -63,8 +56,9 @@ export async function POST(
       );
     }
 
-    const userPlan = ((user as any).plan || 'free').toLowerCase();
-    if (targetTier === 'ai_clip' && userPlan === 'free') {
+    const userCredits = getUserCredits(user.id);
+    const userTier = (userCredits?.tier || 'FREE').toUpperCase();
+    if (targetTier === 'ai_clip' && (userTier === 'FREE' || userTier === 'STARTER')) {
       return NextResponse.json(
         {
           error: 'UPGRADE_REQUIRED',
@@ -73,6 +67,14 @@ export async function POST(
         },
         { status: 402 }
       );
+    }
+
+    const scene = db
+      .prepare('SELECT * FROM video_scenes WHERE project_id = ? AND (id = ? OR scene_index = ?)')
+      .get(projectId, sceneId, Number(sceneId)) as VideoScene | undefined;
+
+    if (!scene) {
+      return NextResponse.json({ error: 'Scene not found' }, { status: 404 });
     }
 
     // 1. Save history for 1-click undo

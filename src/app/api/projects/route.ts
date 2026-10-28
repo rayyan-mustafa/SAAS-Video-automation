@@ -6,6 +6,7 @@ import {
   ContentProject,
   Channel,
   deductUserCredits,
+  getUserCredits,
   getMonthlyVideoUsage,
   checkPlanGenerationRateLimit,
   checkUserEligibilityForPlan,
@@ -214,12 +215,33 @@ export async function POST(request: Request) {
       visualStyle: body.visual_style || channel.visual_style,
     });
 
+    const shouldAutoRender = body.auto_render !== false && body.autoRender !== false;
+    const userCredits = getUserCredits(userId);
+    let approvedAt: string | null = null;
+    let quotedCredits = 0;
+
+    if (shouldAutoRender && userCredits && userCredits.balance >= 25) {
+      try {
+        deductUserCredits(
+          userId,
+          25,
+          'VIDEO_GENERATION',
+          `Video Generation: ${cleanTopic.substring(0, 30)}`,
+          projectId
+        );
+        approvedAt = now;
+        quotedCredits = 25;
+      } catch (deductErr) {
+        console.warn('[Projects API] Credit deduction deferred to manual approval:', deductErr);
+      }
+    }
+
     db.prepare(
       `INSERT INTO content_projects (
         id, user_id, channel_id, topic, target_length_minutes, length_band, preset,
         language, platform, aspect_ratio, visibility, status, current_stage, publishing_status,
-        scheduled_at, auto_publish, metadata_json, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        scheduled_at, auto_publish, metadata_json, approved_at, quoted_credits, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       projectId,
       userId,
@@ -238,11 +260,13 @@ export async function POST(request: Request) {
       scheduled_at,
       willAutoPublish,
       projectMetadata,
+      approvedAt,
+      quotedCredits,
       now,
       now
     );
 
-    // Launch pipeline in background (starts at PLAN stage and halts at PENDING_APPROVAL)
+    // Launch pipeline in background (if approvedAt is set, continues through full video render)
     videoWorker.startProjectPipeline(projectId, 'PLAN');
 
     return NextResponse.json(

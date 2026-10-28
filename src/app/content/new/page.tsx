@@ -141,8 +141,8 @@ function CreateVideoWizardContent() {
   const [selectedVoice, setSelectedVoice] = useState('cf-aura-orion');
   const [customVoiceId, setCustomVoiceId] = useState('');
   const [channels, setChannels] = useState<any[]>([]);
-  const [monthlyUsage, setMonthlyUsage] = useState({ used: 0, limit: 30, remaining: 30 });
-  const [userPlan, setUserPlan] = useState<'free' | 'creator' | 'pro'>('free');
+  const [monthlyUsage, setMonthlyUsage] = useState({ used: 0, limit: 1, remaining: 1 });
+  const [userPlan, setUserPlan] = useState<string>('free');
   const [creating, setCreating] = useState(false);
 
   // 3 Outcome-Driven Creator Selectors
@@ -170,6 +170,7 @@ function CreateVideoWizardContent() {
 
   // Pro Voice Upgrade Modal State
   const [showProVoiceModal, setShowProVoiceModal] = useState(false);
+  const [showProVoiceCloneModal, setShowProVoiceCloneModal] = useState(false);
   const [pendingProVoice, setPendingProVoice] = useState<VoicePreset | null>(null);
 
   // Recording & Upload State
@@ -261,7 +262,9 @@ function CreateVideoWizardContent() {
       }
       if (authRes.ok) {
         const aData = await authRes.json();
-        if (aData.user?.plan) {
+        if (aData.credits?.tier) {
+          setUserPlan(aData.credits.tier.toLowerCase());
+        } else if (aData.user?.plan) {
           setUserPlan(aData.user.plan.toLowerCase());
         }
       }
@@ -647,6 +650,7 @@ function CreateVideoWizardContent() {
           platforms: selectedPlatforms,
           platform: selectedPlatforms.join(', '),
           voice: activeVoice,
+          auto_render: true,
         }),
       });
 
@@ -654,7 +658,7 @@ function CreateVideoWizardContent() {
         const err = await res.json();
         if (err.upgradeRequired) {
           toast.warning(err.message || 'Upgrade required for this feature.');
-          router.push('/pricing');
+          setShowProVoiceCloneModal(true);
           return;
         }
         throw new Error(err.error || err.message || 'Failed to start video generation');
@@ -695,7 +699,7 @@ function CreateVideoWizardContent() {
             {userPlan.toUpperCase()} PLAN
           </span>
           <div style={{ fontSize: '12px', color: monthlyUsage.remaining > 0 ? '#10b981' : '#f43f5e', fontWeight: 600 }}>
-            {monthlyUsage.used} / {monthlyUsage.limit} videos this month ({monthlyUsage.remaining} remaining)
+            {isFree ? `Free Demo: ${monthlyUsage.used} / ${monthlyUsage.limit} video used (${monthlyUsage.remaining} remaining)` : `${monthlyUsage.used} / ${monthlyUsage.limit} videos this month (${monthlyUsage.remaining} remaining)`}
           </div>
         </div>
       </div>
@@ -957,6 +961,10 @@ function CreateVideoWizardContent() {
               <button
                 type="button"
                 onClick={() => {
+                  if (userPlan !== 'pro' && userPlan !== 'scale') {
+                    setShowProVoiceCloneModal(true);
+                    return;
+                  }
                   setModalState('idle');
                   setModalError(null);
                   setShowCloneModal(true);
@@ -2042,6 +2050,170 @@ function CreateVideoWizardContent() {
       {/* ─────────────────────────────────────────────────────────────
           ELEVENLABS PRO VOICE CONVERSION MODAL
       ───────────────────────────────────────────────────────────── */}
+      
+      {/* ─────────────────────────────────────────────────────────────
+          VOICE CLONING PRO UPGRADE MODAL
+      ───────────────────────────────────────────────────────────── */}
+      {showProVoiceCloneModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pro-clone-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowProVoiceCloneModal(false);
+            }
+          }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(10px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '16px',
+          }}
+        >
+          <div
+            style={{
+              background: '#121215',
+              border: '1px solid rgba(168, 85, 247, 0.4)',
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '500px',
+              padding: '28px 24px',
+              boxShadow: '0 25px 50px -12px rgba(168, 85, 247, 0.25)',
+              position: 'relative',
+              boxSizing: 'border-box',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowProVoiceCloneModal(false)}
+              aria-label="Close upgrade modal"
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'transparent',
+                border: 'none',
+                color: '#a1a1aa',
+                fontSize: '18px',
+                cursor: 'pointer',
+                padding: '4px 8px',
+                borderRadius: '4px',
+              }}
+            >
+              ✕
+            </button>
+
+            <div style={{ marginBottom: '16px' }}>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%)',
+                  border: '1px solid rgba(168, 85, 247, 0.4)',
+                  borderRadius: '20px',
+                  padding: '4px 12px',
+                  marginBottom: '12px',
+                }}
+              >
+                <span style={{ fontSize: '13px' }}>🎙️</span>
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    color: '#c084fc',
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Pro Automation Feature
+                </span>
+              </div>
+              <h2
+                id="pro-clone-modal-title"
+                style={{
+                  fontSize: '22px',
+                  fontWeight: 800,
+                  color: '#ffffff',
+                  margin: '0 0 8px 0',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                Unlock Voice Cloning Studio on Pro Automation
+              </h2>
+              <p style={{ fontSize: '13px', color: '#a1a1aa', margin: 0, lineHeight: 1.5 }}>
+                Clone your personal voice in under 30 seconds with hyper-realistic emotional inflections, and unlock our entire library of 50+ ElevenLabs studio voices!
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '13px', color: '#e4e4e7' }}>
+                <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>
+                <span>Instant voice cloning from a 30-second mic recording or audio upload</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '13px', color: '#e4e4e7' }}>
+                <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>
+                <span>Hyper-realistic pacing, natural breath pauses, and custom vocal identity</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '13px', color: '#e4e4e7' }}>
+                <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>
+                <span>Full access to Google Veo 3.1 & Seedance generative AI video engine</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  window.open('/billing', '_blank');
+                  setShowProVoiceCloneModal(false);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '13px',
+                  background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(168, 85, 247, 0.4)',
+                }}
+              >
+                View Pro Automation Plan ➔
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowProVoiceCloneModal(false)}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  background: 'transparent',
+                  color: '#a1a1aa',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Keep Standard Free Voice
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showProVoiceModal && (
         <div
           role="dialog"
@@ -2243,7 +2415,7 @@ function CreateVideoWizardContent() {
                 type="button"
                 onClick={() => {
                   setShowProVoiceModal(false);
-                  router.push('/pricing');
+                  router.push('/billing');
                 }}
                 style={{
                   width: '100%',

@@ -36,6 +36,7 @@ interface ProjectData {
     platform: string;
     status: string;
     current_stage: string;
+    approved_at?: string | null;
     error_message?: string | null;
     scheduled_at?: string | null;
     published_at?: string | null;
@@ -81,6 +82,8 @@ interface ProjectData {
     storageKey: string;
   } | null;
   metadata?: ProjectMetadata | null;
+  userTier?: string;
+  userCredits?: number;
   youtubeConnection?: {
     connected: boolean;
     channelTitle?: string;
@@ -187,6 +190,8 @@ export default function VideoStudioPage({ params }: { params?: any }) {
 
   // Video generation state
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [showTierUpgradeModal, setShowTierUpgradeModal] = useState(false);
   const [generationStep, setGenerationStep] = useState<string>('');
   const [isEditingTopic, setIsEditingTopic] = useState(false);
   const [editedTopic, setEditedTopic] = useState('');
@@ -219,7 +224,39 @@ export default function VideoStudioPage({ params }: { params?: any }) {
     }
   };
 
+  const handleApproveProject = async () => {
+    try {
+      setIsApproving(true);
+      toast.info('Approving storyboard & starting full video composition... 🚀');
+      const search = typeof window !== 'undefined' ? window.location.search : '';
+      const res = await fetch(`/api/projects/${id}/approve${search}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const resJson = await res.json();
+      if (!res.ok) {
+        if (resJson.quotedCredits && res.status === 402) {
+          toast.warning(resJson.error || 'Insufficient credits to render video.');
+          setShowTierUpgradeModal(true);
+          return;
+        }
+        throw new Error(resJson.error || 'Failed to approve project');
+      }
+      toast.success('Storyboard approved! Full 1080p video rendering in progress 🎉');
+      await fetchProject();
+    } catch (err: any) {
+      toast.error(err.message || 'Approval failed');
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
   const handleGenerateVideo = async (startStage: string = 'SCRIPT') => {
+    if (data?.project?.status === 'PENDING_APPROVAL' || !data?.project?.approved_at) {
+      await handleApproveProject();
+      return;
+    }
+
     try {
       setIsGeneratingVideo(true);
       toast.info('Starting AI video generation pipeline... ⚡');
@@ -749,6 +786,13 @@ export default function VideoStudioPage({ params }: { params?: any }) {
 
   const handleSwapSceneTier = async (targetScene: any, targetTier: string) => {
     if (!targetScene || isSwappingTier) return;
+
+    const currentTier = (data?.userTier || 'FREE').toUpperCase();
+    if (targetTier === 'ai_clip' && (currentTier === 'FREE' || currentTier === 'STARTER')) {
+      toast.warning('Cinema AI Video (3x) is a Pro feature. Upgrade your plan to unlock!');
+      setShowTierUpgradeModal(true);
+      return;
+    }
     try {
       setIsSwappingTier(true);
       toast.info(`🎨 Swapping Scene ${targetScene.scene_index} to [${targetTier.toUpperCase()}]...`);
@@ -762,7 +806,7 @@ export default function VideoStudioPage({ params }: { params?: any }) {
       if (!res.ok) {
         if (resJson.upgradeRequired || resJson.error === 'UPGRADE_REQUIRED') {
           toast.warning(resJson.message || 'Cinema AI Video (3x) is a Pro feature. Upgrade your plan to unlock!');
-          router.push('/pricing');
+          setShowTierUpgradeModal(true);
           return;
         }
         throw new Error(resJson.error || 'Failed to swap visual tier');
@@ -2595,6 +2639,170 @@ export default function VideoStudioPage({ params }: { params?: any }) {
           </div>
         </div>
       )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          CINEMA AI VIDEO TIER UPGRADE MODAL (IN-PLACE, NO REDIRECT)
+      ───────────────────────────────────────────────────────────── */}
+      {showTierUpgradeModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="tier-upgrade-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowTierUpgradeModal(false);
+            }
+          }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(10px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '16px',
+          }}
+        >
+          <div
+            style={{
+              background: '#121215',
+              border: '1px solid rgba(139, 92, 246, 0.4)',
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '500px',
+              padding: '28px 24px',
+              boxShadow: '0 25px 50px -12px rgba(139, 92, 246, 0.25)',
+              position: 'relative',
+              boxSizing: 'border-box',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowTierUpgradeModal(false)}
+              aria-label="Close upgrade modal"
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'transparent',
+                border: 'none',
+                color: '#a1a1aa',
+                fontSize: '18px',
+                cursor: 'pointer',
+                padding: '4px 8px',
+                borderRadius: '4px',
+              }}
+            >
+              ✕
+            </button>
+
+            <div style={{ marginBottom: '16px' }}>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%)',
+                  border: '1px solid rgba(139, 92, 246, 0.4)',
+                  borderRadius: '20px',
+                  padding: '4px 12px',
+                  marginBottom: '12px',
+                }}
+              >
+                <span style={{ fontSize: '13px' }}>🎬</span>
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    color: '#a78bfa',
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Creator & Pro Feature
+                </span>
+              </div>
+              <h2
+                id="tier-upgrade-modal-title"
+                style={{
+                  fontSize: '22px',
+                  fontWeight: 800,
+                  color: '#ffffff',
+                  margin: '0 0 8px 0',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                Unlock Cinema AI Video Scene Generation
+              </h2>
+              <p style={{ fontSize: '13px', color: '#a1a1aa', margin: 0, lineHeight: 1.5 }}>
+                Animate this scene with hyper-cinematic AI motion via Google Veo 3.1 & Seedance. Available on Creator and Pro plans. Free Demo accounts feature full HD curated stock video and FLUX.1 motion stills!
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '13px', color: '#e4e4e7' }}>
+                <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>
+                <span>Google Veo 3.1 & Seedance multi-camera cinematic rendering</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '13px', color: '#e4e4e7' }}>
+                <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>
+                <span>Zero watermarks & full commercial monetization rights</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '13px', color: '#e4e4e7' }}>
+                <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>
+                <span>100% ElevenLabs ultra-realistic voices included</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  window.open('/billing', '_blank');
+                  setShowTierUpgradeModal(false);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '13px',
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(139, 92, 246, 0.4)',
+                }}
+              >
+                View Upgrade Plans in New Tab ➔
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowTierUpgradeModal(false)}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  background: 'transparent',
+                  color: '#a1a1aa',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Keep Current Scene & Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
