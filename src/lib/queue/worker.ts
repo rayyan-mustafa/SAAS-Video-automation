@@ -100,7 +100,7 @@ export class VideoPipelineWorker {
       const nowIso = new Date().toISOString();
       db.prepare(`
         INSERT OR IGNORE INTO channels (id, user_id, name, niche, language, voice, target_duration_minutes, visual_style, subtitle_style, intro_style, outro_cta, publishing_platform, content_rules, created_at, updated_at)
-        VALUES (?, ?, 'Creator Studio', 'AI & Tech', 'en', 'en-US-ChristopherNeural', 3, 'Cinematic High-Contrast', 'Modern Clean White', 'High-Impact Hook', 'Subscribe for more breakdowns', 'YouTube', 'Professional studio pacing', ?, ?)
+        VALUES (?, ?, 'Creator Studio', 'AI & Tech', 'en', 'cf-aura-orion', 3, 'Cinematic High-Contrast', 'Modern Clean White', 'High-Impact Hook', 'Subscribe for more breakdowns', 'YouTube', 'Professional studio pacing', ?, ?)
       `).run(project.channel_id, project.user_id, nowIso, nowIso);
       channel = db.prepare('SELECT * FROM channels WHERE id = ?').get(project.channel_id) as Channel | undefined;
     }

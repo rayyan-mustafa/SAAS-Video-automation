@@ -70,7 +70,7 @@ export default function ChannelsPage() {
   const [name, setName] = useState('');
   const [niche, setNiche] = useState('');
   const [language, setLanguage] = useState('en');
-  const [voice, setVoice] = useState('en-US-ChristopherNeural');
+  const [voice, setVoice] = useState('cf-aura-orion');
   const [voiceSpeed, setVoiceSpeed] = useState('1.0x');
   const [targetDuration, setTargetDuration] = useState(8);
   const [visualStyle, setVisualStyle] = useState('Cinematic High-Contrast');
@@ -109,7 +109,7 @@ export default function ChannelsPage() {
     setName('');
     setNiche('');
     setLanguage('en');
-    setVoice('en-US-ChristopherNeural');
+    setVoice('cf-aura-orion');
     setVoiceSpeed('1.0x');
     setTargetDuration(5);
     setVisualStyle('Cinematic High-Contrast');
@@ -439,7 +439,7 @@ export default function ChannelsPage() {
                       VOICE
                     </div>
                     <div style={{ fontSize: '12px', fontWeight: 500, color: '#e4e4e7', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {ch.voice.split('-')[2]?.replace('Neural', '') || ch.voice}
+                      {ch.voice.replace('cf-aura-', '').replace('el-', '').replace('-viral', '').replace('-cinema', '') || ch.voice}
                     </div>
                   </div>
                   <div style={{ gridColumn: 'span 2', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
@@ -700,11 +700,17 @@ export default function ChannelsPage() {
                     <div className="form-group" style={{ marginBottom: 0 }}>
                       <label className="form-label" style={{ fontSize: '11px', fontFamily: 'monospace' }}>NEURAL VOICE</label>
                       <select className="form-select" value={voice} onChange={(e) => setVoice(e.target.value)}>
-                        <option value="en-US-ChristopherNeural">Christopher (US Male - Deep)</option>
-                        <option value="en-US-JennyNeural">Jenny (US Female - Clear)</option>
-                        <option value="en-US-GuyNeural">Guy (US Male - Natural)</option>
-                        <option value="en-GB-SoniaNeural">Sonia (UK Female - Crisp)</option>
-                        <option value="en-GB-RyanNeural">Ryan (UK Male - Authoritative)</option>
+                        <option value="cf-aura-orion">Orion (Deepgram Aura-2 — Standard Documentary)</option>
+                        <option value="cf-aura-asteria">Asteria (Deepgram Aura-2 — Warm Storyteller)</option>
+                        <option value="cf-aura-arcas">Arcas (Deepgram Aura-2 — Business & Tech)</option>
+                        <option value="el-adam-viral">Adam (ElevenLabs Pro — Viral Shorts Narrator)</option>
+                        <option value="el-brian-cinema">Brian (ElevenLabs Pro — Cinema Trailer & Crime)</option>
+                        <option value="el-chris-hormozi">Chris (ElevenLabs Pro — High-Retention Creator)</option>
+                        <option value="el-rachel-story">Rachel (ElevenLabs Pro — Emotional Storyteller)</option>
+
+
+
+
                       </select>
                     </div>
                   </div>

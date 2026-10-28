@@ -71,7 +71,7 @@ export async function POST(request: Request) {
           target_duration_minutes, visual_style, subtitle_style, intro_style, outro_cta,
           publishing_platform, content_rules, publishing_days, publishing_time, timezone,
           default_visibility, auto_publish, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, 'en', 'en-US-ChristopherNeural', '1.0x', 1, 'Cinematic High-Contrast', 'Modern Clean White', 'High-Impact Hook', 'Subscribe for daily videos', 'YouTube', 'Fast-paced, engaging delivery', '["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]', '14:00', 'UTC', 'PRIVATE', 1, ?, ?)
+        ) VALUES (?, ?, ?, ?, 'en', 'cf-aura-orion', '1.0x', 1, 'Cinematic High-Contrast', 'Modern Clean White', 'High-Impact Hook', 'Subscribe for daily videos', 'YouTube', 'Fast-paced, engaging delivery', '["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]', '14:00', 'UTC', 'PRIVATE', 1, ?, ?)
       `).run(resolvedChannelId, userId, channelName, channelNiche, now, now);
     }
 

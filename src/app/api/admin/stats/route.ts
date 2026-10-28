@@ -47,8 +47,10 @@ export async function GET() {
     let activeSubscriptions = 0;
     let totalCredits = 0;
     let tierBreakdown: Record<string, number> = {
+      FREE: 0,
       STARTER: 0,
       CREATOR: 0,
+      PRO: 0,
       SCALE: 0,
       AGENCY: 0,
     };
@@ -60,7 +62,7 @@ export async function GET() {
       totalCredits = (db.prepare("SELECT SUM(balance) as total FROM user_credits").get() as any)?.total || 0;
       
       const tiers = db.prepare(`
-        SELECT COALESCE(tier, 'CREATOR') as tier, COUNT(*) as count 
+        SELECT COALESCE(tier, 'FREE') as tier, COUNT(*) as count 
         FROM user_credits 
         GROUP BY tier
       `).all() as Array<{ tier: string; count: number }>;
@@ -71,9 +73,9 @@ export async function GET() {
 
       recentUsers = db.prepare(`
         SELECT u.id, u.email, u.name, u.role, u.status, u.created_at,
-               COALESCE(uc.tier, 'CREATOR') as tier,
-               COALESCE(uc.balance, 500) as credits_balance,
-               COALESCE(uc.subscription_status, 'ACTIVE') as subscription_status
+               COALESCE(uc.tier, 'FREE') as tier,
+               COALESCE(uc.balance, 25) as credits_balance,
+               COALESCE(uc.subscription_status, 'DEMO') as subscription_status
         FROM users u
         LEFT JOIN user_credits uc ON u.id = uc.user_id
         ORDER BY u.created_at DESC

@@ -235,27 +235,6 @@ export const KNOWN_INTEGRATIONS: Record<string, IntegrationDefinition> = {
   },
 
   // Voiceover & Neural TTS
-  edge_tts: {
-    provider: 'edge_tts',
-    category: 'voice',
-    displayName: 'Microsoft Edge Neural TTS',
-    description: 'Zero-cost studio neural voices (Andrew, Christopher, Ava, Emma, Brian) with word timestamps',
-    defaultSettings: {
-      defaultVoice: 'en-US-ChristopherNeural',
-      pitch: '+0Hz',
-      rate: '+0%',
-      volume: '+0%',
-    },
-    supportedModels: [
-      'en-US-ChristopherNeural',
-      'en-US-AndrewNeural',
-      'en-US-AvaNeural',
-      'en-US-EmmaNeural',
-      'en-US-BrianNeural',
-      'en-GB-RyanNeural',
-    ],
-    credentialFields: [], // Built-in / zero key requirement
-  },
   elevenlabs: {
     provider: 'elevenlabs',
     category: 'voice',

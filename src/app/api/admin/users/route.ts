@@ -85,10 +85,10 @@ export async function GET(req: Request) {
           u.onboarding_completed,
           u.created_at,
           u.updated_at,
-          COALESCE(uc.balance, 500) as credits_balance,
-          COALESCE(uc.tier, 'CREATOR') as plan,
-          COALESCE(uc.subscription_status, 'ACTIVE') as subscription_status,
-          COALESCE(uc.monthly_allowance, 500) as monthly_allowance,
+          COALESCE(uc.balance, 25) as credits_balance,
+          COALESCE(uc.tier, 'FREE') as plan,
+          COALESCE(uc.subscription_status, 'DEMO') as subscription_status,
+          COALESCE(uc.monthly_allowance, 0) as monthly_allowance,
           uc.renews_at,
           uc.stripe_customer_id,
           uc.stripe_subscription_id
@@ -161,10 +161,10 @@ export async function GET(req: Request) {
         u.onboarding_completed,
         u.created_at,
         u.updated_at,
-        COALESCE(uc.balance, 500) as credits_balance,
-        COALESCE(uc.tier, 'CREATOR') as plan,
-        COALESCE(uc.subscription_status, 'ACTIVE') as subscription_status,
-        COALESCE(uc.monthly_allowance, 500) as monthly_allowance,
+        COALESCE(uc.balance, 25) as credits_balance,
+        COALESCE(uc.tier, 'FREE') as plan,
+        COALESCE(uc.subscription_status, 'DEMO') as subscription_status,
+        COALESCE(uc.monthly_allowance, 0) as monthly_allowance,
         uc.renews_at,
         uc.stripe_customer_id,
         uc.stripe_subscription_id,
@@ -185,7 +185,7 @@ export async function GET(req: Request) {
     }
 
     if (tier !== 'ALL') {
-      query += ` AND UPPER(COALESCE(uc.tier, 'CREATOR')) = ?`;
+      query += ` AND UPPER(COALESCE(uc.tier, 'FREE')) = ?`;
       params.push(tier);
     }
 

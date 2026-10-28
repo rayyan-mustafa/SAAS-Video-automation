@@ -184,22 +184,6 @@ export async function POST(request: Request) {
         break;
       }
 
-      case 'edge_tts': {
-        // Built-in local neural voice engine
-        const latencyMs = Math.floor(Math.random() * 5) + 2;
-        IntegrationService.logConnectionTest({
-          provider: 'edge_tts',
-          status: 'SUCCESS',
-          latencyMs,
-          endpoint: 'Local MS Neural Edge TTS Process',
-        });
-        return NextResponse.json({
-          success: true,
-          status: 'SUCCESS',
-          latencyMs,
-          message: 'Microsoft Edge Neural TTS engine operational (0 cost / local stream)',
-        });
-      }
 
       case 'youtube': {
         const ytConfig = IntegrationService.getYoutubeConfig();

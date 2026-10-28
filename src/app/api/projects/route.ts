@@ -48,7 +48,7 @@ export async function GET(request: Request) {
           target_duration_minutes, visual_style, subtitle_style, intro_style, outro_cta,
           publishing_platform, content_rules, publishing_days, publishing_time, timezone,
           default_visibility, auto_publish, created_at, updated_at
-        ) VALUES (?, ?, 'Creator Studio', 'AI & Tech', 'en', 'en-US-ChristopherNeural', '1.0x', 3, 'Cinematic High-Contrast', 'Modern Clean White', 'High-Impact Hook', 'Subscribe for more breakdowns', 'YouTube', 'Professional studio pacing', '["Monday","Wednesday","Friday"]', '14:00', 'UTC', 'PRIVATE', 0, ?, ?)
+        ) VALUES (?, ?, 'Creator Studio', 'AI & Tech', 'en', 'cf-aura-orion', '1.0x', 3, 'Cinematic High-Contrast', 'Modern Clean White', 'High-Impact Hook', 'Subscribe for more breakdowns', 'YouTube', 'Professional studio pacing', '["Monday","Wednesday","Friday"]', '14:00', 'UTC', 'PRIVATE', 0, ?, ?)
       `).run(channelId, userId, now, now);
 
       return NextResponse.json({ projects: [], monthlyUsage });
@@ -171,7 +171,7 @@ export async function POST(request: Request) {
           publishing_platform, content_rules, publishing_days, publishing_time, timezone,
           default_visibility, auto_publish, created_at, updated_at
         ) VALUES (?, ?, 'Creator Channel', 'AI & Technology', 'en', ?, '1.0x', 5, ?, 'Modern Clean White', 'High-Impact Dramatic Question', 'Subscribe to the channel and leave your thoughts below', 'YouTube', 'Engaging, clear, professional tone', '["Monday","Wednesday","Friday"]', '14:00', 'UTC', 'PRIVATE', 0, ?, ?)
-      `).run(channel_id, userId, voice || 'en-US-ChristopherNeural', visual_style || 'Cinematic High-Contrast', now, now);
+      `).run(channel_id, userId, voice || 'cf-aura-orion', visual_style || 'Cinematic High-Contrast', now, now);
       channel = db.prepare('SELECT * FROM channels WHERE id = ?').get(channel_id) as Channel | undefined;
     } else {
       // Update channel voice or visual style if customized during creation

@@ -33,7 +33,7 @@ export async function GET(request: Request) {
           target_duration_minutes, visual_style, subtitle_style, intro_style, outro_cta,
           publishing_platform, content_rules, publishing_days, publishing_time, timezone,
           default_visibility, auto_publish, created_at, updated_at
-        ) VALUES (?, ?, 'Creator Studio', 'AI & Tech', 'en', 'en-US-ChristopherNeural', '1.0x', 5, 'Cinematic High-Contrast', 'Modern Clean White', 'High-Impact Dramatic Question', 'Subscribe to the channel and leave your thoughts below', 'YouTube', 'Engaging, clear, professional tone', '["Monday","Wednesday","Friday"]', '14:00', 'UTC', 'PRIVATE', 0, ?, ?)
+        ) VALUES (?, ?, 'Creator Studio', 'AI & Tech', 'en', 'cf-aura-orion', '1.0x', 5, 'Cinematic High-Contrast', 'Modern Clean White', 'High-Impact Dramatic Question', 'Subscribe to the channel and leave your thoughts below', 'YouTube', 'Engaging, clear, professional tone', '["Monday","Wednesday","Friday"]', '14:00', 'UTC', 'PRIVATE', 0, ?, ?)
       `).run(defaultChanId, userId, now, now);
 
       channels = db
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
       name,
       niche,
       language = 'en',
-      voice = 'en-US-ChristopherNeural',
+      voice = 'cf-aura-orion',
       voice_speed = '1.0x',
       target_duration_minutes = 5,
       visual_style = 'Cinematic High-Contrast',

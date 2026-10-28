@@ -158,8 +158,30 @@ export const PLANS: Plan[] = [
   },
 ];
 
+export const DEMO_PLAN: Plan = {
+  id: 'free',
+  name: 'Free Demo',
+  price_monthly: 0,
+  price_annual: 0,
+  credits_monthly: 0,
+  estimated_videos: 1,
+  estimated_shorts: 1,
+  max_channels: 1,
+  max_resolution: '1080p Preview',
+  is_popular: false,
+  cta_label: 'Free Demo Account',
+  features: [
+    '1 Free Demo Video Allowance',
+    'Cloudflare Deepgram Aura-2 High-Speed Voices',
+    'Curated 1080p Stock & Motion Stills',
+    'Watermarked Preview Export',
+    'Upgrade to Starter or Creator to unlock Auto-Publish',
+  ],
+};
+
 export function getPlanById(id: string): Plan | null {
   const normalizedId = id.toLowerCase();
+  if (normalizedId === 'free' || normalizedId === 'demo') return DEMO_PLAN;
   if (normalizedId === 'pro' || normalizedId === 'scale') return PLANS.find((p) => p.id === 'pro') || PLANS[2];
   if (normalizedId === 'creator') return PLANS.find((p) => p.id === 'creator') || PLANS[1];
   if (normalizedId === 'starter') return PLANS.find((p) => p.id === 'starter') || PLANS[0];
@@ -196,11 +218,12 @@ export function calculateEntitlements(
   planId: string,
   creditBalance: number,
 ): Entitlements {
-  const plan = getPlanById(planId) || PLANS[0];
+  const isDemo = planId.toLowerCase() === 'free' || planId.toLowerCase() === 'demo';
+  const plan = getPlanById(planId) || (isDemo ? DEMO_PLAN : PLANS[0]);
 
   return {
     can_generate_video: creditBalance >= 25,
-    can_publish_youtube: true,
+    can_publish_youtube: !isDemo,
     can_use_copilot: true,
     max_channels: plan.max_channels,
     max_resolution: plan.max_resolution,

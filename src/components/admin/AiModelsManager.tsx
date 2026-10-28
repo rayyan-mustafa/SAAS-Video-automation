@@ -298,7 +298,7 @@ export default function AiModelsManager({ onNotify }: AiModelsManagerProps) {
             <span>🎙️</span> Voice Synthesis & TTS Engines
           </h3>
           <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>
-            Choose between Microsoft Edge Neural Voice (built-in, zero cost) and ElevenLabs Studio Voice.
+            Choose between Cloudflare Deepgram Aura-2 Voice (built-in demo tier) and ElevenLabs Studio Voice (pro tier).
           </p>
         </div>
 

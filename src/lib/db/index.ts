@@ -78,7 +78,7 @@ export function getDb(): Database.Database {
           name TEXT NOT NULL,
           niche TEXT NOT NULL,
           language TEXT NOT NULL DEFAULT 'en',
-          voice TEXT NOT NULL DEFAULT 'en-US-ChristopherNeural',
+          voice TEXT NOT NULL DEFAULT 'cf-aura-orion',
           voice_speed TEXT NOT NULL DEFAULT '1.0x',
           target_duration_minutes INTEGER NOT NULL DEFAULT 5,
           visual_style TEXT NOT NULL DEFAULT 'Cinematic High-Contrast',
@@ -308,10 +308,10 @@ export function getDb(): Database.Database {
 
       CREATE TABLE IF NOT EXISTS user_credits (
         user_id TEXT PRIMARY KEY,
-        balance INTEGER NOT NULL DEFAULT 500,
-        tier TEXT NOT NULL DEFAULT 'CREATOR',
-        subscription_status TEXT NOT NULL DEFAULT 'ACTIVE',
-        monthly_allowance INTEGER NOT NULL DEFAULT 500,
+        balance INTEGER NOT NULL DEFAULT 25,
+        tier TEXT NOT NULL DEFAULT 'FREE',
+        subscription_status TEXT NOT NULL DEFAULT 'DEMO',
+        monthly_allowance INTEGER NOT NULL DEFAULT 0,
         renews_at TEXT,
         stripe_customer_id TEXT,
         stripe_subscription_id TEXT,
@@ -524,7 +524,7 @@ export function getDb(): Database.Database {
       if (!existingCredits) {
         dbInstance.prepare(`
           INSERT INTO user_credits (user_id, balance, tier, subscription_status, monthly_allowance, renews_at, updated_at)
-          VALUES (?, 500, 'CREATOR', 'ACTIVE', 500, ?, ?)
+          VALUES (?, 25, 'FREE', 'DEMO', 0, ?, ?)
         `).run(DEFAULT_USER_ID, new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(), new Date().toISOString());
       }
     } catch {}
@@ -1116,7 +1116,9 @@ export function getUserCredits(userId: string = DEFAULT_USER_ID): { balance: num
   const db = getDb();
   const row = db.prepare('SELECT balance, tier, subscription_status, monthly_allowance FROM user_credits WHERE user_id = ?').get(userId) as any;
   if (!row) {
-    return { balance: 500, tier: 'CREATOR', subscription_status: 'ACTIVE', monthly_allowance: 500 };
+    return userId === DEFAULT_USER_ID
+      ? { balance: 500, tier: 'CREATOR', subscription_status: 'ACTIVE', monthly_allowance: 500 }
+      : { balance: 25, tier: 'FREE', subscription_status: 'DEMO', monthly_allowance: 0 };
   }
   return row;
 }
@@ -1128,7 +1130,7 @@ export function deductUserCredits(userId: string = DEFAULT_USER_ID, amount: numb
   // Ensure record exists
   db.prepare(`
     INSERT INTO user_credits (user_id, balance, tier, subscription_status, monthly_allowance, created_at, updated_at)
-    VALUES (?, 500, 'CREATOR', 'ACTIVE', 500, ?, ?)
+    VALUES (?, 25, 'FREE', 'DEMO', 0, ?, ?)
     ON CONFLICT(user_id) DO NOTHING
   `).run(userId, now, now);
 
@@ -1171,7 +1173,7 @@ export function grantUserCredits(
 
   db.prepare(`
     INSERT INTO user_credits (user_id, balance, tier, subscription_status, monthly_allowance, created_at, updated_at)
-    VALUES (?, ?, 'CREATOR', 'ACTIVE', 500, ?, ?)
+    VALUES (?, ?, 'FREE', 'DEMO', 0, ?, ?)
     ON CONFLICT(user_id) DO UPDATE SET 
       balance = user_credits.balance + excluded.balance,
       updated_at = excluded.updated_at
@@ -1243,7 +1245,7 @@ export function checkUserEligibilityForPlan(userId: string): {
   if (credits.balance <= 0) {
     return { eligible: false, reason: 'Insufficient credits. Active subscription or trial with positive balance required.' };
   }
-  const activeStatus = ['ACTIVE', 'TRIALING', 'TRIAL'];
+  const activeStatus = ['ACTIVE', 'TRIALING', 'TRIAL', 'FREE', 'DEMO'];
   if (!activeStatus.includes(credits.subscription_status.toUpperCase())) {
     return { eligible: false, reason: 'Active subscription or trial required to generate new plans' };
   }

@@ -747,7 +747,7 @@ export default function SuperAdminPage() {
                                   border: tierStyle.border,
                                 }}
                               >
-                                {u.plan || 'CREATOR'}
+                                {u.plan || 'FREE'}
                               </span>
                             </td>
 
@@ -1003,7 +1003,7 @@ export default function SuperAdminPage() {
                             {selectedUser.name || 'Creator'}
                           </h2>
                           <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, ...getTierBadgeStyle(selectedUser.plan) }}>
-                            {selectedUser.plan || 'CREATOR'}
+                            {selectedUser.plan || 'FREE'}
                           </span>
                           <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, ...getSubStatusBadgeStyle(selectedUser.subscription_status) }}>
                             {selectedUser.subscription_status || 'ACTIVE'}
@@ -1045,10 +1045,11 @@ export default function SuperAdminPage() {
                             onChange={(e) => setNewTier(e.target.value)}
                             style={{ flex: 1, padding: '8px 10px', borderRadius: '6px', background: '#1f293d', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '12px' }}
                           >
-                            <option value="STARTER">STARTER ($19/mo)</option>
+                            <option value="FREE">FREE (Demo Tier)</option>
+                            <option value="STARTER">STARTER ($29/mo)</option>
                             <option value="CREATOR">CREATOR ($49/mo)</option>
-                            <option value="SCALE">SCALE ($99/mo)</option>
-                            <option value="AGENCY">AGENCY ($249/mo)</option>
+                            <option value="PRO">PRO ($99/mo)</option>
+
                           </select>
 
                           <select

@@ -49,16 +49,16 @@ export async function POST(req: Request) {
       ) VALUES (?, ?, ?, ?, ?, 1, ?, ?, 'CUSTOMER', 'ACTIVE', 1, ?, ?)
     `).run(userId, cleanEmail, hash, salt, name.trim(), verificationToken, verificationExpires, now, now);
 
-    // Initialize 500 free credits
+    // Initialize 25 free demo credits (1 free video allowance)
     db.prepare(`
       INSERT OR REPLACE INTO user_credits (user_id, balance, tier, subscription_status, monthly_allowance, renews_at, updated_at)
-      VALUES (?, 500, 'CREATOR', 'ACTIVE', 500, ?, ?)
+      VALUES (?, 25, 'FREE', 'DEMO', 0, ?, ?)
     `).run(userId, new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(), now);
 
     // Auto-provision a default starter channel for creator
     db.prepare(`
       INSERT OR IGNORE INTO channels (id, user_id, name, niche, language, voice, target_duration_minutes, visual_style, subtitle_style, intro_style, outro_cta, publishing_platform, content_rules, created_at, updated_at)
-      VALUES (?, ?, ?, 'AI & Tech', 'en', 'en-US-ChristopherNeural', 3, 'Cinematic High-Contrast', 'Modern Clean White', 'High-Impact Hook', 'Subscribe for more breakdowns', 'YouTube', 'Professional studio pacing', ?, ?)
+      VALUES (?, ?, ?, 'AI & Tech', 'en', 'cf-aura-orion', 3, 'Cinematic High-Contrast', 'Modern Clean White', 'High-Impact Hook', 'Subscribe for more breakdowns', 'YouTube', 'Professional studio pacing', ?, ?)
     `).run(`chan_${userId.substring(4)}`, userId, `${name.trim()} Studio`, now, now);
 
     // Create session

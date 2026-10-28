@@ -1,7 +1,7 @@
 import { storage } from '../storage';
 import { videoRenderer } from './renderer';
 import { videoProvider } from './videoProvider';
-import { MsEdgeTTS, OUTPUT_FORMAT } from 'msedge-tts';
+
 import { getDb } from '../db';
 
 export type ProviderStatus = 'CONFIGURED' | 'NOT_CONFIGURED' | 'FAILED';
@@ -32,7 +32,7 @@ export async function checkProvidersHealth(): Promise<ProviderHealthReport> {
         ? 'State-of-the-art AI text-to-video generation pipeline active (Veo/Wan/MiniMax).'
         : '1080p 30fps dynamic video clip generator operational.',
     },
-    tts: { status: 'NOT_CONFIGURED', provider: 'EdgeTTS / Synthetic Neural Voice', details: 'Checking...' },
+    tts: { status: 'CONFIGURED', provider: 'Cloudflare Deepgram Aura-2 / ElevenLabs', details: 'Checking...' },
     r2: { status: 'NOT_CONFIGURED', details: 'No R2 credentials found; local storage provider active.' },
     renderer: { status: 'NOT_CONFIGURED', environment: 'Local Node.js FFmpeg Subprocess', details: 'Checking...' },
     queue: { status: 'NOT_CONFIGURED', details: 'Checking...' },
@@ -81,7 +81,7 @@ export async function checkProvidersHealth(): Promise<ProviderHealthReport> {
 
   // 2. Check TTS
   try {
-    report.tts = { status: 'CONFIGURED', provider: 'EdgeTTS Neural Voice Engine', details: 'Neural voice synthesis ready.' };
+    report.tts = { status: 'CONFIGURED', provider: 'Cloudflare Deepgram Aura-2 & ElevenLabs Turbo v2.5', details: '2-tier neural voice pipeline operational.' };
   } catch (err: any) {
     report.tts = { status: 'CONFIGURED', provider: 'Synthetic PCM Audio Fallback', details: 'Fallback synthesis active.' };
   }

@@ -47,37 +47,38 @@ class MultiEngineVoiceProvider implements VoiceProvider {
     'domi': 'AZnzlk1XvdvUeBnXmlld',
     'sam': 'yoZ06aMxZJJ28mfd3POQ',
   };
-
-  // Mapped Microsoft Edge Neural Voices
-  private static readonly EDGE_VOICE_MAP: Record<string, string> = {
-    'rachel': 'en-US-JennyNeural',
-    'adam': 'en-US-GuyNeural',
-    'antoni': 'en-US-ChristopherNeural',
-    'bella': 'en-US-AriaNeural',
-    'josh': 'en-US-EricNeural',
-    'arnold': 'en-US-DavisNeural',
-    'domi': 'en-US-MichelleNeural',
-    'sam': 'en-US-BrianNeural',
-    'christopher': 'en-US-ChristopherNeural',
-    'jenny': 'en-US-JennyNeural',
-    'guy': 'en-US-GuyNeural',
-    'aria': 'en-US-AriaNeural',
-    'studio voice 1': 'en-US-JennyNeural',
-    'studio voice 2': 'en-US-GuyNeural',
-    'studio voice 3': 'en-US-ChristopherNeural',
-    'studio voice 4': 'en-US-AriaNeural',
-    'studio voice 5': 'en-US-ChristopherNeural',
-    // Language-specific defaults
-    'en': 'en-US-ChristopherNeural',
-    'es': 'es-ES-AlvaroNeural',
-    'fr': 'fr-FR-HenriNeural',
-    'de': 'de-DE-ConradNeural',
-    'hi': 'hi-IN-MadhurNeural',
-    'ur': 'ur-PK-AsadNeural',
-    'ar': 'ar-SA-HamedNeural',
-    'pt': 'pt-BR-AntonioNeural',
-    'it': 'it-IT-DiegoNeural',
+  // Mapped Cloudflare Deepgram Aura-2 Speakers
+  private static readonly DEEPGRAM_SPEAKER_MAP: Record<string, string> = {
+    'orion': 'orion',
+    'cf-aura-orion': 'orion',
+    'asteria': 'asteria',
+    'cf-aura-asteria': 'asteria',
+    'arcas': 'arcas',
+    'cf-aura-arcas': 'arcas',
+    'luna': 'luna',
+    'cf-aura-luna': 'luna',
+    'stella': 'stella',
+    'cf-aura-stella': 'stella',
+    'christopher': 'orion',
+    'en-us-christopherneural': 'orion',
+    'guy': 'arcas',
+    'en-us-guyneural': 'arcas',
+    'jenny': 'asteria',
+    'en-us-jennyneural': 'asteria',
+    'aria': 'asteria',
+    'en-us-arianeural': 'asteria',
+    'sonia': 'asteria',
+    'en-gb-sonianeural': 'asteria',
+    'ryan': 'arcas',
+    'en-gb-ryanneural': 'arcas',
   };
+
+  private resolveDeepgramSpeaker(voiceName?: string): string {
+    if (!voiceName) return 'orion';
+    const clean = voiceName.trim().toLowerCase();
+    return MultiEngineVoiceProvider.DEEPGRAM_SPEAKER_MAP[clean] || 'orion';
+  }
+
 
   private resolveElevenLabsVoiceId(voiceName?: string): string {
     if (!voiceName) return '21m00Tcm4TlvDq8ikWAM';
@@ -104,29 +105,14 @@ class MultiEngineVoiceProvider implements VoiceProvider {
     return '21m00Tcm4TlvDq8ikWAM'; // Default Rachel
   }
 
-  private resolveEdgeVoice(voiceName?: string, language?: string): string {
-    if (voiceName) {
-      const clean = voiceName.trim();
-      // If voice name already matches Edge neural format (e.g., en-US-ChristopherNeural)
-      if (/^[a-z]{2,3}-[A-Z]{2,3}-.+Neural$/i.test(clean)) {
-        return clean;
-      }
-      let key = clean.toLowerCase();
-      if (key.startsWith('elevenlabs:')) {
-        key = key.replace('elevenlabs:', '').trim();
-      }
-      if (MultiEngineVoiceProvider.EDGE_VOICE_MAP[key]) {
-        return MultiEngineVoiceProvider.EDGE_VOICE_MAP[key];
-      }
+    private resolveAzureVoice(voiceName?: string, language?: string): string {
+    const clean = (voiceName || '').toLowerCase().trim();
+    if (clean.includes('asteria') || clean.includes('female') || clean.includes('rachel') || clean.includes('jenny')) {
+      return 'en-US-JennyNeural';
     }
-
-    if (language) {
-      const langKey = language.trim().toLowerCase().substring(0, 2);
-      if (MultiEngineVoiceProvider.EDGE_VOICE_MAP[langKey]) {
-        return MultiEngineVoiceProvider.EDGE_VOICE_MAP[langKey];
-      }
+    if (clean.includes('arcas') || clean.includes('guy') || clean.includes('chris')) {
+      return 'en-US-GuyNeural';
     }
-
     return 'en-US-ChristopherNeural';
   }
 
@@ -211,7 +197,7 @@ class MultiEngineVoiceProvider implements VoiceProvider {
     if (!apiKey) throw new Error('Azure Speech API key not configured');
 
     const region = process.env.AZURE_SPEECH_REGION || 'eastus';
-    const targetVoice = this.resolveEdgeVoice(voiceName, language);
+    const targetVoice = this.resolveAzureVoice(voiceName, language);
     const langCode = targetVoice.split('-').slice(0, 2).join('-') || 'en-US';
 
     // Chunk text under 1500 characters for optimal Azure REST synthesis latency
@@ -264,105 +250,6 @@ class MultiEngineVoiceProvider implements VoiceProvider {
     }
 
     return Buffer.concat(audioBuffers);
-  }
-
-  // Engine 1: Microsoft Edge Neural TTS Engine (Free High-Quality Neural Voices)
-  private async synthesizeWithMsEdgeTTS(text: string, voiceName?: string, language?: string): Promise<Buffer> {
-    const { MsEdgeTTS, OUTPUT_FORMAT } = await import('msedge-tts');
-    const targetVoice = this.resolveEdgeVoice(voiceName, language);
-
-    // Split text into paragraphs/sentences under 550 characters to prevent WebSocket timeouts
-    const paragraphs = text.split(/\n\n+/).filter(Boolean);
-    const chunks: string[] = [];
-    let currentChunk = '';
-
-    for (const p of paragraphs) {
-      if (p.length <= 550) {
-        if ((currentChunk + ' ' + p).length > 550 && currentChunk.trim()) {
-          chunks.push(currentChunk.trim());
-          currentChunk = p;
-        } else {
-          currentChunk += (currentChunk ? ' ' : '') + p;
-        }
-      } else {
-        // Break large single paragraph into sentences
-        const sentences = p.match(/[^.!?]+[.!?]+|\S+/g) || [p];
-        for (const s of sentences) {
-          if ((currentChunk + ' ' + s).length > 550 && currentChunk.trim()) {
-            chunks.push(currentChunk.trim());
-            currentChunk = s;
-          } else {
-            currentChunk += (currentChunk ? ' ' : '') + s;
-          }
-        }
-      }
-    }
-    if (currentChunk.trim()) chunks.push(currentChunk.trim());
-
-    if (chunks.length === 0) {
-      throw new Error('No valid text chunks to synthesize with Edge TTS');
-    }
-
-    const chunkBuffers: Buffer[] = [];
-
-    for (let i = 0; i < chunks.length; i++) {
-      const chunkText = chunks[i];
-      let tts = new MsEdgeTTS();
-      try {
-        try {
-          await tts.setMetadata(targetVoice, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3, {});
-        } catch {
-          // If custom voice metadata fails, fall back to bulletproof default
-          await tts.setMetadata('en-US-ChristopherNeural', OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3, {});
-        }
-
-        const buf = await new Promise<Buffer>((resolve, reject) => {
-          const timeout = setTimeout(() => {
-            try { tts.close(); } catch {}
-            reject(new Error(`Edge TTS chunk ${i} timed out`));
-          }, 25000);
-
-          try {
-            const { audioStream } = tts.toStream(chunkText);
-            const parts: Buffer[] = [];
-            audioStream.on('data', (d: Buffer) => parts.push(d));
-            audioStream.on('end', () => {
-              clearTimeout(timeout);
-              try { tts.close(); } catch {}
-              resolve(Buffer.concat(parts));
-            });
-            audioStream.on('error', (err) => {
-              clearTimeout(timeout);
-              try { tts.close(); } catch {}
-              reject(err);
-            });
-          } catch (streamErr) {
-            clearTimeout(timeout);
-            try { tts.close(); } catch {}
-            reject(streamErr);
-          }
-        });
-
-        if (buf && buf.length > 200) {
-          chunkBuffers.push(buf);
-        }
-      } catch (err: any) {
-        console.warn(`[VoiceProvider] Edge TTS chunk ${i} failed: ${err.message}. Retrying with universal fallback...`);
-        // Retry single chunk via Google TTS
-        try {
-          const gBuf = await this.synthesizeWithGoogleTTS(chunkText, language || 'en');
-          if (gBuf && gBuf.length > 200) {
-            chunkBuffers.push(gBuf);
-          }
-        } catch {}
-      }
-    }
-
-    if (chunkBuffers.length === 0) {
-      throw new Error('Edge TTS did not produce any valid audio buffers');
-    }
-
-    return Buffer.concat(chunkBuffers);
   }
 
   // Engine 2: Google Speech Neural Stream (Universal Fallback, 0 API Key, 100% Reliable Globally)
@@ -421,12 +308,7 @@ class MultiEngineVoiceProvider implements VoiceProvider {
     const isMelo = cleanVoice.startsWith('cf-melotts-') || (language && language.toLowerCase().substring(0, 2) !== 'en');
 
     // Aura-2 speaker map: asteria, arcas, orion, luna, stella
-    let auraSpeaker = 'orion';
-    if (cleanVoice.includes('asteria')) auraSpeaker = 'asteria';
-    else if (cleanVoice.includes('arcas')) auraSpeaker = 'arcas';
-    else if (cleanVoice.includes('luna')) auraSpeaker = 'luna';
-    else if (cleanVoice.includes('stella')) auraSpeaker = 'stella';
-    else if (cleanVoice.includes('orion')) auraSpeaker = 'orion';
+    let auraSpeaker = this.resolveDeepgramSpeaker(voiceName);
 
     const meloLang = cleanVoice.replace(/^cf-melotts-/, '') || (language ? language.toLowerCase().substring(0, 2) : 'en');
 
@@ -661,28 +543,12 @@ $synth.Dispose()
         finalBuffer = await this.synthesizeWithAzureSpeech(cleanText, effectiveVoice, params.language);
         if (finalBuffer && finalBuffer.length > 500) {
           selectedEngine = 'Azure Cognitive Speech';
-          console.log(`[VoiceProvider] Synthesized voiceover via Azure Cognitive Speech (${finalBuffer.length} bytes, voice: ${this.resolveEdgeVoice(effectiveVoice, params.language)})`);
+          console.log(`[VoiceProvider] Synthesized voiceover via Azure Cognitive Speech (${finalBuffer.length} bytes, voice: ${this.resolveAzureVoice(effectiveVoice, params.language)})`);
         }
       } catch (err: any) {
         if (getApiKey('azure') || getApiKey('azure_speech') || process.env.AZURE_SPEECH_KEY || process.env.AZURE_SPEECH_API_KEY) {
-          console.warn(`[VoiceProvider] Azure Speech synthesis failed (${err.message}). Falling back to Edge TTS sandbox...`);
+          console.warn(`[VoiceProvider] Azure Speech synthesis failed (${err.message}). Falling back to Google Neural Stream...`);
         }
-      }
-    }
-
-    // Fallback: Microsoft Edge Neural TTS (dev sandbox)
-    if (!finalBuffer || finalBuffer.length < 500) {
-      if (process.env.NODE_ENV === 'production' && process.env.ALLOW_DEV_TTS !== '1' && !isCloudflareConfigured()) {
-        throw new EngineError('STAGE_EXECUTION_FAILED', 'Licensed Azure Cognitive Speech API or Cloudflare Workers AI credentials required in production mode');
-      }
-      try {
-        finalBuffer = await this.synthesizeWithMsEdgeTTS(cleanText, effectiveVoice, params.language);
-        if (finalBuffer && finalBuffer.length > 500) {
-          selectedEngine = 'Microsoft Edge Neural Sandbox';
-          console.log(`[VoiceProvider] Synthesized voiceover via Microsoft Edge Neural Sandbox (${finalBuffer.length} bytes, mapped voice: ${this.resolveEdgeVoice(effectiveVoice, params.language)})`);
-        }
-      } catch (err: any) {
-        console.warn(`[VoiceProvider] Microsoft Edge TTS failed (${err.message}). Trying Google Neural Stream...`);
       }
     }
 

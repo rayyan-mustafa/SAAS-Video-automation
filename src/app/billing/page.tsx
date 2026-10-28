@@ -161,11 +161,11 @@ export default function BillingPage() {
                 Active Plan Tier
               </div>
               <div style={{ fontSize: '22px', fontWeight: 800, color: '#fff', marginTop: '4px' }}>
-                {credits?.tier ? `${credits.tier} Plan` : 'PRO CREATOR Plan'}
+                {credits?.tier && credits.tier.toUpperCase() !== 'FREE' ? `${credits.tier} Plan` : 'Demo Account (Free Tier)'}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--status-ready)', marginTop: '4px' }}>
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--status-ready)' }} />
-                <span>{credits?.subscription_status || 'ACTIVE'} Subscription</span>
+                <span>{credits?.subscription_status === 'ACTIVE' ? 'Active Paid Subscription' : 'Demo Account (Upgrade to Activate Daily Pipeline)'}</span>
               </div>
             </div>
 
@@ -207,7 +207,7 @@ export default function BillingPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
               {plans.map((p: any) => {
-                const isCurrent = (credits?.tier || 'CREATOR').toLowerCase() === p.id.toLowerCase();
+                const isCurrent = (credits?.tier || 'FREE').toLowerCase() === p.id.toLowerCase();
                 const price = isAnnual ? p.price_annual : p.price_monthly;
 
                 return (

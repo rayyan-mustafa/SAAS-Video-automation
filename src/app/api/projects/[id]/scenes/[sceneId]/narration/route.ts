@@ -77,7 +77,7 @@ export async function POST(
 
     // 3. Resolve voice & synthesize audio for this single scene
     const channel = db.prepare('SELECT * FROM channels WHERE id = ?').get(project.channel_id) as Channel | undefined;
-    const voiceName = channel?.voice || 'en-US-ChristopherNeural';
+    const voiceName = channel?.voice || 'cf-aura-orion';
     const voiceSpeed = channel?.voice_speed || '1.0x';
 
     const voiceRes = await voiceProvider.generateVoiceover({
