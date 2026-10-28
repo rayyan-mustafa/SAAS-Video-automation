@@ -745,14 +745,14 @@ export function LandingPage() {
               <span style={{ color: '#71717a', fontSize: '14px' }}>/ month</span>
             </div>
 
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: '11px', fontSize: '13.5px', color: '#d4d4d8', flex: 1 }}>
-              <li>✓ <strong>15 1080p Videos / month</strong> (Every other day)</li>
-              <li>✓ <strong>Zero Watermark</strong> Full HD Downloads</li>
-              <li>✓ <strong>Curated 1080p Stock Footage</strong> & FLUX.1</li>
-              <li>✓ <strong>Deepgram Aura-2</strong> High-Speed Voices</li>
-              <li>✓ 3-Stage Viral Scripting & Synced Captions</li>
-              <li>✓ 1 Connected Channel (YouTube or TikTok)</li>
-              <li>✓ Zero-Waste Auto-Refund Guarantee</li>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: '11px', fontSize: '13px', color: '#d4d4d8', flex: 1 }}>
+              <li>✓ <strong>15 Full AI Videos / mo</strong> — Post every other day (~30 Shorts)</li>
+              <li>✓ <strong>1080p Full HD MP4</strong> — Zero watermark & full commercial rights</li>
+              <li>✓ <strong>Deepgram Aura-2 Voices</strong> — Natural, human-like narration</li>
+              <li>✓ <strong>Stock Footage & FLUX.1</strong> — High-definition visual B-roll</li>
+              <li>✓ <strong>Kinetic Subtitles</strong> — Platform safe-zones (zero UI cutoff)</li>
+              <li>✓ <strong>1 Connected Channel</strong> — YouTube Shorts or TikTok autopilot</li>
+              <li>✓ <strong>Zero-Waste Guarantee</strong> — 100% instant auto-refund on failures</li>
             </ul>
 
             <Link href="/signup?plan=starter" style={{
@@ -787,14 +787,15 @@ export function LandingPage() {
               <span style={{ color: '#71717a', fontSize: '14px' }}>/ month</span>
             </div>
 
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: '11px', fontSize: '13.5px', color: '#d4d4d8', flex: 1 }}>
-              <li>✓ <strong>30 1080p Videos / month</strong> (1 post every day)</li>
-              <li>✓ <strong>100% ElevenLabs Turbo v2.5</strong> Voices</li>
-              <li>✓ <strong>Cinema AI Video Access</strong> (3x Hook Multiplier)</li>
-              <li>✓ <strong>Curated 1080p Stock</strong> + 8K FLUX.1 Stills</li>
-              <li>✓ <strong>Glassmorphic Stat Cards</strong> & Sounds</li>
-              <li>✓ 2 Connected Channels (YouTube + TikTok)</li>
-              <li>✓ Direct Multi-Platform Auto-Publishing</li>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: '11px', fontSize: '13px', color: '#d4d4d8', flex: 1 }}>
+              <li>✓ <strong>30 Full AI Videos / mo</strong> — Post 1 video every day (~60 Shorts)</li>
+              <li>✓ <strong>100% ElevenLabs Voices</strong> — Studio narration (Adam, Brian, Rachel)</li>
+              <li>✓ <strong>Cinema AI Video Access</strong> — Veo 3.1 & Seedance generative clips</li>
+              <li>✓ <strong>Stock + 8K FLUX.1 Stills</strong> — Dynamic Ken Burns motion & zooms</li>
+              <li>✓ <strong>Glassmorphic Stat Cards</strong> — Viral sound effects & background music</li>
+              <li>✓ <strong>2 Connected Channels</strong> — Dual autopilot (YouTube Shorts + TikTok)</li>
+              <li>✓ <strong>Scene Editor-Lite</strong> — 1-click re-voicing & undo history</li>
+              <li>✓ <strong>Zero-Waste Guarantee</strong> — 100% instant auto-refund on failures</li>
             </ul>
 
             <Link href="/signup?plan=creator" style={{
@@ -825,14 +826,15 @@ export function LandingPage() {
               <span style={{ color: '#71717a', fontSize: '14px' }}>/ month</span>
             </div>
 
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: '11px', fontSize: '13.5px', color: '#d4d4d8', flex: 1 }}>
-              <li>✓ <strong>60 1080p Videos / month</strong> (2 per day)</li>
-              <li>✓ <strong>Google Veo 3.1 & Kling Pro</strong> AI Video Engine</li>
-              <li>✓ <strong>Custom Voice Cloning Studio</strong></li>
-              <li>✓ <strong>Competitor Outlier Radar</strong> & Own Channel IQ</li>
-              <li>✓ Up to 5 Connected Social Channels</li>
-              <li>✓ Priority Fast-Lane Render Queue (&lt;90s)</li>
-              <li>✓ VIP 24/7 Dedicated Support</li>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: '11px', fontSize: '13px', color: '#d4d4d8', flex: 1 }}>
+              <li>✓ <strong>60 Full AI Videos / mo</strong> — Post 2 videos every day (~120 Shorts)</li>
+              <li>✓ <strong>All 4 Social Platforms</strong> — YouTube, TikTok, Instagram & FB Reels</li>
+              <li>✓ <strong>Full Generative AI Video</strong> — Google Veo 3.1, Seedance & Kling Pro</li>
+              <li>✓ <strong>Voice Cloning Studio</strong> — Clone your voice + 50+ ElevenLabs</li>
+              <li>✓ <strong>Competitor Outlier Spy</strong> — Steal winning hooks & viral trends</li>
+              <li>✓ <strong>VIP Turbo Render Queue</strong> — &lt;90s Cloudflare GPU priority</li>
+              <li>✓ <strong>4K Ultra HD Exports</strong> — High-bitrate studio quality MP4s</li>
+              <li>✓ <strong>VIP 24/7 Priority Support</strong> — Dedicated onboarding & channel growth</li>
             </ul>
 
             <Link href="/signup?plan=pro" style={{

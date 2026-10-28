@@ -271,12 +271,24 @@ export default function BillingPage() {
 
                     {/* Features List */}
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                      {p.features.map((f: string, idx: number) => (
-                        <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', lineHeight: 1.4 }}>
-                          <span style={{ color: 'var(--status-ready)', fontWeight: 700 }}>✓</span>
-                          <span>{f}</span>
-                        </li>
-                      ))}
+                      {p.features.map((f: string, idx: number) => {
+                        const parts = f.split(' — ');
+                        return (
+                          <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', lineHeight: 1.45 }}>
+                            <span style={{ color: 'var(--status-ready)', fontWeight: 800, fontSize: '13px', lineHeight: 1.3, flexShrink: 0 }}>✓</span>
+                            <span>
+                              {parts.length > 1 ? (
+                                <>
+                                  <strong style={{ color: '#fff', fontWeight: 600 }}>{parts[0]}</strong>
+                                  <span style={{ color: 'var(--text-muted)' }}> — {parts[1]}</span>
+                                </>
+                              ) : (
+                                <span style={{ color: '#e4e4e7' }}>{f}</span>
+                              )}
+                            </span>
+                          </li>
+                        );
+                      })}
                     </ul>
 
                     {/* CTA Button */}
