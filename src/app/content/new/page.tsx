@@ -101,11 +101,20 @@ const MOTION_ENGINE_TIERS = [
     proRequired: false,
   },
   {
+    id: 'stock_footage',
+    title: 'Curated 1080p Stock & B-Roll',
+    multiplier: '1x Credit / Scene',
+    desc: 'High-definition real-world footage, drone aerials & lifestyle b-roll via Pexels & Pixabay',
+    badge: 'Free Demo & All Plans',
+    badgeColor: '#0ea5e9',
+    proRequired: false,
+  },
+  {
     id: 'ai_clip',
     title: 'Cinema AI Video',
     multiplier: '3x Credits / Scene',
     desc: 'True AI Motion Video via Luma / Fal / Runway',
-    badge: 'PRO',
+    badge: 'Creator & Pro',
     badgeColor: '#8b5cf6',
     proRequired: true,
   },
@@ -114,7 +123,7 @@ const MOTION_ENGINE_TIERS = [
     title: 'Hollywood Director',
     multiplier: '5x Credits / Scene',
     desc: 'Ultra-Cinema AI Video via Veo / Kling Pro',
-    badge: 'PRO ULTRA',
+    badge: 'PRO EXCLUSIVE',
     badgeColor: '#ec4899',
     proRequired: true,
   },
@@ -139,7 +148,7 @@ function CreateVideoWizardContent() {
   // 3 Outcome-Driven Creator Selectors
   const [storytellingFormat, setStorytellingFormat] = useState('viral-documentary');
   const [visualStyle, setVisualStyle] = useState('dark-cinematic-8k');
-  const [visualMotionTier, setVisualMotionTier] = useState<'motion_still' | 'ai_clip' | 'ai_clip_ultra'>('motion_still');
+  const [visualMotionTier, setVisualMotionTier] = useState<'motion_still' | 'stock_footage' | 'ai_clip' | 'ai_clip_ultra'>('motion_still');
 
   // Video Format & Platforms
   const [aspectRatio, setAspectRatio] = useState<'9:16' | '16:9'>('9:16');

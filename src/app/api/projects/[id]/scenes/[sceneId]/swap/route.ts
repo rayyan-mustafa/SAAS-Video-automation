@@ -55,7 +55,7 @@ export async function POST(
     const body = await req.json();
     const { targetTier, visualPrompt, statLabel, statValue } = body;
 
-    const allowedTiers = ['motion_still', 'graphic', 'ai_clip'];
+    const allowedTiers = ['motion_still', 'graphic', 'stock_footage', 'ai_clip'];
     if (!targetTier || !allowedTiers.includes(targetTier)) {
       return NextResponse.json(
         { error: `Invalid target tier. Allowed: ${allowedTiers.join(', ')}` },

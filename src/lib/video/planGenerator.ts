@@ -130,9 +130,9 @@ export async function generateVideoPlan(params: PlanGenerationParams): Promise<G
 
   // Enforce 3-Second Visual Beat Rule & Visual Tiers
   const scenes: GeneratedScene[] = rawScenes.map((s, idx) => {
-    let tier: 'ai_clip' | 'motion_still' | 'graphic' = 'motion_still';
+    let tier: 'ai_clip' | 'motion_still' | 'graphic' | 'stock_footage' = 'motion_still';
     if (idx === 0) {
-      tier = 'ai_clip'; // Hook hero scene gets AI video
+      tier = userPlan === 'free' ? 'motion_still' : 'ai_clip'; // Hook hero scene gets AI video on paid plans, motion still for free demo
     } else {
       const hasStat = /\b(\d+%|\$\d+|\d+x|\d+\s*(million|billion|thousand|k|m|b))\b/i.test(s.narration);
       if (hasStat) {

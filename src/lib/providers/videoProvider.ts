@@ -194,7 +194,7 @@ class DefaultVideoProvider implements VideoProvider {
     colorStyle?: string;
     continuityNotes?: string;
     aspectRatio?: AspectRatio;
-    visualMediaMode?: 'auto' | 'ai_clip' | 'motion_still';
+    visualMediaMode?: 'auto' | 'ai_clip' | 'motion_still' | 'stock_footage';
   }): Promise<GeneratedClip[]> {
     const {
       projectId,
@@ -258,6 +258,71 @@ class DefaultVideoProvider implements VideoProvider {
         durationSec: res.durationSec,
         tier: 'motion_still',
         visualTier: 'motion_still',
+      } as any];
+    }
+
+    // 2b. Direct Stock Footage Dispatch (Pexels / Pixabay 1080p B-Roll)
+    if (requestedTier === 'stock_footage') {
+      try {
+        const { stockVideoEngine } = await import('./stockVideoProvider');
+        const keywords = stockVideoEngine.extractSearchKeywords(visualPrompt, niche, (params as any).topic);
+        const clipOffset = sceneIndex;
+        const stockAspectRatio: '9:16' | '16:9' = aspectRatio === '16:9' ? '16:9' : '9:16';
+        const stockVideoUrl = await stockVideoEngine.findStockVideo(keywords, clipOffset, stockAspectRatio);
+
+        if (stockVideoUrl) {
+          const storageKey = `clips/${projectId}/scene_${sceneIndex}_stock.mp4`;
+          const stockOutputPath = storage.getFilePath(storageKey);
+          const outDir = path.dirname(stockOutputPath);
+          if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+
+          await stockVideoEngine.renderStockVideoScene({
+            videoUrl: stockVideoUrl,
+            durationSec,
+            outputPath: stockOutputPath,
+            sceneIndex,
+            headline: visualPrompt.slice(0, 30),
+            niche,
+            accent: '#38bdf8',
+            aspectRatio: stockAspectRatio,
+          });
+
+          if (fs.existsSync(stockOutputPath)) {
+            const url = storage.getUrl(storageKey);
+
+            return [{
+              clipIndex: 1,
+              storageKey,
+              url,
+              filePath: stockOutputPath,
+              durationSec,
+              tier: 'stock_footage',
+              visualTier: 'stock_footage',
+            } as any];
+          }
+        }
+      } catch (stockErr: any) {
+        console.warn(`[VideoProvider] Direct Stock Footage failed: ${stockErr.message}. Falling back to motion still.`);
+      }
+
+      // Graceful fallback to dynamic Ken Burns motion still if no stock clip returned
+      const motionType = sceneIndex % 2 === 0 ? 'zoom_in' : 'zoom_out';
+      const res = await motionStillRenderer.renderMotionStill({
+        projectId,
+        sceneIndex,
+        durationSec,
+        promptDescription: visualPrompt,
+        motionType,
+        aspectRatio: aspectRatio === '16:9' ? '16:9' : '9:16',
+      });
+      return [{
+        clipIndex: 1,
+        storageKey: res.storageKey,
+        url: res.url,
+        filePath: res.filePath,
+        durationSec: res.durationSec,
+        tier: 'stock_footage',
+        visualTier: 'stock_footage',
       } as any];
     }
 
