@@ -731,81 +731,120 @@ export function LandingPage() {
         </div>
 
         {/* Pricing Cards Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', maxWidth: '840px', margin: '0 auto' }}>
-          {/* Creator Plan */}
-          <div className="autora-card-glow" style={{ background: '#121215', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px', padding: '36px 28px', textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: '18px', fontWeight: 800, color: '#fff', marginBottom: '8px' }}>Creator Studio</div>
-            <p style={{ color: '#a1a1aa', fontSize: '13.5px', margin: '0 0 20px', minHeight: '40px' }}>
-              Perfect for solo creators launching 1 automated YouTube, TikTok, or Reels channel.
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', maxWidth: '1150px', margin: '0 auto' }}>
+          {/* Starter Plan ($29/mo, $24/mo annual) */}
+          <div className="autora-card-glow" style={{ background: '#121215', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px', padding: '32px 24px', textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontSize: '18px', fontWeight: 800, color: '#fff', marginBottom: '8px' }}>Starter Plan</div>
+            <p style={{ color: '#a1a1aa', fontSize: '13px', margin: '0 0 20px', minHeight: '38px' }}>
+              For aspiring creators launching their first automated faceless channel.
             </p>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '24px' }}>
-              <span style={{ fontSize: '44px', fontWeight: 900, color: '#fff' }}>
-                ${billingCycle === 'annual' ? '39' : '49'}
+              <span style={{ fontSize: '42px', fontWeight: 900, color: '#fff' }}>
+                ${billingCycle === 'annual' ? '24' : '29'}
               </span>
               <span style={{ color: '#71717a', fontSize: '14px' }}>/ month</span>
             </div>
 
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', color: '#d4d4d8', flex: 1 }}>
-              <li>✓ <strong>30 1080p Videos / month</strong> (1 per day)</li>
-              <li>✓ <strong>Multi-Platform Publishing</strong> (YouTube + TikTok + Reels)</li>
-              <li>✓ <strong>5 Narrative Variety Frameworks</strong> (YPP Safe)</li>
-              <li>✓ <strong>Zero-Waste Auto-Refund</strong> Guarantee</li>
-              <li>✓ 40+ Studio Neural Voices</li>
-              <li>✓ 1 Active Connected Channel</li>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: '11px', fontSize: '13.5px', color: '#d4d4d8', flex: 1 }}>
+              <li>✓ <strong>15 1080p Videos / month</strong> (Every other day)</li>
+              <li>✓ <strong>Zero Watermark</strong> Full HD Downloads</li>
+              <li>✓ <strong>Curated 1080p Stock Footage</strong> & FLUX.1</li>
+              <li>✓ <strong>Deepgram Aura-2</strong> High-Speed Voices</li>
+              <li>✓ 3-Stage Viral Scripting & Synced Captions</li>
+              <li>✓ 1 Connected Channel (YouTube or TikTok)</li>
+              <li>✓ Zero-Waste Auto-Refund Guarantee</li>
             </ul>
 
-            <Link href="/signup?plan=creator" style={{
+            <Link href="/signup?plan=starter" style={{
               background: 'rgba(255, 255, 255, 0.08)',
               color: '#fff',
               border: '1px solid rgba(255, 255, 255, 0.2)',
-              padding: '14px',
+              padding: '13px',
               borderRadius: '8px',
               textAlign: 'center',
               fontWeight: 700,
               fontSize: '14px',
               textDecoration: 'none'
             }}>
-              Start Creator Plan ➔
+              Start Starter Plan ➔
             </Link>
           </div>
 
-          {/* Pro Channel Plan */}
-          <div className="autora-card-glow" style={{ background: '#121215', border: '1px solid #00f0ff', borderRadius: '16px', padding: '36px 28px', textAlign: 'left', display: 'flex', flexDirection: 'column', position: 'relative', boxShadow: '0 0 40px rgba(0, 240, 255, 0.15)' }}>
-            <div style={{ position: 'absolute', top: '-12px', right: '24px', background: '#00f0ff', color: '#000', fontSize: '11px', fontWeight: 800, padding: '4px 12px', borderRadius: '12px', textTransform: 'uppercase' }}>
+          {/* Creator Plan ($49/mo, $39/mo annual) — HERO */}
+          <div className="autora-card-glow" style={{ background: '#121215', border: '2px solid #00f0ff', borderRadius: '16px', padding: '32px 24px', textAlign: 'left', display: 'flex', flexDirection: 'column', position: 'relative', boxShadow: '0 0 35px rgba(0, 240, 255, 0.2)' }}>
+            <div style={{ position: 'absolute', top: '-12px', right: '20px', background: 'linear-gradient(135deg, #00f0ff 0%, #7000ff 100%)', color: '#fff', fontSize: '10.5px', fontWeight: 800, padding: '3px 10px', borderRadius: '10px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               MOST POPULAR
             </div>
 
-            <div style={{ fontSize: '18px', fontWeight: 800, color: '#fff', marginBottom: '8px' }}>Pro Automation Network</div>
-            <p style={{ color: '#a1a1aa', fontSize: '13.5px', margin: '0 0 20px', minHeight: '40px' }}>
-              For serious media operators and agencies scaling multiple multi-platform brands.
+            <div style={{ fontSize: '18px', fontWeight: 800, color: '#fff', marginBottom: '8px' }}>Creator Studio</div>
+            <p style={{ color: '#a1a1aa', fontSize: '13px', margin: '0 0 20px', minHeight: '38px' }}>
+              For creators posting daily to qualify for TikTok & YouTube monetization.
             </p>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '24px' }}>
-              <span style={{ fontSize: '44px', fontWeight: 900, color: '#fff' }}>
-                ${billingCycle === 'annual' ? '79' : '99'}
+              <span style={{ fontSize: '42px', fontWeight: 900, color: '#fff' }}>
+                ${billingCycle === 'annual' ? '39' : '49'}
               </span>
               <span style={{ color: '#71717a', fontSize: '14px' }}>/ month</span>
             </div>
 
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', color: '#d4d4d8', flex: 1 }}>
-              <li>✓ <strong>100 1080p Videos / month</strong> (High Volume)</li>
-              <li>✓ <strong>Competitor Outlier Radar</strong> (Track 5 Channels)</li>
-              <li>✓ <strong>Own Channel IQ</strong> (Winning Hook Tuning)</li>
-              <li>✓ <strong>True Generative AI Video Clips</strong> (Wan 2.1 & Hailuo)</li>
-              <li>✓ <strong>Custom Voice Cloning</strong> (ElevenLabs Integration)</li>
-              <li>✓ Up to 5 Connected Social Channels</li>
-              <li>✓ Priority Fast-Lane Video Render Queue</li>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: '11px', fontSize: '13.5px', color: '#d4d4d8', flex: 1 }}>
+              <li>✓ <strong>30 1080p Videos / month</strong> (1 post every day)</li>
+              <li>✓ <strong>100% ElevenLabs Turbo v2.5</strong> Voices</li>
+              <li>✓ <strong>Cinema AI Video Access</strong> (3x Hook Multiplier)</li>
+              <li>✓ <strong>Curated 1080p Stock</strong> + 8K FLUX.1 Stills</li>
+              <li>✓ <strong>Glassmorphic Stat Cards</strong> & Sounds</li>
+              <li>✓ 2 Connected Channels (YouTube + TikTok)</li>
+              <li>✓ Direct Multi-Platform Auto-Publishing</li>
             </ul>
 
-            <Link href="/signup?plan=pro" style={{
+            <Link href="/signup?plan=creator" style={{
               background: '#00f0ff',
               color: '#000',
-              padding: '14px',
+              padding: '13px',
               borderRadius: '8px',
               textAlign: 'center',
               fontWeight: 800,
               fontSize: '14px',
               textDecoration: 'none',
-              boxShadow: '0 4px 20px rgba(0, 240, 255, 0.35)'
+              boxShadow: '0 4px 15px rgba(0, 240, 255, 0.3)'
+            }}>
+              Start Creator Plan ➔
+            </Link>
+          </div>
+
+          {/* Pro Automation Plan ($99/mo, $79/mo annual) */}
+          <div className="autora-card-glow" style={{ background: '#121215', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '16px', padding: '32px 24px', textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontSize: '18px', fontWeight: 800, color: '#fff', marginBottom: '8px' }}>Pro Automation</div>
+            <p style={{ color: '#a1a1aa', fontSize: '13px', margin: '0 0 20px', minHeight: '38px' }}>
+              For serious media operators and agencies scaling multiple channels.
+            </p>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '24px' }}>
+              <span style={{ fontSize: '42px', fontWeight: 900, color: '#fff' }}>
+                ${billingCycle === 'annual' ? '79' : '99'}
+              </span>
+              <span style={{ color: '#71717a', fontSize: '14px' }}>/ month</span>
+            </div>
+
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: '11px', fontSize: '13.5px', color: '#d4d4d8', flex: 1 }}>
+              <li>✓ <strong>60 1080p Videos / month</strong> (2 per day)</li>
+              <li>✓ <strong>Google Veo 3.1 & Kling Pro</strong> AI Video Engine</li>
+              <li>✓ <strong>Custom Voice Cloning Studio</strong></li>
+              <li>✓ <strong>Competitor Outlier Radar</strong> & Own Channel IQ</li>
+              <li>✓ Up to 5 Connected Social Channels</li>
+              <li>✓ Priority Fast-Lane Render Queue (&lt;90s)</li>
+              <li>✓ VIP 24/7 Dedicated Support</li>
+            </ul>
+
+            <Link href="/signup?plan=pro" style={{
+              background: 'rgba(255, 255, 255, 0.08)',
+              color: '#fff',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              padding: '13px',
+              borderRadius: '8px',
+              textAlign: 'center',
+              fontWeight: 700,
+              fontSize: '14px',
+              textDecoration: 'none'
             }}>
               Launch Pro Studio ➔
             </Link>

@@ -38,19 +38,28 @@ async function runModule1Tests() {
   }
   console.log('✓ Admin sitemap purged and excluded from robots.txt.');
 
-  // Test 3: Pricing Reconciling ($49 Creator / $99 Pro)
-  console.log('[Test 3] Verifying 2-Tier Pricing Reconciling...');
-  assert.strictEqual(PLANS.length, 2, 'Exactly 2 production tiers must exist');
+  // Test 3: Pricing Reconciling ($29 Starter / $49 Creator / $99 Pro)
+  console.log('[Test 3] Verifying 3-Tier Production Pricing Reconciling...');
+  assert.strictEqual(PLANS.length, 3, 'Exactly 3 production tiers must exist: Starter, Creator, Pro');
+
+  const starterPlan = getPlanById('starter');
+  assert(starterPlan !== null, 'Starter plan must exist');
+  assert.strictEqual(starterPlan!.price_monthly, 29, 'Starter plan price must be $29/mo');
+  assert.strictEqual(starterPlan!.price_annual, 24, 'Starter plan annual price must be $24/mo');
+  assert.strictEqual(starterPlan!.credits_monthly, 375, 'Starter plan must have 375 credits/mo');
+  assert.strictEqual(starterPlan!.estimated_videos, 15, 'Starter plan must provide 15 videos/mo');
   
   const creatorPlan = getPlanById('creator');
   assert(creatorPlan !== null, 'Creator plan must exist');
   assert.strictEqual(creatorPlan!.price_monthly, 49, 'Creator plan price must be $49/mo');
+  assert.strictEqual(creatorPlan!.price_annual, 39, 'Creator plan annual price must be $39/mo');
   assert.strictEqual(creatorPlan!.credits_monthly, 750, 'Creator plan must have 750 credits/mo');
   assert.strictEqual(creatorPlan!.estimated_videos, 30, 'Creator plan must provide 30 videos/mo');
 
   const proPlan = getPlanById('pro');
   assert(proPlan !== null, 'Pro plan must exist');
   assert.strictEqual(proPlan!.price_monthly, 99, 'Pro plan price must be $99/mo');
+  assert.strictEqual(proPlan!.price_annual, 79, 'Pro plan annual price must be $79/mo');
   assert.strictEqual(proPlan!.credits_monthly, 1500, 'Pro plan must have 1,500 credits/mo');
   assert.strictEqual(proPlan!.estimated_videos, 60, 'Pro plan must provide 60 videos/mo');
 

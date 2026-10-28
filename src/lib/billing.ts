@@ -86,6 +86,29 @@ export type PaymentProvider = 'polar' | 'stripe' | 'paddle' | 'none';
 
 export const PLANS: Plan[] = [
   {
+    id: 'starter',
+    name: 'Starter Plan',
+    price_monthly: 29,
+    price_annual: 24,
+    credits_monthly: 375,
+    estimated_videos: 15,
+    estimated_shorts: 30,
+    max_channels: 1,
+    max_resolution: '1080p Full HD',
+    is_popular: false,
+    cta_label: 'Get Starter Plan ($29/mo)',
+    features: [
+      '15 Full Videos / Month (Post Every Other Day)',
+      '1080p Full HD MP4 Downloads & Zero Watermark',
+      'Curated 1080p Stock Footage & FLUX.1 Motion Stills',
+      'Cloudflare Deepgram Aura-2 High-Speed Voices',
+      '3-Stage Split-Brain Viral Scripting Engine',
+      'Word-Level Synced Captions & Safe Zones',
+      'Single Channel Auto-Publish & Scheduling',
+      'Zero-Waste Policy (Failed jobs never count)',
+    ],
+  },
+  {
     id: 'creator',
     name: 'Creator Plan',
     price_monthly: 49,
@@ -93,18 +116,20 @@ export const PLANS: Plan[] = [
     credits_monthly: 750,
     estimated_videos: 30,
     estimated_shorts: 60,
-    max_channels: 1,
+    max_channels: 2,
     max_resolution: '1080p Full HD',
+    badge: 'MOST POPULAR — 1 DAILY VIDEO',
     is_popular: true,
     cta_label: 'Get Creator Plan ($49/mo)',
     features: [
-      '30 Full Videos / Month (1 Daily Video)',
-      'Full 1080p MP4 Immediate Downloads',
-      'Microsoft Edge & ElevenLabs Studio Voices',
-      'Multi-Model Script Engine (Gemini + DeepSeek)',
-      'Automated Captions & Subtitle Burn-In',
+      '30 Full Videos / Month (1 Post Every Single Day)',
+      '100% ElevenLabs Turbo v2.5 Ultra-Realistic Voices',
+      'Cinema AI Video Access (3x Credit Multiplier for Hook Scenes)',
+      'Curated 1080p Stock Video + 8K FLUX.1 Motion Stills',
+      'Glassmorphic Stat Cards & Sound Effects',
+      '2 Connected Channels (YouTube Shorts + TikTok)',
+      'Direct Multi-Platform Auto-Publish & Daily Scheduling',
       'Zero-Waste Policy (Failed jobs never count)',
-      'Direct YouTube Auto-Publish & Scheduling',
     ],
   },
   {
@@ -122,11 +147,11 @@ export const PLANS: Plan[] = [
     cta_label: 'Get Pro Plan ($99/mo)',
     features: [
       '60 Full Videos / Month (2 Daily Videos)',
-      'Unlimited Connected YouTube Channels',
-      'Priority Render Queue & Ultra-Fast Processing',
+      'Unlimited Connected Channels (YouTube, TikTok, IG & FB)',
       'Google Veo 3.1 & FAL.ai Wan 2.1 Engine Access',
-      'Custom Cloned Voice IDs + ElevenLabs Studio',
-      'Advanced Content Copilot & Workflow Automation',
+      'Custom Voice Cloning Studio + ElevenLabs Studio',
+      'Competitor Intelligence & Viral Outliers Engine',
+      'Priority Render Queue (<90s Cloudflare Processing)',
       '4K Ultra HD & High-Bitrate Video Exports',
       'VIP 24/7 Dedicated Support',
     ],
@@ -135,7 +160,9 @@ export const PLANS: Plan[] = [
 
 export function getPlanById(id: string): Plan | null {
   const normalizedId = id.toLowerCase();
-  if (normalizedId === 'pro' || normalizedId === 'scale') return PLANS.find((p) => p.id === 'pro') || PLANS[1];
+  if (normalizedId === 'pro' || normalizedId === 'scale') return PLANS.find((p) => p.id === 'pro') || PLANS[2];
+  if (normalizedId === 'creator') return PLANS.find((p) => p.id === 'creator') || PLANS[1];
+  if (normalizedId === 'starter') return PLANS.find((p) => p.id === 'starter') || PLANS[0];
   return PLANS.find((p) => p.id.toLowerCase() === normalizedId) || null;
 }
 
