@@ -227,3 +227,25 @@ To uphold the highest software quality across all contributions:
 
 
 
+
+
+---
+
+## Spec-Driven Development & Large Markdown Execution Protocol
+
+Whenever a large specification (.md), PRD, or multi-module architecture blueprint is provided:
+1. **Zero Blind Implementation**: The agent must NEVER attempt to implement all requirements in a single response turn.
+2. **Phase Deconstruction & Dependency Classification**:
+   - Deconstruct the specification into isolated batches:
+     - Foundation & Schemas (`[SEQUENTIAL]`)
+     - Core Logic & Providers (`[SEQUENTIAL, Depends on Schemas]`)
+     - Independent Subsystems (`[INDEPENDENT, Parallelizable across chats/subagents]`)
+     - Consumer Endpoints & API routes (`[SEQUENTIAL]`)
+     - Frontend UI & Visual Studio (`[Depends on API/Types]`)
+3. **Living Execution Ledger (`TASK_LEDGER.md`)**:
+   - Create or update `TASK_LEDGER.md` with explicit task checkboxes and verification gates.
+4. **Mandatory Verification Gate**:
+   - Run `npm run typecheck` and relevant unit tests before marking any phase complete.
+5. **Atomic Git Commit & Fresh Context Handover**:
+   - Commit verified phase code using Conventional Commits.
+   - Hand off to the user with a clean boundary: allowing continued work in the same chat or opening a fresh chat that loads `TASK_LEDGER.md` and `git log` with 100% clean token capacity.

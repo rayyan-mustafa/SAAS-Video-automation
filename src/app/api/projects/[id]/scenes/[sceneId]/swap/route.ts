@@ -63,6 +63,18 @@ export async function POST(
       );
     }
 
+    const userPlan = ((user as any).plan || 'free').toLowerCase();
+    if (targetTier === 'ai_clip' && userPlan === 'free') {
+      return NextResponse.json(
+        {
+          error: 'UPGRADE_REQUIRED',
+          message: 'Cinema AI Video (3x) is a Pro feature. Upgrade your plan to unlock cinematic AI video scene generation.',
+          upgradeRequired: true,
+        },
+        { status: 402 }
+      );
+    }
+
     // 1. Save history for 1-click undo
     saveSceneHistory(scene.id);
 

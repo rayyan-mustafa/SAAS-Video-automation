@@ -942,6 +942,14 @@ export class VideoPipelineWorker {
           }
         } catch {}
 
+        let projectUserPlan = 'free';
+        if (project.user_id) {
+          try {
+            const u = db.prepare('SELECT plan FROM users WHERE id = ?').get(project.user_id) as { plan?: string } | undefined;
+            if (u?.plan) projectUserPlan = u.plan.toLowerCase();
+          } catch {}
+        }
+
         const composition = await ffmpegCompositor.composeVideo({
           projectId: project.id,
           clipFilePaths: clipPaths,
@@ -949,6 +957,8 @@ export class VideoPipelineWorker {
           subtitleFilePath: subPath,
           totalDurationSec: effectiveDurationSec,
           aspectRatio: finalAspectRatio === '16:9' ? '16:9' : '9:16',
+          userPlan: projectUserPlan,
+          watermark: projectUserPlan === 'free' || projectUserPlan === 'demo',
         });
 
         // Store video output record

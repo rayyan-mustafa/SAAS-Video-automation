@@ -4,8 +4,9 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useToast } from '@/components/Toast';
+import { AUTORA_VOICE_CATALOG, VoicePreset } from '@/lib/video/voiceCatalog';
 
-export interface UserVoice {
+interface UserVoice {
   id: string;
   name: string;
   voice_id: string;
@@ -13,12 +14,110 @@ export interface UserVoice {
   created_at: string;
 }
 
-const STUDIO_VOICES = [
-  { id: 'elevenlabs:rachel', name: 'Studio Voice 1', desc: 'Rachel (Female, Calm & Professional)' },
-  { id: 'elevenlabs:adam', name: 'Studio Voice 2', desc: 'Adam (Male, Deep & Cinematic)' },
-  { id: 'elevenlabs:antoni', name: 'Studio Voice 3', desc: 'Antoni (Male, Energetic & Dynamic)' },
-  { id: 'elevenlabs:bella', name: 'Studio Voice 4', desc: 'Bella (Female, Warm & Conversational)' },
-  { id: 'en-US-ChristopherNeural', name: 'Studio Voice 5', desc: 'Christopher (Male, Clear Broadcast)' },
+const STORYTELLING_FORMATS = [
+  {
+    id: 'viral-documentary',
+    title: 'Viral Documentary',
+    desc: 'Dramatic pacing, curiosity hooks & investigative tone',
+    icon: '🕵️',
+    badge: 'High Retention',
+  },
+  {
+    id: 'true-crime-mystery',
+    title: 'True Crime & Mystery',
+    desc: 'Suspenseful atmosphere, tension build & unanswered questions',
+    icon: '🔍',
+    badge: 'Binge-Worthy',
+  },
+  {
+    id: 'reddit-confession',
+    title: 'Reddit / First-Person Story',
+    desc: 'Emotional confessions, shocking plot twists & relatable voice',
+    icon: '💬',
+    badge: 'Viral Confessions',
+  },
+  {
+    id: 'founder-business',
+    title: 'Founder / Business Breakdown',
+    desc: 'Fast-paced teardowns, valuation numbers & contrarian lessons',
+    icon: '📈',
+    badge: 'High RPM',
+  },
+  {
+    id: 'stoic-history',
+    title: 'Stoic & History',
+    desc: 'Ancient philosophy, legendary leaders & timeless life wisdom',
+    icon: '🏛️',
+    badge: 'Evergreen',
+  },
+];
+
+const VISUAL_STYLE_PRESETS_UI = [
+  {
+    id: 'dark-cinematic-8k',
+    title: 'Dark Cinematic 8K',
+    desc: 'Dramatic chiaroscuro lighting & deep atmospheric shadows',
+    icon: '🎬',
+    tag: 'Documentary',
+  },
+  {
+    id: 'hyper-realistic-film',
+    title: 'Hyper-Realistic Film',
+    desc: 'Authentic 35mm film stock, natural lighting & documentary clarity',
+    icon: '🎞️',
+    tag: '35mm Kodak',
+  },
+  {
+    id: '3d-pixar-animation',
+    title: '3D Pixar Animation',
+    desc: 'Stylized characters, rich subsurface scattering & vibrant lighting',
+    icon: '✨',
+    tag: 'Stylized 3D',
+  },
+  {
+    id: 'graphic-novel-comic',
+    title: 'Graphic Novel / Comic',
+    desc: 'Bold ink linework, dynamic cel shading & comic book pulp art',
+    icon: '💥',
+    tag: 'Graphic Cel',
+  },
+  {
+    id: 'dark-anime',
+    title: 'Dark Anime',
+    desc: 'Neo-Tokyo aesthetics, dramatic edge glow & Japanese animation',
+    icon: '⚡',
+    tag: 'Anime 8K',
+  },
+];
+
+const MOTION_ENGINE_TIERS = [
+  {
+    id: 'motion_still',
+    title: 'Autora Flash Motion',
+    multiplier: '1x Credit / Scene',
+    desc: '60fps Dynamic Ken Burns Camera Motion powered by FLUX.1',
+    badge: 'Free Demo & All Plans',
+    badgeColor: '#10b981',
+    proRequired: false,
+  },
+  {
+    id: 'ai_clip',
+    title: 'Cinema AI Video',
+    multiplier: '3x Credits / Scene',
+    desc: 'True AI Motion Video via Luma / Fal / Runway',
+    badge: 'PRO',
+    badgeColor: '#8b5cf6',
+    proRequired: true,
+  },
+  {
+    id: 'ai_clip_ultra',
+    title: 'Hollywood Director',
+    multiplier: '5x Credits / Scene',
+    desc: 'Ultra-Cinema AI Video via Veo / Kling Pro',
+    badge: 'PRO ULTRA',
+    badgeColor: '#ec4899',
+    proRequired: true,
+  },
 ];
 
 type ModalState = 'idle' | 'recording' | 'recorded' | 'uploading' | 'cloning' | 'success' | 'error';
@@ -30,11 +129,22 @@ function CreateVideoWizardContent() {
   const templateTopic = searchParams.get('topic');
 
   const [topic, setTopic] = useState(templateTopic || '');
-  const [selectedVoice, setSelectedVoice] = useState('elevenlabs:rachel');
+  const [selectedVoice, setSelectedVoice] = useState('cf-aura-orion');
   const [customVoiceId, setCustomVoiceId] = useState('');
   const [channels, setChannels] = useState<any[]>([]);
   const [monthlyUsage, setMonthlyUsage] = useState({ used: 0, limit: 30, remaining: 30 });
+  const [userPlan, setUserPlan] = useState<'free' | 'creator' | 'pro'>('free');
   const [creating, setCreating] = useState(false);
+
+  // 3 Outcome-Driven Creator Selectors
+  const [storytellingFormat, setStorytellingFormat] = useState('viral-documentary');
+  const [visualStyle, setVisualStyle] = useState('dark-cinematic-8k');
+  const [visualMotionTier, setVisualMotionTier] = useState<'motion_still' | 'ai_clip' | 'ai_clip_ultra'>('motion_still');
+
+  // Video Format & Platforms
+  const [aspectRatio, setAspectRatio] = useState<'9:16' | '16:9'>('9:16');
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['YouTube', 'TikTok', 'Instagram', 'Facebook']);
+  const [videoLength, setVideoLength] = useState<number>(3); // Default 3m (TikTok Creator Rewards & Shorts sweet spot)
 
   // User Cloned Voices State
   const [myVoices, setMyVoices] = useState<UserVoice[]>([]);
@@ -66,16 +176,9 @@ function CreateVideoWizardContent() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Advanced Options & Platform Configuration
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [visualStyle, setVisualStyle] = useState('Cinematic High-Contrast');
-  const [aspectRatio, setAspectRatio] = useState<'9:16' | '16:9'>('9:16');
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['YouTube', 'TikTok', 'Instagram', 'Facebook']);
-  const [videoLength, setVideoLength] = useState<number>(3); // Default 3m (TikTok & YouTube Shorts sweet spot)
-
-  // Focus trap ref
   const modalCardRef = useRef<HTMLDivElement | null>(null);
+
+  const isFree = userPlan === 'free';
 
   useEffect(() => {
     fetchUserData();
@@ -124,9 +227,10 @@ function CreateVideoWizardContent() {
 
   const fetchUserData = async () => {
     try {
-      const [chanRes, projRes] = await Promise.all([
+      const [chanRes, projRes, authRes] = await Promise.all([
         fetch('/api/channels'),
         fetch('/api/projects'),
+        fetch('/api/auth/me'),
       ]);
 
       if (chanRes.ok) {
@@ -137,6 +241,12 @@ function CreateVideoWizardContent() {
         const pData = await projRes.json();
         if (pData.monthlyUsage) {
           setMonthlyUsage(pData.monthlyUsage);
+        }
+      }
+      if (authRes.ok) {
+        const aData = await authRes.json();
+        if (aData.user?.plan) {
+          setUserPlan(aData.user.plan.toLowerCase());
         }
       }
     } catch {}
@@ -224,7 +334,7 @@ function CreateVideoWizardContent() {
       console.error('Microphone access error:', err);
       stopMediaTracks();
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        setModalError('Microphone permission was denied. Please click the lock or settings icon in your browser address bar (next to autora.live) to allow microphone access, then refresh.');
+        setModalError('Microphone permission was denied. Please allow microphone access in your browser address bar.');
       } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
         setModalError('No microphone was detected on your device. Please plug in a microphone or upload an audio file.');
       } else {
@@ -324,7 +434,7 @@ function CreateVideoWizardContent() {
   // ─────────────────────────────────────────────────────────────
 
   const handleCloneVoice = async () => {
-    if (modalState === 'cloning') return; // Prevent duplicate submission
+    if (modalState === 'cloning') return;
 
     setModalError(null);
     const sanitizedName = newVoiceName.replace(/[<>"'&]/g, '').trim().substring(0, 50) || 'My Cloned Voice';
@@ -374,7 +484,6 @@ function CreateVideoWizardContent() {
       setModalState('success');
       toast.success(`🎉 Voice "${sanitizedName}" ready!`);
 
-      // Auto close modal after brief confirmation
       setTimeout(() => {
         closeModalSafely();
       }, 2000);
@@ -385,7 +494,7 @@ function CreateVideoWizardContent() {
   };
 
   const closeModalSafely = () => {
-    if (modalState === 'cloning') return; // Do not close while actively cloning
+    if (modalState === 'cloning') return;
     stopMediaTracks();
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     resetRecording();
@@ -408,12 +517,11 @@ function CreateVideoWizardContent() {
     const confirmed = window.confirm(`Delete "${voiceName}"? This will permanently remove it from your account.`);
     if (!confirmed) return;
 
-    // Optimistic removal
     const previousVoices = [...myVoices];
     setMyVoices((prev) => prev.filter((v) => v.id !== voiceDbId));
 
     if (selectedVoice === voiceId) {
-      setSelectedVoice('elevenlabs:rachel');
+      setSelectedVoice('cf-aura-orion');
     }
 
     try {
@@ -422,7 +530,6 @@ function CreateVideoWizardContent() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        // Rollback
         setMyVoices(previousVoices);
         toast.error(data.error || 'Failed to delete voice');
       } else {
@@ -503,18 +610,28 @@ function CreateVideoWizardContent() {
         body: JSON.stringify({
           channel_id: targetChannelId || 'default_channel',
           topic: topic.trim(),
+          storytelling_format: storytellingFormat,
+          storytellingFormat,
+          visual_style: visualStyle,
+          visualStyle,
+          motion_tier: visualMotionTier,
+          visual_tier: visualMotionTier,
           target_length_minutes: videoLength,
           aspect_ratio: aspectRatio,
           platforms: selectedPlatforms,
           platform: selectedPlatforms.join(', '),
           voice: activeVoice,
-          visual_style: visualStyle,
         }),
       });
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || 'Failed to start video generation');
+        if (err.upgradeRequired) {
+          toast.warning(err.message || 'Upgrade required for this feature.');
+          router.push('/pricing');
+          return;
+        }
+        throw new Error(err.error || err.message || 'Failed to start video generation');
       }
 
       const data = await res.json();
@@ -527,8 +644,11 @@ function CreateVideoWizardContent() {
     }
   };
 
+  const freeVoices = AUTORA_VOICE_CATALOG.filter((v) => v.tier === 'free');
+  const proVoices = AUTORA_VOICE_CATALOG.filter((v) => v.tier === 'paid');
+
   return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '20px 16px 60px' }}>
+    <div style={{ maxWidth: '780px', margin: '0 auto', padding: '20px 16px 60px' }}>
       {/* Top Breadcrumb & Quota Status */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '8px' }}>
         <Link
@@ -537,8 +657,23 @@ function CreateVideoWizardContent() {
         >
           ← Back to Dashboard
         </Link>
-        <div style={{ fontSize: '12px', color: monthlyUsage.remaining > 0 ? '#10b981' : '#f43f5e', fontWeight: 600 }}>
-          {monthlyUsage.used} / {monthlyUsage.limit} videos this month ({monthlyUsage.remaining} remaining)
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{
+            fontSize: '11px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+            padding: '2px 8px',
+            borderRadius: '4px',
+            fontWeight: 700,
+            background: isFree ? 'rgba(255,255,255,0.06)' : 'rgba(99, 102, 241, 0.2)',
+            color: isFree ? '#a1a1aa' : '#818cf8',
+            border: isFree ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(99, 102, 241, 0.4)'
+          }}>
+            {userPlan.toUpperCase()} PLAN
+          </span>
+          <div style={{ fontSize: '12px', color: monthlyUsage.remaining > 0 ? '#10b981' : '#f43f5e', fontWeight: 600 }}>
+            {monthlyUsage.used} / {monthlyUsage.limit} videos this month ({monthlyUsage.remaining} remaining)
+          </div>
         </div>
       </div>
 
@@ -550,13 +685,13 @@ function CreateVideoWizardContent() {
         boxShadow: '0 20px 40px rgba(0,0,0,0.4)'
       }}>
         <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', margin: '0 0 8px 0' }}>
-          Create Your Video
+          Create Viral Video
         </h1>
         <p style={{ color: '#a1a1aa', fontSize: '14px', margin: '0 0 28px 0' }}>
-          Tell us what you want your video to be about.
+          AI crafts high-retention scripts, selects pacing beats, synthesizes natural voiceover, and renders cinematic motion.
         </p>
 
-        <form onSubmit={handleCreateVideo} style={{ display: 'flex', flexDirection: 'column', gap: '26px' }}>
+        <form onSubmit={handleCreateVideo} style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
           {/* STEP 1: TOPIC INPUT */}
           <div>
             <label htmlFor="video-topic-input" style={{ display: 'block', fontSize: '14px', fontWeight: 700, color: '#f4f4f5', marginBottom: '6px' }}>
@@ -578,21 +713,224 @@ function CreateVideoWizardContent() {
                 lineHeight: 1.5,
                 boxSizing: 'border-box',
               }}
-              placeholder="e.g. 10 foods that help support healthy aging"
+              placeholder="e.g. 5 hidden signs of extreme high intelligence that people mistake for weirdness"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
             />
             <div style={{ fontSize: '12px', color: '#71717a', marginTop: '6px' }}>
-              Tip: You can enter a headline, a question, or a detailed prompt.
+              Tip: Enter a shocking hook, contrarian question, or detailed outline. Our 3-stage engine writes for maximum 3-second retention.
             </div>
           </div>
 
-          {/* STEP 2: CHOOSE VOICE */}
+          {/* ─────────────────────────────────────────────────────────────
+              OUTCOME-BASED CREATOR CONTROL 1: STORYTELLING FORMAT
+          ───────────────────────────────────────────────────────────── */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <label style={{ fontSize: '14px', fontWeight: 700, color: '#f4f4f5', margin: 0 }}>
+                1. Storytelling Format & Narrative Engine
+              </label>
+              <span style={{ fontSize: '11px', color: '#818cf8', fontWeight: 600 }}>Curiosity & Retention Rules Applied</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
+              {STORYTELLING_FORMATS.map((f) => {
+                const isSelected = storytellingFormat === f.id;
+                return (
+                  <div
+                    key={f.id}
+                    role="radio"
+                    aria-checked={isSelected}
+                    tabIndex={0}
+                    onClick={() => setStorytellingFormat(f.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === ' ' || e.key === 'Enter') {
+                        e.preventDefault();
+                        setStorytellingFormat(f.id);
+                      }
+                    }}
+                    style={{
+                      background: isSelected ? 'rgba(99, 102, 241, 0.14)' : 'rgba(255, 255, 255, 0.02)',
+                      border: isSelected ? '2px solid #818cf8' : '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '10px',
+                      padding: '12px 14px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px',
+                      transition: 'all 0.15s ease',
+                      outline: 'none',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '18px' }}>{f.icon}</span>
+                      <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', background: 'rgba(255,255,255,0.06)', color: '#c7d2fe' }}>
+                        {f.badge}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff', marginTop: '2px' }}>
+                      {f.title}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#a1a1aa', lineHeight: 1.35 }}>
+                      {f.desc}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ─────────────────────────────────────────────────────────────
+              OUTCOME-BASED CREATOR CONTROL 2: VISUAL STYLE PRESET
+          ───────────────────────────────────────────────────────────── */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <label style={{ fontSize: '14px', fontWeight: 700, color: '#f4f4f5', margin: 0 }}>
+                2. Visual Art Style & Lighting Preset
+              </label>
+              <span style={{ fontSize: '11px', color: '#a1a1aa' }}>Cohesive DNA across all scenes</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
+              {VISUAL_STYLE_PRESETS_UI.map((s) => {
+                const isSelected = visualStyle === s.id;
+                return (
+                  <div
+                    key={s.id}
+                    role="radio"
+                    aria-checked={isSelected}
+                    tabIndex={0}
+                    onClick={() => setVisualStyle(s.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === ' ' || e.key === 'Enter') {
+                        e.preventDefault();
+                        setVisualStyle(s.id);
+                      }
+                    }}
+                    style={{
+                      background: isSelected ? 'rgba(99, 102, 241, 0.14)' : 'rgba(255, 255, 255, 0.02)',
+                      border: isSelected ? '2px solid #818cf8' : '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '10px',
+                      padding: '12px 14px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px',
+                      transition: 'all 0.15s ease',
+                      outline: 'none',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '18px' }}>{s.icon}</span>
+                      <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', background: 'rgba(255,255,255,0.06)', color: '#d4d4d8' }}>
+                        {s.tag}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff', marginTop: '2px' }}>
+                      {s.title}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#a1a1aa', lineHeight: 1.35 }}>
+                      {s.desc}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ─────────────────────────────────────────────────────────────
+              OUTCOME-BASED CREATOR CONTROL 3: VISUAL MOTION ENGINE TIER
+          ───────────────────────────────────────────────────────────── */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '6px' }}>
+              <label style={{ fontSize: '14px', fontWeight: 700, color: '#f4f4f5', margin: 0 }}>
+                3. Visual Motion Engine Tier
+              </label>
+              <span style={{ fontSize: '11px', color: '#71717a' }}>Hybrid upgrade per-scene also available in Storyboard</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
+              {MOTION_ENGINE_TIERS.map((tier) => {
+                const isSelected = visualMotionTier === tier.id;
+                const isLocked = tier.proRequired && isFree;
+                return (
+                  <div
+                    key={tier.id}
+                    role="radio"
+                    aria-checked={isSelected}
+                    tabIndex={0}
+                    onClick={() => {
+                      if (isLocked) {
+                        toast.info(`${tier.title} is available on Creator & Pro plans. Upgrade to unlock full AI Video.`);
+                        return;
+                      }
+                      setVisualMotionTier(tier.id as any);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === ' ' || e.key === 'Enter') {
+                        e.preventDefault();
+                        if (!isLocked) setVisualMotionTier(tier.id as any);
+                      }
+                    }}
+                    style={{
+                      background: isSelected ? 'rgba(99, 102, 241, 0.14)' : 'rgba(255, 255, 255, 0.02)',
+                      border: isSelected ? '2px solid #818cf8' : '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '10px',
+                      padding: '14px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '6px',
+                      transition: 'all 0.15s ease',
+                      outline: 'none',
+                      opacity: isLocked ? 0.65 : 1,
+                      position: 'relative',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        background: tier.badgeColor,
+                        color: '#fff',
+                        letterSpacing: '0.04em',
+                      }}>
+                        {tier.badge}
+                      </span>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#34d399' }}>
+                        {tier.multiplier}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span>{tier.title}</span>
+                      {isLocked && <span style={{ fontSize: '12px' }}>🔒</span>}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#a1a1aa', lineHeight: 1.4 }}>
+                      {tier.desc}
+                    </div>
+                    {isLocked && (
+                      <div style={{ fontSize: '10px', color: '#f472b6', fontWeight: 600, marginTop: '4px' }}>
+                        Click to preview Pro plans
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ─────────────────────────────────────────────────────────────
+              STEP 4: CHOOSE VOICEOVER (STRICT 2-TIER CATALOG)
+          ───────────────────────────────────────────────────────────── */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-              <label style={{ fontSize: '14px', fontWeight: 700, color: '#f4f4f5', margin: 0 }}>
-                Choose Voice
-              </label>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 700, color: '#f4f4f5', margin: 0 }}>
+                  4. Choose Voiceover Narration
+                </label>
+                <div style={{ fontSize: '11px', color: '#71717a', marginTop: '2px' }}>
+                  Aura-2 Standard (Free Demo) vs 100% ElevenLabs Studio Voices (Pro)
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={() => {
@@ -623,43 +961,11 @@ function CreateVideoWizardContent() {
             </div>
 
             {/* MY CLONED VOICES SECTION */}
-            <div style={{ marginBottom: '18px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
-                My Cloned Voices
-              </div>
-
-              {loadingVoices ? (
-                <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)', fontSize: '12px', color: '#71717a' }}>
-                  Loading your cloned voices…
+            {myVoices.length > 0 && (
+              <div style={{ marginBottom: '18px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 600, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                  My Cloned Voices
                 </div>
-              ) : voicesError ? (
-                <div style={{ padding: '14px', background: 'rgba(239, 68, 68, 0.08)', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)', fontSize: '12px', color: '#f87171', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>{voicesError}</span>
-                  <button
-                    type="button"
-                    onClick={fetchUserVoices}
-                    style={{ background: 'transparent', border: 'none', color: '#60a5fa', cursor: 'pointer', textDecoration: 'underline', fontSize: '12px' }}
-                  >
-                    Retry
-                  </button>
-                </div>
-              ) : myVoices.length === 0 ? (
-                <div style={{
-                  padding: '16px',
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px dashed rgba(255,255,255,0.1)',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  color: '#71717a',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '12px',
-                  flexWrap: 'wrap'
-                }}>
-                  <span>You haven&apos;t cloned a voice yet. Click <strong>Clone Your Voice</strong> above to narrate videos with your real voice!</span>
-                </div>
-              ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '10px' }}>
                   {myVoices.map((v) => {
                     const isSelected = selectedVoice === v.voice_id;
@@ -761,17 +1067,21 @@ function CreateVideoWizardContent() {
                     );
                   })}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
-            {/* PRE-MADE STUDIO VOICES */}
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
-                Studio Voices (Pre-configured)
+            {/* FREE DEMO VOICES (Deepgram Aura-2 on Cloudflare) */}
+            <div style={{ marginBottom: '18px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  ✓ Standard Voices (Free Demo & All Plans)
+                </span>
+                <span style={{ fontSize: '11px', color: '#71717a' }}>Cloudflare Deepgram Aura-2</span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '10px' }}>
-                {STUDIO_VOICES.map((v) => {
+                {freeVoices.map((v) => {
                   const isSelected = selectedVoice === v.id;
+                  const isPlaying = playingVoiceId === v.id;
                   return (
                     <div
                       key={v.id}
@@ -786,36 +1096,152 @@ function CreateVideoWizardContent() {
                         }
                       }}
                       style={{
-                        background: isSelected ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-                        border: isSelected ? '1px solid #ffffff' : '1px solid rgba(255, 255, 255, 0.08)',
+                        background: isSelected ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255, 255, 255, 0.02)',
+                        border: isSelected ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.08)',
                         borderRadius: '8px',
                         padding: '12px 14px',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
+                        justifyContent: 'space-between',
                         gap: '10px',
                         outline: 'none',
                       }}
                     >
-                      <div style={{
-                        width: '16px',
-                        height: '16px',
-                        borderRadius: '50%',
-                        border: isSelected ? '5px solid #ffffff' : '1px solid rgba(255,255,255,0.3)',
-                        background: isSelected ? '#09090b' : 'transparent',
-                        flexShrink: 0
-                      }} />
-                      <div>
-                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>{v.name}</div>
-                        <div style={{ fontSize: '12px', color: '#a1a1aa' }}>{v.desc}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
+                        <div style={{
+                          width: '16px',
+                          height: '16px',
+                          borderRadius: '50%',
+                          border: isSelected ? '5px solid #10b981' : '1px solid rgba(255,255,255,0.3)',
+                          background: isSelected ? '#09090b' : 'transparent',
+                          flexShrink: 0
+                        }} />
+                        <div>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>{v.name}</div>
+                          <div style={{ fontSize: '11px', color: '#a1a1aa' }}>{v.description}</div>
+                        </div>
                       </div>
+                      <button
+                        type="button"
+                        onClick={(e) => handlePlaySample(e, v.previewAudioUrl, v.id)}
+                        aria-label={isPlaying ? `Pause sample for ${v.name}` : `Play sample for ${v.name}`}
+                        style={{
+                          background: isPlaying ? '#10b981' : 'rgba(255,255,255,0.08)',
+                          border: 'none',
+                          color: '#fff',
+                          borderRadius: '4px',
+                          padding: '6px 10px',
+                          fontSize: '11px',
+                          cursor: 'pointer',
+                          minWidth: '32px',
+                          minHeight: '32px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}
+                      >
+                        {isPlaying ? '⏸' : '▶'}
+                      </button>
                     </div>
                   );
                 })}
               </div>
             </div>
 
-            {/* Optional Collapsed Accordion for Raw Voice ID (For Power Users Only) */}
+            {/* PRO STUDIO VOICES (100% ElevenLabs Turbo v2.5) */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#c084fc', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  ⭐ Studio Narrator Voices (100% ElevenLabs)
+                </span>
+                <span style={{ fontSize: '11px', color: '#c084fc', fontWeight: 600 }}>PRO TIER</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '10px' }}>
+                {proVoices.map((v) => {
+                  const isSelected = selectedVoice === v.id;
+                  const isPlaying = playingVoiceId === v.id;
+                  return (
+                    <div
+                      key={v.id}
+                      role="radio"
+                      aria-checked={isSelected}
+                      tabIndex={0}
+                      onClick={() => {
+                        setSelectedVoice(v.id);
+                        if (isFree) {
+                          toast.info('⭐ You selected an ElevenLabs Pro Voice. On Free Demo, audio will preview standard Aura-2 until upgrading.');
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === ' ' || e.key === 'Enter') {
+                          e.preventDefault();
+                          setSelectedVoice(v.id);
+                        }
+                      }}
+                      style={{
+                        background: isSelected ? 'rgba(168, 85, 247, 0.15)' : 'rgba(255, 255, 255, 0.02)',
+                        border: isSelected ? '1px solid #c084fc' : '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '8px',
+                        padding: '12px 14px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '10px',
+                        outline: 'none',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
+                        <div style={{
+                          width: '16px',
+                          height: '16px',
+                          borderRadius: '50%',
+                          border: isSelected ? '5px solid #c084fc' : '1px solid rgba(255,255,255,0.3)',
+                          background: isSelected ? '#09090b' : 'transparent',
+                          flexShrink: 0
+                        }} />
+                        <div>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span>{v.name}</span>
+                            <span style={{ fontSize: '9px', fontWeight: 800, padding: '1px 5px', borderRadius: '3px', background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)', color: '#fff' }}>
+                              PRO
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#a1a1aa' }}>{v.description}</div>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={(e) => handlePlaySample(e, v.previewAudioUrl, v.id)}
+                        aria-label={isPlaying ? `Pause sample for ${v.name}` : `Play sample for ${v.name}`}
+                        style={{
+                          background: isPlaying ? '#a855f7' : 'rgba(255,255,255,0.08)',
+                          border: 'none',
+                          color: '#fff',
+                          borderRadius: '4px',
+                          padding: '6px 10px',
+                          fontSize: '11px',
+                          cursor: 'pointer',
+                          minWidth: '32px',
+                          minHeight: '32px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}
+                      >
+                        {isPlaying ? '⏸' : '▶'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Optional Collapsed Accordion for Raw Voice ID */}
             <details style={{ marginTop: '14px', fontSize: '12px', color: '#71717a' }}>
               <summary style={{ cursor: 'pointer', userSelect: 'none', padding: '4px 0' }}>
                 Advanced: Paste an external ElevenLabs Voice ID manually
@@ -870,10 +1296,10 @@ function CreateVideoWizardContent() {
             </details>
           </div>
 
-          {/* STEP 3: VIDEO FORMAT & ASPECT RATIO */}
+          {/* STEP 5: VIDEO FORMAT & ASPECT RATIO */}
           <div>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, color: '#f4f4f5', marginBottom: '8px' }}>
-              Video Format & Aspect Ratio
+              5. Video Format & Aspect Ratio
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
               <div
@@ -911,7 +1337,7 @@ function CreateVideoWizardContent() {
                     </span>
                   </div>
                   <div style={{ fontSize: '12px', color: '#a1a1aa', marginTop: '4px', lineHeight: 1.4 }}>
-                    Full-screen mobile video. Supports 30s up to 5 min. Ideal for high-retention feeds, TikTok Rewards & FB Reels.
+                    Full-screen mobile video. Supports 30s up to 5 min. Safe-zone subtitles placed at least 320px from bottom.
                   </div>
                 </div>
               </div>
@@ -958,10 +1384,10 @@ function CreateVideoWizardContent() {
             </div>
           </div>
 
-          {/* STEP 4: TARGET PUBLISHING PLATFORMS */}
+          {/* STEP 6: TARGET PUBLISHING PLATFORMS */}
           <div>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, color: '#f4f4f5', marginBottom: '8px' }}>
-              Target Publishing Platforms
+              6. Target Publishing Platforms
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
               {[
@@ -1014,11 +1440,11 @@ function CreateVideoWizardContent() {
             </div>
           </div>
 
-          {/* STEP 5: TARGET DURATION & MONETIZATION TIER */}
+          {/* STEP 7: TARGET DURATION & MONETIZATION TIER */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '6px' }}>
               <label htmlFor="target-duration-select" style={{ fontSize: '14px', fontWeight: 700, color: '#f4f4f5', margin: 0 }}>
-                Video Length & Monetization Tier
+                7. Video Length & Monetization Tier
               </label>
               {aspectRatio === '9:16' && (
                 <span style={{ fontSize: '11px', color: '#34d399', fontWeight: 600 }}>
@@ -1044,10 +1470,11 @@ function CreateVideoWizardContent() {
               {aspectRatio === '9:16' ? (
                 <>
                   <option value={0.5}>30 Seconds - Quick Viral Hook Teaser (9:16)</option>
+                  <option value={0.75}>45 Seconds - Free Demo Max Cap (9:16)</option>
                   <option value={1}>60 Seconds (1 min) - Classic Short Format (9:16)</option>
                   <option value={1.5}>90 Seconds (1.5 min) - Instagram Reels Sweet Spot (9:16)</option>
                   <option value={2}>2 Minutes (120s) - High-Retention Narrative Story (9:16)</option>
-                  <option value={3}>⭐ 3 Minutes (180s) - TikTok Creator Rewards & 3m YouTube Short Sweet Spot (Highest RPM)</option>
+                  <option value={3}>⭐ 3 Minutes (180s) - TikTok Creator Rewards Sweet Spot (Highest RPM)</option>
                   <option value={5}>5 Minutes (300s) - Deep Vertical Masterclass (9:16)</option>
                 </>
               ) : (
@@ -1074,78 +1501,12 @@ function CreateVideoWizardContent() {
                 color: '#c7d2fe',
                 lineHeight: 1.5,
               }}>
-                <strong>💡 TikTok Monetization Rule:</strong> The TikTok Creator Rewards Program strictly requires videos to be <strong>over 1 minute (&gt;60 seconds)</strong> to qualify for monetization. Videos between <strong>2 to 3+ minutes</strong> consistently earn $10&times; to $50&times; higher RPMs ($0.50 &ndash; $1.20+ per 1,000 views) compared to sub-minute shorts. YouTube also now supports vertical Shorts up to 3 minutes!
+                <strong>💡 TikTok Monetization Rule:</strong> The TikTok Creator Rewards Program strictly requires videos to be <strong>over 1 minute (&gt;60 seconds)</strong> to qualify for monetization. Videos between <strong>2 to 3+ minutes</strong> earn $0.50 &ndash; $1.20+ RPM compared to sub-minute shorts.
               </div>
             )}
           </div>
 
-          {/* HEALTH CONTENT SAFE MODE NOTICE */}
-          <div style={{
-            padding: '12px 16px',
-            background: 'rgba(56, 189, 248, 0.05)',
-            border: '1px solid rgba(56, 189, 248, 0.15)',
-            borderRadius: '8px',
-            fontSize: '12px',
-            color: '#94a3b8',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            <span>ℹ️</span>
-            <span>AI-generated content should be reviewed before publishing.</span>
-          </div>
-
-          {/* OPTIONAL ADVANCED SETTINGS (COLLAPSIBLE) */}
-          <div>
-            <button
-              type="button"
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#a1a1aa',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                padding: '4px 0',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              <span>{showAdvanced ? '− Hide' : '+ Show'} Advanced Visual Style (Optional)</span>
-            </button>
-
-            {showAdvanced && (
-              <div style={{ marginTop: '14px', padding: '16px', background: '#09090b', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div>
-                  <label htmlFor="visual-style-select" style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#a1a1aa', marginBottom: '6px' }}>
-                    Visual Style
-                  </label>
-                  <select
-                    id="visual-style-select"
-                    value={visualStyle}
-                    onChange={(e) => setVisualStyle(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      fontSize: '13px',
-                      background: '#121215',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '6px',
-                      color: '#fff'
-                    }}
-                  >
-                    <option value="Cinematic High-Contrast">Cinematic Documentary</option>
-                    <option value="Photorealistic 8K">Natural Realism</option>
-                    <option value="Modern Clean">Minimalist Modern</option>
-                  </select>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* PRIMARY CTA & MANDATORY EXPLANATION */}
+          {/* PRIMARY CTA */}
           <div style={{ marginTop: '10px' }}>
             <button
               type="submit"
@@ -1177,11 +1538,12 @@ function CreateVideoWizardContent() {
               margin: '12px 0 0 0',
               lineHeight: 1.5
             }}>
-              AI will write the script, create the scenes, generate the voiceover and render your final video automatically.
+              AI will write the viral script, calculate exact audio timing, compose scenes, and render your video automatically.
             </p>
           </div>
         </form>
       </div>
+
 
       {/* ─────────────────────────────────────────────────────────────
           IN-APP INSTANT VOICE CLONING MODAL

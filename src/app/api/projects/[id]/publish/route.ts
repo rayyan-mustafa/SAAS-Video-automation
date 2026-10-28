@@ -38,6 +38,20 @@ export async function POST(request: Request, { params }: { params: any }) {
       return NextResponse.json({ error: 'You do not have access to this project' }, { status: 403 });
     }
 
+    // Free Demo Conversion Lock: Auto-Publishing is locked for free tier users
+    const userPlan = ((user as any).plan || 'free').toLowerCase();
+    if (userPlan === 'free' && !isAdmin) {
+      return NextResponse.json(
+        {
+          error: 'UPGRADE_REQUIRED',
+          message: 'Direct automated publishing to YouTube, TikTok, Instagram & Facebook is locked on the Free Demo. Upgrade to Creator or Pro to publish automatically.',
+          upgradeRequired: true,
+          action: 'PUBLISH_LOCKED',
+        },
+        { status: 402 }
+      );
+    }
+
     if (project.status !== 'COMPLETED') {
       return NextResponse.json({ error: 'Video generation is not complete yet.' }, { status: 400 });
     }

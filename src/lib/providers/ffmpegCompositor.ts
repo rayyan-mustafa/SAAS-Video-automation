@@ -15,6 +15,8 @@ export interface CompositionParams {
   backgroundMusicPath?: string;
   totalDurationSec: number;
   aspectRatio?: '9:16' | '16:9';
+  watermark?: boolean;
+  userPlan?: string;
 }
 
 export interface CompositionResult {
@@ -84,8 +86,13 @@ export class FfmpegCompositor {
       }
     }
 
-    const { subtitleFilePath } = params;
+    const { subtitleFilePath, watermark, userPlan } = params;
     let videoFilter = `scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height},setsar=1`;
+
+    const isFreeTier = Boolean(watermark || (userPlan && (userPlan.toLowerCase() === 'free' || userPlan.toLowerCase() === 'demo')));
+    if (isFreeTier) {
+      videoFilter += `,drawtext=text='Created with Autora.ai':fontcolor=white@0.7:fontsize=28:x=w-tw-30:y=30:box=1:boxcolor=black@0.4:boxborderw=8`;
+    }
 
     if (subtitleFilePath && fs.existsSync(subtitleFilePath)) {
       const safeSubPath = subtitleFilePath.replace(/\\/g, '/').replace(/:/g, '\\:');

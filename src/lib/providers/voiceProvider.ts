@@ -10,6 +10,10 @@ import { isCloudflareConfigured, runCloudflareBinary } from './cloudflareAiClien
 
 const execFileAsync = util.promisify(execFile);
 
+import { AUTORA_VOICE_CATALOG, VoicePreset } from '../video/voiceCatalog';
+export { AUTORA_VOICE_CATALOG };
+export type { VoicePreset };
+
 export interface VoiceProvider {
   generateVoiceover(params: {
     text: string;
@@ -17,6 +21,7 @@ export interface VoiceProvider {
     voiceSpeed?: string;
     language?: string;
     projectId?: string;
+    userPlan?: string;
   }): Promise<{ audioBuffer: Buffer; durationSec: number; format: string }>;
 }
 
@@ -27,14 +32,20 @@ class MultiEngineVoiceProvider implements VoiceProvider {
 
   // Curated ElevenLabs Studio Voices
   private static readonly ELEVENLABS_VOICE_MAP: Record<string, string> = {
-    'rachel': '21m00Tcm4TlvDq8ikWAM',   // Rachel (Calm, Professional Studio)
-    'adam': 'pNInz6obpgDQGcFmaJgB',     // Adam (Deep, Authoritative)
-    'antoni': 'ErXwobaYiN019PkySvjV',   // Antoni (Energetic, Documentary)
-    'bella': 'EXAVITQu4vr4xnSDxMaL',    // Bella (Warm, Engaging)
-    'josh': 'TxGEqnHWrfWFTfGW9XjX',     // Josh (Dynamic, Narration)
-    'arnold': 'VR6AewLTigWG4xSOukaG',   // Arnold (Crisp, Narrative)
-    'domi': 'AZnzlk1XvdvUeBnXmlld',     // Domi (Confident, Strong)
-    'sam': 'yoZ06aMxZJJ28mfd3POQ',      // Sam (Natural, Conversational)
+    'rachel': '21m00Tcm4TlvDq8ikWAM',
+    'el-rachel-story': '21m00Tcm4TlvDq8ikWAM',
+    'adam': 'pNInz6obpgDQGcFmaJgB',
+    'el-adam-viral': 'pNInz6obpgDQGcFmaJgB',
+    'brian': 'nPczCjzI2devNBz1zQrb',
+    'el-brian-cinema': 'nPczCjzI2devNBz1zQrb',
+    'chris': 'iP95p4xoKVk53GoZ742B',
+    'el-chris-hormozi': 'iP95p4xoKVk53GoZ742B',
+    'antoni': 'ErXwobaYiN019PkySvjV',
+    'bella': 'EXAVITQu4vr4xnSDxMaL',
+    'josh': 'TxGEqnHWrfWFTfGW9XjX',
+    'arnold': 'VR6AewLTigWG4xSOukaG',
+    'domi': 'AZnzlk1XvdvUeBnXmlld',
+    'sam': 'yoZ06aMxZJJ28mfd3POQ',
   };
 
   // Mapped Microsoft Edge Neural Voices
@@ -78,6 +89,13 @@ class MultiEngineVoiceProvider implements VoiceProvider {
     const lower = clean.toLowerCase();
     if (MultiEngineVoiceProvider.ELEVENLABS_VOICE_MAP[lower]) {
       return MultiEngineVoiceProvider.ELEVENLABS_VOICE_MAP[lower];
+    }
+    // Check AUTORA_VOICE_CATALOG
+    const catalogMatch = AUTORA_VOICE_CATALOG.find(
+      (v) => v.id.toLowerCase() === lower || v.providerVoiceId.toLowerCase() === lower
+    );
+    if (catalogMatch && catalogMatch.provider === 'elevenlabs') {
+      return catalogMatch.providerVoiceId;
     }
     // Direct Custom Cloned Voice ID (typically 15-35 alphanumeric chars)
     if (/^[a-zA-Z0-9_-]{15,35}$/.test(clean)) {
@@ -148,10 +166,12 @@ class MultiEngineVoiceProvider implements VoiceProvider {
         },
         body: JSON.stringify({
           text: chunk,
-          model_id: 'eleven_multilingual_v2',
+          model_id: 'eleven_turbo_v2_5',
           voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
+            stability: 0.45,
+            similarity_boost: 0.80,
+            style: 0.35,
+            use_speaker_boost: true,
           },
         }),
       });
@@ -179,8 +199,8 @@ class MultiEngineVoiceProvider implements VoiceProvider {
   private escapeXml(text: string): string {
     return text
       .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
+      .replace(/&lt;/g, '&lt;')
+      .replace(/&gt;/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&apos;');
   }
@@ -401,12 +421,12 @@ class MultiEngineVoiceProvider implements VoiceProvider {
     const isMelo = cleanVoice.startsWith('cf-melotts-') || (language && language.toLowerCase().substring(0, 2) !== 'en');
 
     // Aura-2 speaker map: asteria, arcas, orion, luna, stella
-    let auraSpeaker = 'asteria';
-    if (cleanVoice.includes('orion')) auraSpeaker = 'orion';
+    let auraSpeaker = 'orion';
+    if (cleanVoice.includes('asteria')) auraSpeaker = 'asteria';
     else if (cleanVoice.includes('arcas')) auraSpeaker = 'arcas';
     else if (cleanVoice.includes('luna')) auraSpeaker = 'luna';
     else if (cleanVoice.includes('stella')) auraSpeaker = 'stella';
-    else if (cleanVoice.includes('asteria')) auraSpeaker = 'asteria';
+    else if (cleanVoice.includes('orion')) auraSpeaker = 'orion';
 
     const meloLang = cleanVoice.replace(/^cf-melotts-/, '') || (language ? language.toLowerCase().substring(0, 2) : 'en');
 
@@ -557,6 +577,7 @@ $synth.Dispose()
     voiceSpeed?: string;
     language?: string;
     projectId?: string;
+    userPlan?: string;
   }): Promise<{ audioBuffer: Buffer; durationSec: number; format: string }> {
     const cleanText = params.text.trim();
     if (!cleanText) {
@@ -568,57 +589,79 @@ $synth.Dispose()
     const tempId = params.projectId || 'temp_' + Date.now();
     const tempDir = getTempDir(tempId);
 
+    const userPlan = (params.userPlan || '').toLowerCase();
+    const isExplicitlyFree = userPlan === 'free' || userPlan === 'demo';
+
+    // Strict 2-Tier Voice Policy: Free tier requests for Pro ElevenLabs voices auto-downgrade to Cloudflare Aura-2
+    let effectiveVoice = params.voiceName || 'cf-aura-orion';
+    if (isExplicitlyFree) {
+      const requested = (params.voiceName || '').toLowerCase();
+      const isPaidRequested =
+        requested.startsWith('el-') ||
+        requested.startsWith('elevenlabs:') ||
+        AUTORA_VOICE_CATALOG.some(
+          (v) => v.tier === 'paid' && (v.id.toLowerCase() === requested || v.providerVoiceId === requested)
+        );
+
+      if (isPaidRequested) {
+        console.warn(`[VoiceProvider] Free tier user requested Pro ElevenLabs voice "${params.voiceName}". Routing to Cloudflare Deepgram Aura-2 (Orion) at $0.0010 COGS.`);
+        effectiveVoice = 'cf-aura-orion';
+      }
+    }
+
     let finalBuffer: Buffer | null = null;
     let selectedEngine = 'none';
 
-    // Priority 0a: Cloudflare TTS if explicitly requested via cf- prefix
-    if (params.voiceName?.startsWith('cf-') && isCloudflareConfigured()) {
+    // Tier Route A: Free / Demo Users -> 100% Cloudflare Workers AI TTS (Deepgram Aura-2) Primary
+    if (isExplicitlyFree && isCloudflareConfigured()) {
       try {
-        finalBuffer = await this.synthesizeWithCloudflareTTS(cleanText, params.voiceName, params.language);
+        finalBuffer = await this.synthesizeWithCloudflareTTS(cleanText, effectiveVoice, params.language);
         if (finalBuffer && finalBuffer.length > 500) {
-          selectedEngine = 'Cloudflare Workers AI TTS';
-          console.log(`[VoiceProvider] Synthesized voiceover via Cloudflare Workers AI TTS (${finalBuffer.length} bytes, voice: ${params.voiceName})`);
+          selectedEngine = 'Cloudflare Workers AI TTS (Aura-2)';
+          console.log(`[VoiceProvider] Synthesized Free Demo voiceover via Cloudflare Workers AI (${finalBuffer.length} bytes, voice: ${effectiveVoice})`);
         }
       } catch (err: any) {
-        console.warn(`[VoiceProvider] Cloudflare TTS failed (${err.message}). Falling back to standard priority...`);
+        console.warn(`[VoiceProvider] Cloudflare Workers AI TTS failed for free user (${err.message}). Trying fallback...`);
       }
     }
 
-    // 0. Try ElevenLabs if configured
-    if (!finalBuffer || finalBuffer.length < 500) {
-      try {
-        finalBuffer = await this.synthesizeWithElevenLabs(cleanText, params.voiceName);
-        if (finalBuffer && finalBuffer.length > 500) {
-          selectedEngine = 'ElevenLabs';
-          console.log(`[VoiceProvider] Synthesized voiceover via ElevenLabs (${finalBuffer.length} bytes, voice: ${params.voiceName || 'default'})`);
-        }
-      } catch (err: any) {
-        if (getApiKey('elevenlabs') || process.env.ELEVENLABS_API_KEY) {
-          console.warn(`[VoiceProvider] ElevenLabs synthesis failed (${err.message}). Falling back...`);
+    // Tier Route B: Paid Users -> 100% ElevenLabs Turbo v2.5 Primary
+    // Free tier must NEVER call ElevenLabs under any circumstances
+    if (!isExplicitlyFree) {
+      const elevenKey = getApiKey('elevenlabs') || process.env.ELEVENLABS_API_KEY;
+      if (elevenKey && elevenKey.trim().length > 10 && !elevenKey.includes('placeholder')) {
+        try {
+          finalBuffer = await this.synthesizeWithElevenLabs(cleanText, effectiveVoice);
+          if (finalBuffer && finalBuffer.length > 500) {
+            selectedEngine = 'ElevenLabs Turbo v2.5';
+            console.log(`[VoiceProvider] Synthesized Pro voiceover via ElevenLabs (${finalBuffer.length} bytes, voice: ${effectiveVoice})`);
+          }
+        } catch (err: any) {
+          console.warn(`[VoiceProvider] ElevenLabs synthesis failed (${err.message}). Falling back to Cloudflare Workers AI TTS...`);
         }
       }
     }
 
-    // 1. Try Cloudflare Workers AI TTS (Deepgram Aura-2 & MeloTTS) if configured
+    // Fallback: Cloudflare Workers AI TTS (if ElevenLabs failed or not configured)
     if ((!finalBuffer || finalBuffer.length < 500) && isCloudflareConfigured()) {
       try {
-        finalBuffer = await this.synthesizeWithCloudflareTTS(cleanText, params.voiceName, params.language);
+        finalBuffer = await this.synthesizeWithCloudflareTTS(cleanText, effectiveVoice, params.language);
         if (finalBuffer && finalBuffer.length > 500) {
           selectedEngine = 'Cloudflare Workers AI TTS';
-          console.log(`[VoiceProvider] Synthesized voiceover via Cloudflare Workers AI TTS (${finalBuffer.length} bytes)`);
+          console.log(`[VoiceProvider] Synthesized fallback voiceover via Cloudflare Workers AI TTS (${finalBuffer.length} bytes, voice: ${effectiveVoice})`);
         }
       } catch (err: any) {
-        console.warn(`[VoiceProvider] Cloudflare Workers AI TTS failed (${err.message}). Falling back to Azure Speech...`);
+        console.warn(`[VoiceProvider] Cloudflare Workers AI TTS fallback failed (${err.message}). Falling back to Azure Speech...`);
       }
     }
 
-    // 2. Try Azure Cognitive Speech API (Licensed Commercial Enterprise Voice Tier)
+    // Fallback: Azure Cognitive Speech API
     if (!finalBuffer || finalBuffer.length < 500) {
       try {
-        finalBuffer = await this.synthesizeWithAzureSpeech(cleanText, params.voiceName, params.language);
+        finalBuffer = await this.synthesizeWithAzureSpeech(cleanText, effectiveVoice, params.language);
         if (finalBuffer && finalBuffer.length > 500) {
           selectedEngine = 'Azure Cognitive Speech';
-          console.log(`[VoiceProvider] Synthesized voiceover via Azure Cognitive Speech (${finalBuffer.length} bytes, voice: ${this.resolveEdgeVoice(params.voiceName, params.language)})`);
+          console.log(`[VoiceProvider] Synthesized voiceover via Azure Cognitive Speech (${finalBuffer.length} bytes, voice: ${this.resolveEdgeVoice(effectiveVoice, params.language)})`);
         }
       } catch (err: any) {
         if (getApiKey('azure') || getApiKey('azure_speech') || process.env.AZURE_SPEECH_KEY || process.env.AZURE_SPEECH_API_KEY) {
@@ -627,23 +670,23 @@ $synth.Dispose()
       }
     }
 
-    // 3. Try Microsoft Edge Neural TTS (Free Sandbox dev mode only)
+    // Fallback: Microsoft Edge Neural TTS (dev sandbox)
     if (!finalBuffer || finalBuffer.length < 500) {
       if (process.env.NODE_ENV === 'production' && process.env.ALLOW_DEV_TTS !== '1' && !isCloudflareConfigured()) {
         throw new EngineError('STAGE_EXECUTION_FAILED', 'Licensed Azure Cognitive Speech API or Cloudflare Workers AI credentials required in production mode');
       }
       try {
-        finalBuffer = await this.synthesizeWithMsEdgeTTS(cleanText, params.voiceName, params.language);
+        finalBuffer = await this.synthesizeWithMsEdgeTTS(cleanText, effectiveVoice, params.language);
         if (finalBuffer && finalBuffer.length > 500) {
           selectedEngine = 'Microsoft Edge Neural Sandbox';
-          console.log(`[VoiceProvider] Synthesized voiceover via Microsoft Edge Neural Sandbox (${finalBuffer.length} bytes, mapped voice: ${this.resolveEdgeVoice(params.voiceName, params.language)})`);
+          console.log(`[VoiceProvider] Synthesized voiceover via Microsoft Edge Neural Sandbox (${finalBuffer.length} bytes, mapped voice: ${this.resolveEdgeVoice(effectiveVoice, params.language)})`);
         }
       } catch (err: any) {
         console.warn(`[VoiceProvider] Microsoft Edge TTS failed (${err.message}). Trying Google Neural Stream...`);
       }
     }
 
-    // 2. Try Google Speech Neural Stream (Universal fallback)
+    // Fallback: Google Speech Neural Stream
     if (!finalBuffer || finalBuffer.length < 500) {
       try {
         finalBuffer = await this.synthesizeWithGoogleTTS(cleanText, params.language || 'en');
@@ -656,7 +699,7 @@ $synth.Dispose()
       }
     }
 
-    // 3. Fallback to Windows SAPI Synthesizer (Windows only)
+    // Fallback: Windows SAPI Synthesizer (Windows only)
     if (!finalBuffer || finalBuffer.length < 500) {
       try {
         finalBuffer = await this.synthesizeWithWindowsSAPI(cleanText, params.voiceSpeed);
@@ -666,7 +709,7 @@ $synth.Dispose()
       } catch {}
     }
 
-    // 4. Fail closed: Throw typed EngineError if all voice engines fail
+    // Fail closed: Throw typed EngineError if all voice engines fail
     if (!finalBuffer || finalBuffer.length < 500) {
       throw new EngineError('NO_VALID_AUDIO', 'All voice synthesis engines failed to produce valid audio.');
     }

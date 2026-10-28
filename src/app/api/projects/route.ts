@@ -92,6 +92,27 @@ export async function POST(request: Request) {
     }
 
     // Check monthly quota (30 videos/month server-side enforcement)
+    const userPlan = ((user as any)?.plan || 'free').toLowerCase();
+    const isFreeUser = userPlan === 'free' || userPlan === 'demo';
+
+    // Free Demo Guardrail: Free users are limited to 1 Demo Video
+    if (isFreeUser) {
+      const existingCount = getDb()
+        .prepare('SELECT COUNT(*) as cnt FROM content_projects WHERE user_id = ?')
+        .get(userId) as { cnt: number } | undefined;
+
+      if (existingCount && existingCount.cnt >= 1) {
+        return NextResponse.json(
+          {
+            error: 'UPGRADE_REQUIRED',
+            message: 'Free Demo is limited to 1 trial video. Upgrade to Creator or Pro to unlock 30-60 automated videos/month, 1080p unwatermarked exports, and ElevenLabs voices.',
+            upgradeRequired: true,
+          },
+          { status: 402 }
+        );
+      }
+    }
+
     const monthlyUsage = getMonthlyVideoUsage(userId);
     if (monthlyUsage.remaining <= 0) {
       return NextResponse.json(
@@ -177,7 +198,10 @@ export async function POST(request: Request) {
     recordPlanGeneration(userId);
 
     const numericLength = Number(target_length_minutes);
-    const parsedLength = !isNaN(numericLength) && numericLength > 0 ? numericLength : 3;
+    let parsedLength = !isNaN(numericLength) && numericLength > 0 ? numericLength : 3;
+    if (isFreeUser && parsedLength > 0.75) {
+      parsedLength = 0.75; // Cap free demo at 45 seconds (0.75 min)
+    }
     const lengthBand = resolveLengthBand(parsedLength).band;
     const resolvedAspectRatio = body.aspect_ratio || body.aspectRatio || '9:16';
     const selectedPlatforms = Array.isArray(body.platforms) && body.platforms.length > 0

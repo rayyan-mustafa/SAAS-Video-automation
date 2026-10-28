@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/components/Toast';
 import { InteractiveWorkflowCanvas } from '@/components/InteractiveWorkflowCanvas';
 
@@ -92,6 +92,7 @@ export default function VideoStudioPage({ params }: { params?: any }) {
   const id = (routeParams?.id as string) || (params?.id as string) || '';
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const toast = useToast();
+  const router = useRouter();
 
   const [data, setData] = useState<ProjectData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -758,7 +759,14 @@ export default function VideoStudioPage({ params }: { params?: any }) {
         body: JSON.stringify({ targetTier, visualPrompt: targetScene.visual_prompt }),
       });
       const resJson = await res.json();
-      if (!res.ok) throw new Error(resJson.error || 'Failed to swap visual tier');
+      if (!res.ok) {
+        if (resJson.upgradeRequired || resJson.error === 'UPGRADE_REQUIRED') {
+          toast.warning(resJson.message || 'Cinema AI Video (3x) is a Pro feature. Upgrade your plan to unlock!');
+          router.push('/pricing');
+          return;
+        }
+        throw new Error(resJson.error || 'Failed to swap visual tier');
+      }
 
       toast.success(`Scene ${targetScene.scene_index} swapped to ${targetTier}! ${resJson.isFree ? '• Free Edit Used' : `• Billed ${resJson.creditsDeducted} cr`}`);
       await fetchProject();
@@ -1990,6 +1998,33 @@ export default function VideoStudioPage({ params }: { params?: any }) {
                       Motion Still
                     </button>
                   </div>
+                  {(activeScene as any).visual_tier !== 'ai_clip' && (
+                    <button
+                      type="button"
+                      onClick={() => handleSwapSceneTier(activeScene, 'ai_clip')}
+                      disabled={isSwappingTier}
+                      className="btn btn-sm"
+                      style={{
+                        marginTop: '8px',
+                        width: '100%',
+                        background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                        color: '#fff',
+                        fontWeight: 700,
+                        fontSize: '11px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        border: 'none',
+                        borderRadius: '6px',
+                        padding: '8px 10px',
+                        boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <span>🎬 Animate Scene with AI Video (3x Pro)</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* WP5 Narration Edit & 1-Click Undo */}

@@ -53,11 +53,13 @@ export interface GeneratedScene {
   visualSubject?: string;
   environment?: string;
   cameraMovement?: string;
+  cameraMotion?: 'zoom_in_fast' | 'zoom_in_slow' | 'pan_right' | 'pan_left' | 'zoom_out' | string;
   lighting?: string;
   colorStyle?: string;
   continuityNotes?: string;
   estimatedDurationSec: number;
   subtitleText: string;
+  visualTier?: 'ai_clip' | 'motion_still' | 'graphic';
 }
 
 export interface AiProvider {
@@ -71,6 +73,7 @@ export interface AiProvider {
     introStyle?: string;
     outroCta?: string;
     contentRules?: string;
+    userPlan?: string;
   }): Promise<{ script: ScriptStructure; fullNarration: string }>;
 
   generateScenes(params: {
@@ -79,6 +82,7 @@ export interface AiProvider {
     language: string;
     targetLengthMinutes: number;
     visualStyle?: string;
+    userPlan?: string;
   }): Promise<GeneratedScene[]>;
 
   generateMetadata(params: {
@@ -166,6 +170,7 @@ export function stageSceneVisual(params: {
   subject: string;
   environment: string;
   cameraMovement: string;
+  cameraMotion: string;
   continuityNotes: string;
 } {
   const { narration, sceneIndex, sectionName, bible, customCamera } = params;
@@ -211,7 +216,17 @@ export function stageSceneVisual(params: {
     visualAction = `actively working through: "${firstSentence}", seamless professional mastery`;
   }
 
-  const prompt = `${bible.protagonistOrAnchor} ${visualAction}, set inside ${bible.primarySetting}. ${cameraMovement}. ${bible.lightingAndMood}. ${bible.colorGrade}. 35mm anamorphic lens, shallow depth of field, 8k resolution, photorealistic film still, vertical 9:16 composition.`;
+  // 3-SECOND CAMERA MOTION ALTERNATION: Never repeat same camera motion on consecutive scenes
+  const CAMERA_MOTIONS: Array<'zoom_in_fast' | 'zoom_in_slow' | 'pan_right' | 'pan_left' | 'zoom_out'> = [
+    'zoom_in_fast',
+    'pan_right',
+    'zoom_in_slow',
+    'pan_left',
+    'zoom_out',
+  ];
+  const cameraMotion = CAMERA_MOTIONS[(sceneIndex - 1) % CAMERA_MOTIONS.length];
+
+  const prompt = `${bible.protagonistOrAnchor} ${visualAction}, set inside ${bible.primarySetting}. ${cameraMovement}. ${bible.lightingAndMood}. ${bible.colorGrade}. 35mm anamorphic lens, shallow depth of field, 8k resolution, photorealistic film still, vertical 9:16 composition, cinematic lighting, no text, no watermark, no letters.`;
 
   const subject = `${bible.protagonistOrAnchor.split(' ').slice(0, 6).join(' ')} - ${sectionName}`;
   const continuityNotes = `Scene ${sceneIndex} maintains character identity (${bible.protagonistOrAnchor.slice(0, 35)}...) and persistent environment (${bible.primarySetting.slice(0, 35)}...)`;
@@ -221,6 +236,7 @@ export function stageSceneVisual(params: {
     subject,
     environment: bible.primarySetting,
     cameraMovement,
+    cameraMotion,
     continuityNotes,
   };
 }
@@ -236,6 +252,7 @@ class DefaultAiProvider implements AiProvider {
     introStyle?: string;
     outroCta?: string;
     contentRules?: string;
+    userPlan?: string;
   }): Promise<{ script: ScriptStructure; fullNarration: string }> {
     const { channelName, niche, topic, targetLengthMinutes, introStyle, outroCta, visualStyle } = params;
 
@@ -318,10 +335,16 @@ class DefaultAiProvider implements AiProvider {
     language: string;
     targetLengthMinutes: number;
     visualStyle?: string;
+    userPlan?: string;
   }): Promise<GeneratedScene[]> {
     const { script, niche, visualStyle = 'Cinematic High-Contrast' } = params;
     const globalStyle = resolveGlobalVisualStyle(visualStyle);
     const bible = script.productionBible || resolveProductionBible(script.title, niche, visualStyle);
+    const ensureCleanPrompt = (p: string) => {
+      const trimmed = (p || '').trim().replace(/[.,\s]+$/, '');
+      if (trimmed.includes('no text, no watermark, no letters')) return trimmed;
+      return `${trimmed}, cinematic lighting, 8k resolution, no text, no watermark, no letters`;
+    };
     const scenes: GeneratedScene[] = [];
     let sceneIndex = 1;
 
@@ -354,10 +377,11 @@ class DefaultAiProvider implements AiProvider {
       sceneIndex: sceneIndex++,
       sectionName: 'Hook',
       narration: script.hook,
-      visualPrompt: hookPrompt,
+      visualPrompt: ensureCleanPrompt(hookPrompt),
       visualSubject: script.hookVisualSubject || hookStaging.subject,
       environment: hookStaging.environment,
       cameraMovement: hookStaging.cameraMovement,
+      cameraMotion: hookStaging.cameraMotion,
       lighting: bible.lightingAndMood,
       colorStyle: bible.colorGrade,
       continuityNotes: `Establishes core visual anchor (${bible.protagonistOrAnchor.slice(0, 45)}...) and primary setting (${bible.primarySetting.slice(0, 45)}...)`,
@@ -389,10 +413,11 @@ class DefaultAiProvider implements AiProvider {
         sceneIndex: sceneIndex++,
         sectionName: 'Introduction',
         narration: script.introduction,
-        visualPrompt: introPrompt,
+        visualPrompt: ensureCleanPrompt(introPrompt),
         visualSubject: script.introVisualSubject || introStaging.subject,
         environment: introStaging.environment,
         cameraMovement: introStaging.cameraMovement,
+      cameraMotion: introStaging.cameraMotion,
         lighting: bible.lightingAndMood,
         colorStyle: bible.colorGrade,
         continuityNotes: `Maintains character and environment continuity from Scene 1 while broadening perspective`,
@@ -441,10 +466,11 @@ class DefaultAiProvider implements AiProvider {
           sceneIndex: sceneIndex++,
           sectionName: `${section.heading} - ${sub.subheading}`,
           narration: sub.narration,
-          visualPrompt,
+          visualPrompt: ensureCleanPrompt(visualPrompt),
           visualSubject,
           environment: sub.environment || subStaging.environment,
           cameraMovement: sub.cameraMovement || subStaging.cameraMovement,
+          cameraMotion: subStaging.cameraMotion,
           lighting: sub.lighting || bible.lightingAndMood,
           colorStyle: sub.colorStyle || bible.colorGrade,
           continuityNotes: sub.continuityNotes || subStaging.continuityNotes,
@@ -475,10 +501,11 @@ class DefaultAiProvider implements AiProvider {
         sceneIndex: sceneIndex++,
         sectionName: 'Conclusion',
         narration: script.conclusion,
-        visualPrompt: conclPrompt,
+        visualPrompt: ensureCleanPrompt(conclPrompt),
         visualSubject: script.conclusionVisualSubject || conclStaging.subject,
         environment: conclStaging.environment,
         cameraMovement: conclStaging.cameraMovement,
+        cameraMotion: conclStaging.cameraMotion,
         lighting: bible.lightingAndMood,
         colorStyle: bible.colorGrade,
         continuityNotes: `Culmination of narrative arc, celebrating mastery in primary setting`,
@@ -511,10 +538,11 @@ class DefaultAiProvider implements AiProvider {
       sceneIndex: sceneIndex++,
       sectionName: 'Call To Action',
       narration: script.callToAction,
-      visualPrompt: ctaPrompt,
+      visualPrompt: ensureCleanPrompt(ctaPrompt),
       visualSubject: script.ctaVisualSubject || `Branded Channel Outro - ${params.script.title}`,
       environment: ctaStaging.environment,
       cameraMovement: ctaStaging.cameraMovement,
+      cameraMotion: ctaStaging.cameraMotion,
       lighting: bible.lightingAndMood,
       colorStyle: bible.colorGrade,
       continuityNotes: `Transitions smoothly from cinematic conclusion into clean branded closing frame`,
@@ -861,10 +889,10 @@ class DefaultAiProvider implements AiProvider {
 
     const cleanTopic = topic.trim();
     const additions = [
-      `Delving deeper into this phenomenon reveals a critical dimension that scientific models frequently emphasize. When analyzing the cascading secondary effects of ${cleanTopic}, researchers note that the interactions between structural resistance and kinetic energy produce nonlinear feedback loops. This means that initial disruptions do not simply resolve—they compound over time, amplifying both thermal and gravitational stresses.`,
-      `To fully understand the global implications of this scenario, we have to examine the historical and theoretical parallels documented across modern computational simulations. Every data point confirms that the threshold between systemic stability and sudden collapse is astonishingly narrow, requiring us to re-evaluate our fundamental assumptions about ${cleanTopic}.`,
-      `Furthermore, empirical observations demonstrate that environmental adaptation under such extreme conditions follows very specific physical laws. As the primary forces reshape the landscape, secondary ecosystems and atmospheric layers begin to reorganize into unfamiliar patterns, proving that nature's capacity for recalibration is both terrifying and resilient.`,
-      `The strategic takeaway from this analysis goes far beyond theoretical curiosity. By studying what happens when the core mechanisms of ${cleanTopic} are pushed to their absolute limits, scientists gain invaluable insights into how fragile our everyday reality truly is, and what it takes to preserve long-term systemic balance.`,
+      `A critical dimension that experimental testing highlights is the hidden mechanics of ${cleanTopic}. When analyzing the secondary impact, researchers note that the interactions produce compound feedback loops. Initial disruptions do not simply resolve—they compound over time, amplifying stress across the entire system.`,
+      `To fully understand the real-world implications, we have to look at the historical data. Every data point confirms that the margin between stability and sudden failure is razor thin, requiring us to re-examine our assumptions about ${cleanTopic}.`,
+      `Furthermore, direct observations demonstrate that adaptation under these conditions follows very specific rules. As the primary forces reshape the landscape, secondary patterns emerge rapidly, proving that systemic resilience is both necessary and complex.`,
+      `The strategic takeaway goes far beyond theory. By studying what happens when the core mechanisms of ${cleanTopic} are pushed to their absolute limits, we gain invaluable insights into how everyday systems operate, and what it takes to maintain lasting performance.`,
     ];
 
     let addIdx = 0;
@@ -930,6 +958,13 @@ ${formatInstructions}
 Adhere to channel tone: ${params.contentRules || 'Engaging, clear, professional delivery'}.
 Intro Hook Style: ${params.introStyle || 'High-Impact Dramatic Question'}.
 Outro CTA: ${params.outroCta || 'Subscribe and hit the bell'}.${healthSafeguard}
+
+STRICT VIRAL SHORT-FORM RETENTION & HOOK RULES (MANDATORY):
+1. THE 3-SECOND HOOK: Your first 2 sentences MUST use a Curiosity Gap, Contrarian Shock, or In-Media-Res opening under 18 words total.
+2. WRITE FOR THE EAR: 6th-grade reading level. Short, punchy sentences (max 12 words per sentence).
+3. RETENTION OPEN LOOPS: Every 15 seconds (~35 words), introduce a micro-cliffhanger ("But here is the part nobody talks about...", "And just 48 hours later, everything collapsed.").
+4. BANNED AI SLOP WORDS: NEVER use the words: delve, tapestry, testament, beacon, symphony, unlock, unleash, elevate, realm, embark, game-changer, in a world where, buckle up, dive in.
+5. PACING MARKERS: Use "..." for a 0.4s dramatic pause in ElevenLabs/Aura TTS.
 
 CRITICAL NARRATIVE CONTINUITY & SCENE COHESION RULES (MANDATORY FOR COMMERCIAL SAAS):
 1. SEAMLESS STORYTELLING: The script MUST flow as a single continuous story without disjointed cuts.

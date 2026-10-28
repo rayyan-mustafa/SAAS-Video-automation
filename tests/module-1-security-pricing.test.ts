@@ -51,10 +51,10 @@ async function runModule1Tests() {
   const proPlan = getPlanById('pro');
   assert(proPlan !== null, 'Pro plan must exist');
   assert.strictEqual(proPlan!.price_monthly, 99, 'Pro plan price must be $99/mo');
-  assert.strictEqual(proPlan!.credits_monthly, 2250, 'Pro plan must have 2,250 credits/mo');
-  assert.strictEqual(proPlan!.estimated_videos, 90, 'Pro plan must provide 90 videos/mo');
+  assert.strictEqual(proPlan!.credits_monthly, 1500, 'Pro plan must have 1,500 credits/mo');
+  assert.strictEqual(proPlan!.estimated_videos, 60, 'Pro plan must provide 60 videos/mo');
 
-  const entitlements = calculateEntitlements('pro', 2250);
+  const entitlements = calculateEntitlements('pro', 1500);
   assert.strictEqual(entitlements.can_generate_video, true);
   assert.strictEqual(entitlements.max_channels, 5);
   console.log('✓ Pricing reconciled to $49 Creator and $99 Pro with verified quotas.');
