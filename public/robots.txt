@@ -1,4 +1,4 @@
-# AUTORA (AutoVideo) - Web Crawler & Robots Policy
+# Tillercast - Web Crawler & Robots Policy
 User-agent: *
 Allow: /
 Allow: /landing
@@ -17,4 +17,4 @@ Disallow: /reset-password
 Disallow: /verify-email
 
 # XML Sitemaps
-Sitemap: https://autora.live/sitemap.xml
+Sitemap: https://tillercast.live/sitemap.xml

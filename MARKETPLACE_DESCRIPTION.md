@@ -1,11 +1,11 @@
-# AutoVideo — AI YouTube Automation & Video Production SaaS
+# Tillercast — AI YouTube Automation & Video Production SaaS
 
 > **Turn ideas into fully rendered 1080p Full HD YouTube videos with AI scripts, neural voiceover, B-roll composition, dynamic subtitles, custom thumbnails, and 30-day automated YouTube publishing.**
 
 ---
 
 ## 🌟 Product Overview
-**AutoVideo** is a turnkey, multi-tenant SaaS application built for content creators, YouTube automation channels, digital marketing agencies, and media networks. It automates the entire video production and release lifecycle: from raw topic prompt to scheduled 1080p video on YouTube.
+**Tillercast** is a turnkey, multi-tenant SaaS application built for content creators, YouTube automation channels, digital marketing agencies, and media networks. It automates the entire video production and release lifecycle: from raw topic prompt to scheduled 1080p video on YouTube.
 
 ---
 
@@ -13,7 +13,7 @@
 
 ### 📅 30-Day YouTube Auto-Publishing & Release Calendar
 - **One-Time Google OAuth 2.0 Connection**: Connect a YouTube channel once with official Google OAuth 2.0.
-- **30-Day Release Calendar**: Plan a month of content; AutoVideo automatically generates, renders, uploads, and schedules videos according to calendar slots.
+- **30-Day Release Calendar**: Plan a month of content; Tillercast automatically generates, renders, uploads, and schedules videos according to calendar slots.
 - **Official YouTube Data API v3**: Uses resumable video uploads, metadata formatting, and custom thumbnail setting. Zero unofficial browser automation or password scraping.
 - **Resilient Background Scheduler**: Automatic retry handling, token rotation, and duplicate upload prevention.
 
@@ -25,7 +25,7 @@
 - **Custom 1080p Thumbnails**: High-CTR thumbnail generation with bold typography.
 - **Native 1080p CFR FFmpeg Compositor**: High-definition H.264/AAC FastStart MP4 video output.
 
-### 🤖 AutoVideo AI Copilot
+### 🤖 Tillercast AI Copilot
 - Contextual studio assistant for rewriting scene prompts, creating stronger hooks, shortening/expanding narrations, changing tone, and generating viral titles.
 
 ### 🔐 Enterprise Multi-Tenant Customer Architecture

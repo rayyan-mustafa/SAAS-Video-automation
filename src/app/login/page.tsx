@@ -94,13 +94,13 @@ export default function LoginPage() {
               </svg>
             </div>
             <span className="logo-text" style={{ fontSize: '18px', fontWeight: 700, color: '#fff', letterSpacing: '-0.5px' }}>
-              Auto<span className="highlight" style={{ color: '#00F0FF' }}>RA</span>
+              Tiller<span className="highlight" style={{ color: '#00F0FF' }}>cast</span>
             </span>
           </Link>
           <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#fff', letterSpacing: '-0.02em', marginBottom: '4px' }}>
             Welcome back
           </h1>
-          <p style={{ fontSize: '13px', color: '#94a3b8' }}>Sign in to your AUTORA account</p>
+          <p style={{ fontSize: '13px', color: '#94a3b8' }}>Sign in to your Tillercast account</p>
         </div>
 
         {/* Card */}

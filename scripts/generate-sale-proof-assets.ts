@@ -81,9 +81,9 @@ async function generateProofAssets() {
   const proGrossMargin = (((proGrossRevenue - proTotalMaxCogs) / proGrossRevenue) * 100).toFixed(1);
 
   // Construct Markdown Report
-  const report = `# AUTORA Studio — Production Sale Readiness & Telemetry Audit Report
+  const report = `# Tillercast Studio — Production Sale Readiness & Telemetry Audit Report
 **Date:** ${new Date().toISOString()}  
-**System:** AUTORA Engine v2.1 (autora.live)  
+**System:** Tillercast Engine v2.1 (tillercast.live)  
 **Target Valuation Profile:** Turnkey Autonomous Video SaaS  
 
 ---
@@ -130,7 +130,7 @@ ${recentRefunds.map((r) => `| \`${r.id.substring(0, 16)}...\` | \`${r.user_id.su
 
 ## 4. Three-Tier Visual Distribution & Rendering Economics
 
-AUTORA balances compute expenditure and latency through its 3-tier visual compositor:
+Tillercast balances compute expenditure and latency through its 3-tier visual compositor:
 
 | Visual Tier | Description | Typical Latency | Cost (COGS) | Total Scenes Rendered |
 |---|---|---|---|---|

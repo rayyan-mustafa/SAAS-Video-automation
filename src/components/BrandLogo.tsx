@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export interface BrandLogoProps {
   href?: string;
-  variant?: 'autovideo' | 'autora';
+  variant?: 'autovideo' | 'autora' | 'tillercast';
   showText?: boolean;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
@@ -12,7 +12,7 @@ export interface BrandLogoProps {
 
 export const BrandLogo: React.FC<BrandLogoProps> = ({
   href = '/',
-  variant = 'autora',
+  variant = 'tillercast',
   showText = true,
   size = 'md',
   className = '',
@@ -71,13 +71,17 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           className="logo-text"
           style={{ fontSize: fontSizes }}
         >
-          {variant === 'autora' ? (
+          {variant === 'tillercast' ? (
             <>
-              Auto<span className="highlight">RA</span>
+              Tiller<span className="highlight">cast</span>
+            </>
+          ) : variant === 'autora' ? (
+            <>
+              Tiller<span className="highlight">cast</span>
             </>
           ) : (
             <>
-              Auto<span className="highlight">Video</span>
+              Tiller<span className="highlight">cast</span>
             </>
           )}
         </span>

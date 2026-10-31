@@ -20,7 +20,7 @@ async function runMultiPlatformDurationTests() {
 
   // Test 1: Decoupled Vertical Aspect Ratio with >1 Minute Duration (3m TikTok Sweetspot)
   console.log('[Test 1] Creating 3-minute 9:16 vertical project for TikTok & YouTube...');
-  const testEmail = `test_flex_${Date.now()}@autora.live`;
+  const testEmail = `test_flex_${Date.now()}@tillercast.live`;
   db.prepare(`
     INSERT INTO users (id, email, password_hash, salt, name, created_at, updated_at)
     VALUES (?, ?, 'hash', 'salt', 'Flex Creator', ?, ?)

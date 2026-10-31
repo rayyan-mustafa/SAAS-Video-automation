@@ -821,7 +821,7 @@ export class VideoPipelineWorker {
           if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
           try {
             const voiceRes = await voiceProvider.generateVoiceover({
-              text: project.topic || 'Autora Video Production',
+              text: project.topic || 'Tillercast Video Production',
               projectId: project.id,
             });
             if (!voiceRes.audioBuffer || voiceRes.audioBuffer.length < 1000) {
@@ -887,7 +887,7 @@ export class VideoPipelineWorker {
           let scriptAsset = db
             .prepare("SELECT * FROM generated_assets WHERE project_id = ? AND asset_type = 'script' ORDER BY created_at DESC LIMIT 1")
             .get(project.id) as GeneratedAsset | undefined;
-          let narrationText = project.topic || 'AutoRA High Quality Video Production';
+          let narrationText = project.topic || 'Tillercast High Quality Video Production';
           if (scriptAsset) {
             const sData = await storage.getObject(scriptAsset.storage_key);
             if (sData) {

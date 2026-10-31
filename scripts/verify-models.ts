@@ -143,7 +143,7 @@ if (require.main === module) {
       console.table(results);
     } else {
       console.log(`
-AUTORA Model Verification CLI
+Tillercast Model Verification CLI
 Usage:
   npx tsx scripts/verify-models.ts --model <model-id> [--skip-call]
   npx tsx scripts/verify-models.ts --all [--skip-call]

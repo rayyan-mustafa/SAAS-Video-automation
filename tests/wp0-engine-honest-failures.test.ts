@@ -24,7 +24,7 @@ async function runWp0Tests() {
   const db = getDb();
   const now = new Date().toISOString();
   const testUserId = `user_wp0_${Date.now()}`;
-  const testEmail = `wp0_${Date.now()}@autora.live`;
+  const testEmail = `wp0_${Date.now()}@tillercast.live`;
 
   // Setup test user
   db.prepare(`

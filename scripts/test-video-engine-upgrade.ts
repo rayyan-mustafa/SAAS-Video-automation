@@ -17,7 +17,7 @@ import { storage } from '../src/lib/storage';
 
 async function runQaVerificationSuite() {
   console.log('================================================================');
-  console.log('   AUTORA.LIVE — AI VIDEO GENERATION ENGINE QA VERIFICATION');
+  console.log('   TILLERCAST.LIVE — AI VIDEO GENERATION ENGINE QA VERIFICATION');
   console.log('================================================================\n');
 
   const db = getDb();
@@ -151,7 +151,7 @@ async function runQaVerificationSuite() {
   // TEST 6: NEURAL AUDIO VOICE SYNTHESIS (Edge Neural / Urdu / EN)
   // ─────────────────────────────────────────────────────────────
   console.log('\n--- TEST 6: Neural Audio & Multilingual Voice Synthesis ---');
-  const testNarration = 'Welcome to Autora. Today we explore how state-of-the-art AI video diffusion models transform text prompts into photorealistic motion.';
+  const testNarration = 'Welcome to Tillercast. Today we explore how state-of-the-art AI video diffusion models transform text prompts into photorealistic motion.';
   const voiceRes = await voiceProvider.generateVoiceover({
     text: testNarration,
     voiceName: 'en-US-ChristopherNeural',
@@ -165,7 +165,7 @@ async function runQaVerificationSuite() {
   // ─────────────────────────────────────────────────────────────
   console.log('\n--- TEST 7: Subtitle Cue Generation & SRT Output ---');
   const cues = subtitleProvider.generateCues([
-    { sceneIndex: 1, estimatedDurationSec: 5, subtitleText: 'Welcome to Autora video engine.' },
+    { sceneIndex: 1, estimatedDurationSec: 5, subtitleText: 'Welcome to Tillercast video engine.' },
     { sceneIndex: 2, estimatedDurationSec: 5, subtitleText: 'Generating genuine motion video with neural models.' },
   ]);
   const srtOutput = subtitleProvider.generateSrt(cues);
@@ -193,7 +193,7 @@ async function runQaVerificationSuite() {
     '-y',
     '-f', 'lavfi',
     '-i', 'color=c=0x111827:s=1080x1920:d=5:r=30',
-    '-vf', "drawtext=text='AUTORA AI VIDEO TEST':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=(h-text_h)/2",
+    '-vf', "drawtext=text='TILLERCAST AI VIDEO TEST':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=(h-text_h)/2",
     '-c:v', 'libx264',
     '-pix_fmt', 'yuv420p',
     '-t', '5',

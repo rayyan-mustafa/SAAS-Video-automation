@@ -110,7 +110,7 @@ export function getPolarPlanConfig(planId: string, billingCycle: 'monthly' | 'an
  */
 export async function createPolarCheckout(options: PolarCheckoutOptions): Promise<PolarCheckoutResult> {
   const { userId, userEmail, planId, billingCycle = 'monthly' } = options;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://autora.live';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tillercast.live';
   const successUrl = options.successUrl || `${appUrl}/billing?status=success&plan=${encodeURIComponent(planId)}`;
 
   const { productId, checkoutUrl } = getPolarPlanConfig(planId, billingCycle);

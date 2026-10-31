@@ -28,7 +28,7 @@ function run(cmd: string): string {
 
 async function main() {
   console.log('================================================================');
-  console.log('   AUTORA UPSTREAM INTELLIGENCE: AUTOMATED CHANGE AUDITOR       ');
+  console.log('   TILLERCAST UPSTREAM INTELLIGENCE: AUTOMATED CHANGE AUDITOR   ');
   console.log('================================================================\n');
 
   const configPath = path.join(process.cwd(), '.upstream-sync.json');
@@ -188,7 +188,7 @@ async function main() {
           headers: {
             Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
             'Content-Type': 'application/json',
-            'User-Agent': 'Autora-Upstream-Bot',
+            'User-Agent': 'Tillercast-Upstream-Bot',
           },
           body: issueBody,
         });

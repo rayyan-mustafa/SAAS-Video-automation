@@ -1,4 +1,4 @@
--- AutoVideo SaaS PostgreSQL Production Schema
+-- Tillercast SaaS PostgreSQL Production Schema
 
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,

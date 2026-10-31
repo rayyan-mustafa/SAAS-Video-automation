@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       const res = await fetch('https://api.polar.sh/v1/organizations', {
         headers: {
           Authorization: `Bearer ${token}`,
-          'User-Agent': 'Autora-Engine/2.0',
+          'User-Agent': 'Tillercast-Engine/2.0',
         },
         signal: AbortSignal.timeout(10000),
       });

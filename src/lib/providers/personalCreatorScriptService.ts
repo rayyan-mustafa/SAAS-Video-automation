@@ -331,8 +331,8 @@ Length: ~${lengthMinutes} minutes`;
           headers: {
             Authorization: `Bearer ${openRouterKey}`,
             'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://autora.live',
-            'X-Title': 'AUTORA Personal AI Creator',
+            'HTTP-Referer': 'https://tillercast.live',
+            'X-Title': 'Tillercast Personal AI Creator',
           },
           body: JSON.stringify({
             model: 'deepseek/deepseek-chat',

@@ -14,19 +14,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = getBlogPostBySlug(params.slug);
   if (!post) {
     return {
-      title: 'Article Not Found — AUTORA Blog',
+      title: 'Article Not Found — Tillercast Blog',
     };
   }
 
   return {
-    title: `${post.seoTitle || post.title} | AUTORA Blog`,
+    title: `${post.seoTitle || post.title} | Tillercast Blog`,
     description: post.seoDescription || post.excerpt,
     keywords: post.tags,
     openGraph: {
       title: post.title,
       description: post.excerpt,
-      url: `https://autora.live/blog/${post.slug}`,
-      siteName: 'AUTORA.LIVE',
+      url: `https://tillercast.live/blog/${post.slug}`,
+      siteName: 'Tillercast.live',
       type: 'article',
       publishedTime: post.publishDate,
       authors: [post.author.name],
@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [post.coverImage],
     },
     alternates: {
-      canonical: `https://autora.live/blog/${post.slug}`,
+      canonical: `https://tillercast.live/blog/${post.slug}`,
     },
   };
 }
@@ -75,15 +75,15 @@ export default function BlogPostDetailPage({ params }: Props) {
     },
     publisher: {
       '@type': 'Organization',
-      name: 'AUTORA.LIVE',
+      name: 'Tillercast.live',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://autora.live/icon.svg',
+        url: 'https://tillercast.live/icon.svg',
       },
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://autora.live/blog/${post.slug}`,
+      '@id': `https://tillercast.live/blog/${post.slug}`,
     },
   };
 
@@ -238,7 +238,7 @@ export default function BlogPostDetailPage({ params }: Props) {
               </svg>
             </div>
             <span style={{ fontSize: '20px', fontWeight: 800, color: '#ffffff' }}>
-              Auto<span style={{ background: 'linear-gradient(135deg, #a855f7, #ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>RA</span>
+              Tiller<span style={{ background: 'linear-gradient(135deg, #a855f7, #ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>cast</span>
             </span>
           </Link>
 
@@ -314,7 +314,7 @@ export default function BlogPostDetailPage({ params }: Props) {
             Automate Your YouTube Channel in 60 Seconds
           </h3>
           <p style={{ fontSize: '15px', color: '#a1a1aa', maxWidth: '540px', margin: '0 auto 24px', lineHeight: 1.6 }}>
-            Let AUTORA handle script writing, neural voiceover, photorealistic AI visuals, and automated daily YouTube publishing.
+            Let Tillercast handle script writing, neural voiceover, photorealistic AI visuals, and automated daily YouTube publishing.
           </p>
           <Link href="/signup" style={{
             background: '#ffffff',
@@ -349,7 +349,7 @@ export default function BlogPostDetailPage({ params }: Props) {
             <div style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>Written by {post.author.name}</div>
             <div style={{ fontSize: '13px', color: '#c084fc', fontWeight: 600, marginBottom: '8px' }}>{post.author.role}</div>
             <p style={{ fontSize: '13.5px', color: '#a1a1aa', margin: 0, lineHeight: 1.5 }}>
-              Specializing in generative AI architectures, YouTube recommendation algorithms, and automated media production engines at AUTORA.LIVE.
+              Specializing in generative AI architectures, YouTube recommendation algorithms, and automated media production engines at Tillercast.live.
             </p>
           </div>
         </div>
@@ -386,7 +386,7 @@ export default function BlogPostDetailPage({ params }: Props) {
 
       {/* Footer */}
       <footer style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', padding: '36px 24px', textAlign: 'center', color: '#71717a', fontSize: '14px' }}>
-        <p style={{ margin: 0 }}>© 2026 AUTORA.LIVE — All Rights Reserved. Autonomous AI Video Automation.</p>
+        <p style={{ margin: 0 }}>© 2026 Tillercast.live — All Rights Reserved. Autonomous AI Video Automation.</p>
       </footer>
     </div>
   );

@@ -16,7 +16,7 @@ export function Navbar() {
       <div className="navbar-inner">
         <Link href="/content" className="navbar-brand">
           <span className="brand-dot" />
-          <span style={{ fontWeight: 800, letterSpacing: '0.04em' }}>AUTORA</span>
+          <span style={{ fontWeight: 800, letterSpacing: '0.04em' }}>Tillercast</span>
         </Link>
         <div className="navbar-links">
           <Link

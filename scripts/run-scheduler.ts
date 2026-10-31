@@ -5,7 +5,7 @@
  *   npm run scheduler
  *   npm run worker
  *
- * Runs the AutoVideo automated publishing queue continuously with graceful shutdown.
+ * Runs the Tillercast automated publishing queue continuously with graceful shutdown.
  */
 
 import fs from 'fs';
@@ -29,7 +29,7 @@ try {
 const intervalMs = parseInt(process.env.SCHEDULER_INTERVAL_MS || '30000', 10);
 
 console.log('================================================================');
-console.log('   AUTOVIDEO — AUTONOMOUS PUBLISHING WORKER DAEMON');
+console.log('   TILLERCAST — AUTONOMOUS PUBLISHING WORKER DAEMON');
 console.log(`   Poll Interval: ${intervalMs / 1000}s`);
 console.log('================================================================\n');
 

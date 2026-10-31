@@ -1,9 +1,9 @@
-# AutoVideo SaaS — Operational & Technical Documentation
+# Tillercast SaaS — Operational & Technical Documentation
 
 ---
 
 ## 1. Executive Overview
-**AutoVideo SaaS** is an autonomous AI-native video generation platform built with Next.js 14 (App Router), TypeScript, SQLite (WAL mode), TailwindCSS/Vanilla CSS design system, and an integrated FFmpeg rendering compositor.
+**Tillercast SaaS** is an autonomous AI-native video generation platform built with Next.js 14 (App Router), TypeScript, SQLite (WAL mode), TailwindCSS/Vanilla CSS design system, and an integrated FFmpeg rendering compositor.
 
 ---
 
@@ -79,15 +79,15 @@ STRIPE_PUBLISHABLE_KEY=
 
 ## 5. Google OAuth 2.0 & YouTube Data API v3 Auto-Publishing
 
-AutoVideo uses the **official YouTube Data API v3** with Google OAuth 2.0 authorization code flow. Zero browser automation, Selenium, or password scraping is used.
+Tillercast uses the **official YouTube Data API v3** with Google OAuth 2.0 authorization code flow. Zero browser automation, Selenium, or password scraping is used.
 
 ### 5.1 Google Cloud Console Setup Guide
 1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
-2. Create a new project named **AutoVideo Studio** (or your brand name).
+2. Create a new project named **Tillercast Studio** (or your brand name).
 3. Navigate to **APIs & Services $\to$ Library** and search for **YouTube Data API v3**. Click **Enable**.
 4. Navigate to **APIs & Services $\to$ OAuth consent screen**:
    - User Type: **External**
-   - App Name: **AutoVideo SaaS**
+   - App Name: **Tillercast SaaS**
    - User Support Email: your support email
    - Developer Contact: your developer email
 5. **Add OAuth Scopes**:
@@ -96,7 +96,7 @@ AutoVideo uses the **official YouTube Data API v3** with Google OAuth 2.0 author
    - `https://www.googleapis.com/auth/userinfo.email` (View connected Google account email)
 6. Navigate to **APIs & Services $\to$ Credentials $\to$ Create Credentials $\to$ OAuth Client ID**:
    - Application Type: **Web application**
-   - Name: **AutoVideo Web Client**
+   - Name: **Tillercast Web Client**
    - Authorized JavaScript origins: `http://localhost:3000` (and `https://yourdomain.com` in production)
    - Authorized redirect URIs: `http://localhost:3000/api/auth/youtube/callback` (and `https://yourdomain.com/api/auth/youtube/callback`)
 7. Copy the generated **Client ID** and **Client Secret** into your `.env` file:
@@ -109,7 +109,7 @@ AutoVideo uses the **official YouTube Data API v3** with Google OAuth 2.0 author
 ### 5.2 30-Day Automated Publishing Workflow
 1. **Connect Channel:** Customer navigates to **Settings $\to$ YouTube Integration** and clicks **"Connect YouTube"**.
 2. **Google Consent:** Customer logs into Google and grants upload permissions.
-3. **Token Ingestion:** AutoVideo securely stores the refresh token in the SQLite `oauth_connections` table under the customer's isolated `user_id`.
+3. **Token Ingestion:** Tillercast securely stores the refresh token in the SQLite `oauth_connections` table under the customer's isolated `user_id`.
 4. **Schedule Content Plan:** In **Content Calendar (`/calendar`)** or **Studio (`/content/[id]`)**, customer sets scheduled release dates.
 5. **Background Auto-Publisher:** The scheduler service (`/api/scheduler/run`) periodically queries due videos (`scheduled_at <= NOW`), initiates a resumable upload to YouTube, uploads custom high-CTR thumbnails, and records the live YouTube Video ID (`https://www.youtube.com/watch?v={videoId}`).
 6. **Token Security:** Tokens are never leaked in client API payloads, never displayed in logs, and are fully scoped per tenant.
@@ -147,7 +147,7 @@ AutoVideo uses the **official YouTube Data API v3** with Google OAuth 2.0 author
 
 ## 8. Customer SaaS Experience vs. Administrator Platform Configuration
 
-AUTORA is designed as a turnkey commercial SaaS where customers purchase subscription plans / credits and immediately create videos using platform-managed infrastructure.
+Tillercast is designed as a turnkey commercial SaaS where customers purchase subscription plans / credits and immediately create videos using platform-managed infrastructure.
 
 ### 8.1 Customer Experience (No API Keys Required)
 - **Zero API Configuration:** Customers do NOT enter OpenAI, Google Gemini, ElevenLabs, Cloudflare, Pexels, or Pixabay API keys.

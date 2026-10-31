@@ -1,12 +1,12 @@
 name: "Feature Request"
-description: "Suggest an idea or architectural enhancement for AUTORA"
+description: "Suggest an idea or architectural enhancement for Tillercast"
 title: "[Feature]: "
 labels: ["enhancement", "triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for suggesting an improvement for AUTORA!
+        Thank you for suggesting an improvement for Tillercast!
   - type: textarea
     id: problem
     attributes:

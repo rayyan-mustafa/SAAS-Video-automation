@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
     let testUrl = '';
     let testMethod = 'GET';
-    let testHeaders: Record<string, string> = { 'User-Agent': 'Autora-Engine/2.0' };
+    let testHeaders: Record<string, string> = { 'User-Agent': 'Tillercast-Engine/2.0' };
     let testBody: string | undefined = undefined;
 
     const startTime = Date.now();

@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
       success: true,
       topic,
       hooks,
-      ctaText: 'Turn this hook into a complete 1080p video with AutoRA',
+      ctaText: 'Turn this hook into a complete 1080p video with Tillercast',
       signupUrl: `/signup?topic=${encodeURIComponent(topic)}`,
     });
   } catch (err: any) {

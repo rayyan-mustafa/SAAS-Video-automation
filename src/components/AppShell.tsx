@@ -201,7 +201,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           SIDEBAR NAVIGATION
       ───────────────────────────────────────────────────────────── */}
       {/* ─────────────────────────────────────────────────────────────
-          SIDEBAR NAVIGATION (AUTORA)
+          SIDEBAR NAVIGATION (TILLERCAST)
       ───────────────────────────────────────────────────────────── */}
       <aside className={`sidebar ${collapsed ? 'collapsed sidebar-collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`} style={{ backgroundColor: '#090a0d', borderRight: '1px solid rgba(255, 255, 255, 0.07)' }}>
         <div className="sidebar-header" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
@@ -225,7 +225,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             {!collapsed && (
               <span className="logo-text" style={{ fontSize: '1.25rem', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.5px' }}>
-                Auto<span className="highlight" style={{ color: '#00F0FF' }}>RA</span>
+                Tiller<span className="highlight" style={{ color: '#00F0FF' }}>cast</span>
               </span>
             )}
           </Link>
@@ -654,7 +654,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* ─────────────────────────────────────────────────────────────
-          MAIN WRAPPER & TOPBAR (AUTORA)
+          MAIN WRAPPER & TOPBAR (TILLERCAST)
       ───────────────────────────────────────────────────────────── */}
       <div className="main-wrapper">
         <header className="topbar" style={{ backgroundColor: 'rgba(9, 10, 13, 0.85)', borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
@@ -672,7 +672,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </svg>
             </button>
 
-            {/* Breadcrumbs matching AUTORA */}
+            {/* Breadcrumbs matching TILLERCAST */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
               <span style={{ color: '#71717a' }}>Dashboard</span>
               <span style={{ color: '#3f3f46' }}>›</span>

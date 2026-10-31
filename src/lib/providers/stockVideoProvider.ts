@@ -159,7 +159,7 @@ export class StockVideoEngine {
       const res = await fetch(url, {
         headers: {
           Authorization: token,
-          'User-Agent': 'Mozilla/5.0 AUTORA/1.0',
+          'User-Agent': 'Mozilla/5.0 Tillercast/1.0',
         },
       });
 

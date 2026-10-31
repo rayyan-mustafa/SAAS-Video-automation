@@ -20,7 +20,7 @@ async function runModule4Tests() {
   db.prepare(`
     INSERT INTO users (id, email, password_hash, salt, name, role, status, created_at, updated_at)
     VALUES (?, ?, 'dummy', 'dummy', 'Competitor Test User', 'CUSTOMER', 'ACTIVE', ?, ?)
-  `).run(testUserId, `${testUserId}@autora.test`, now, now);
+  `).run(testUserId, `${testUserId}@tillercast.test`, now, now);
 
   // Test 1: Insert Competitor Channel and Viral Video Cache
   console.log('[Test 1] Storing competitor channel and viral outliers in SQLite...');

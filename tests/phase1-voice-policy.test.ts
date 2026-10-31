@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { AUTORA_VOICE_CATALOG, voiceProvider, VoicePreset } from '../src/lib/providers/voiceProvider';
+import { TILLERCAST_VOICE_CATALOG, AUTORA_VOICE_CATALOG, voiceProvider, VoicePreset } from '../src/lib/providers/voiceProvider';
 
 async function runVoicePolicyTests() {
   console.log('\n========================================================================');
@@ -7,11 +7,11 @@ async function runVoicePolicyTests() {
   console.log('========================================================================\n');
 
   // Test 1: Validate Catalog Structure
-  console.log('[Test 1] Validating AUTORA_VOICE_CATALOG entries and tier segregation...');
-  assert.ok(AUTORA_VOICE_CATALOG.length >= 7, 'Catalog must contain at least 7 curated voice presets');
+  console.log('[Test 1] Validating TILLERCAST_VOICE_CATALOG entries and tier segregation...');
+  assert.ok(TILLERCAST_VOICE_CATALOG.length >= 7, 'Catalog must contain at least 7 curated voice presets');
 
-  const freeVoices = AUTORA_VOICE_CATALOG.filter((v) => v.tier === 'free');
-  const paidVoices = AUTORA_VOICE_CATALOG.filter((v) => v.tier === 'paid');
+  const freeVoices = TILLERCAST_VOICE_CATALOG.filter((v) => v.tier === 'free');
+  const paidVoices = TILLERCAST_VOICE_CATALOG.filter((v) => v.tier === 'paid');
 
   assert.ok(freeVoices.length >= 3, 'Must have at least 3 Free Demo voices (Cloudflare Deepgram Aura-2)');
   assert.ok(paidVoices.length >= 4, 'Must have at least 4 Pro voices (100% ElevenLabs)');
@@ -26,7 +26,7 @@ async function runVoicePolicyTests() {
     assert.ok(v.previewAudioUrl, `Paid voice ${v.id} must have a preview audio URL`);
     assert.ok(v.providerVoiceId.length > 5, `Paid voice ${v.id} must have a valid providerVoiceId`);
   }
-  console.log('  -> PASS: AUTORA_VOICE_CATALOG conforms strictly to Free Aura-2 vs Pro ElevenLabs tiers.');
+  console.log('  -> PASS: TILLERCAST_VOICE_CATALOG conforms strictly to Free Aura-2 vs Pro ElevenLabs tiers.');
 
   // Test 2: Verify Free Tier Auto-Downgrade Safety Guard
   console.log('[Test 2] Validating Free Tier Auto-Downgrade Guard on Pro voice request...');

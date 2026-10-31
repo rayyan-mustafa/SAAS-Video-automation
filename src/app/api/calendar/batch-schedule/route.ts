@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     db.prepare(`
       INSERT OR IGNORE INTO users (id, email, password_hash, salt, name, email_verified, role, status, onboarding_completed, created_at, updated_at)
       VALUES (?, ?, '', '', ?, 1, 'CUSTOMER', 'ACTIVE', 1, ?, ?)
-    `).run(userId, user?.email || 'creator@autovideo.local', user?.name || 'Creator', now, now);
+    `).run(userId, user?.email || 'creator@tillercast.local', user?.name || 'Creator', now, now);
 
     // Ensure channel exists
     if (!channel) {

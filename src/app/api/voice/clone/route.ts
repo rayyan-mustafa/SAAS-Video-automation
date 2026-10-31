@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
       try {
         const elevenFormData = new FormData();
         elevenFormData.append('name', cleanName);
-        elevenFormData.append('description', `Cloned via AUTORA for user ${user.id}`);
+        elevenFormData.append('description', `Cloned via Tillercast for user ${user.id}`);
         const audioBlob = new Blob([fileBytes], { type: file.type || 'audio/wav' });
         elevenFormData.append('files', audioBlob, originalFileName);
 

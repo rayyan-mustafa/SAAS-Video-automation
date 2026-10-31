@@ -152,7 +152,7 @@ export default function CompetitorsPage() {
           Steal Proven Viral Hooks & Outliers
         </h1>
         <p style={{ color: '#94a3b8', fontSize: '15px', maxWidth: '700px', lineHeight: 1.6 }}>
-          Track top competitor YouTube channels in your niche. AUTORA analyzes their uploads from the last 7–14 days, isolates videos performing <strong>&ge;1.5&times; above their average</strong>, and automatically generates high-converting variations directly into your 30-day calendar.
+          Track top competitor YouTube channels in your niche. Tillercast analyzes their uploads from the last 7–14 days, isolates videos performing <strong>&ge;1.5&times; above their average</strong>, and automatically generates high-converting variations directly into your 30-day calendar.
         </p>
       </div>
 

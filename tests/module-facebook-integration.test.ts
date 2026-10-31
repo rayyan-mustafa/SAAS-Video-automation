@@ -28,12 +28,12 @@ async function runFacebookIntegrationTests() {
     INSERT INTO oauth_connections (
       id, user_id, platform, account_email, channel_id, channel_title,
       access_token, token_expiry, scope, created_at, updated_at
-    ) VALUES (?, ?, 'FACEBOOK', 'pageadmin@facebook.com', '109876543210', 'Autora Creator Page', 'EAAG_fake_facebook_token', ?, 'pages_show_list,pages_read_engagement,pages_manage_posts', ?, ?)
+    ) VALUES (?, ?, 'FACEBOOK', 'pageadmin@facebook.com', '109876543210', 'Tillercast Creator Page', 'EAAG_fake_facebook_token', ?, 'pages_show_list,pages_read_engagement,pages_manage_posts', ?, ?)
   `).run(fbConnId, testUserId, new Date(Date.now() + 3600000).toISOString(), now, now);
 
   const fbStatusConnected = await publishingProvider.getPlatformStatus('Facebook', testUserId);
   assert.strictEqual(fbStatusConnected.status, 'CONNECTED');
-  assert.strictEqual(fbStatusConnected.channelTitle, 'Autora Creator Page');
+  assert.strictEqual(fbStatusConnected.channelTitle, 'Tillercast Creator Page');
   console.log('✓ Facebook Page connection recognized via Meta Graph integration.');
 
   // Test 3: Facebook Video Publishing - Missing File Guard

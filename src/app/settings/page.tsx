@@ -446,7 +446,7 @@ export default function SettingsHubPage() {
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', borderTop: '1px solid var(--border-subtle)', paddingTop: '16px' }}>
                   <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                    AUTORA is authorized to publish and schedule videos directly to this channel.
+                    Tillercast is authorized to publish and schedule videos directly to this channel.
                   </p>
                   <button
                     type="button"
@@ -612,10 +612,10 @@ export default function SettingsHubPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div className="card" style={{ padding: '24px' }}>
             <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>
-              AUTORA Managed Infrastructure
+              Tillercast Managed Infrastructure
             </h2>
             <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px' }}>
-              AUTORA provides fully managed AI models, high-definition stock media feeds, and neural voice engines out-of-the-box.
+              Tillercast provides fully managed AI models, high-definition stock media feeds, and neural voice engines out-of-the-box.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

@@ -1,9 +1,9 @@
 # Agent Guidelines & Repository Conventions
 
-## App Architecture & Product Mission (AUTORA)
+## App Architecture & Product Mission (Tillercast)
 
 ### Product Identity & Core Mission
-**AUTORA** (`autora.live`) is an Autonomous Multi-Platform AI Video Creation & Social Publishing SaaS. It empowers creators and businesses to run automated, high-retention video channels across **YouTube** (Shorts & Longform), **TikTok**, **Instagram Reels**, and **Facebook Reels** with zero manual editing.
+**Tillercast** (`tillercast.live`) is an Autonomous Multi-Platform AI Video Creation & Social Publishing SaaS. It empowers creators and businesses to run automated, high-retention video channels across **YouTube** (Shorts & Longform), **TikTok**, **Instagram Reels**, and **Facebook Reels** with zero manual editing.
 
 ### Core 8 Production Modules
 1. **Module 1 — Production Security & 3-Tier Pricing**:

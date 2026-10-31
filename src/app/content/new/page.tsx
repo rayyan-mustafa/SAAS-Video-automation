@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useToast } from '@/components/Toast';
-import { AUTORA_VOICE_CATALOG, VoicePreset } from '@/lib/video/voiceCatalog';
+import { TILLERCAST_VOICE_CATALOG, VoicePreset } from '@/lib/video/voiceCatalog';
 
 interface UserVoice {
   id: string;
@@ -93,7 +93,7 @@ const VISUAL_STYLE_PRESETS_UI = [
 const MOTION_ENGINE_TIERS = [
   {
     id: 'motion_still',
-    title: 'Autora Flash Motion',
+    title: 'Tillercast Flash Motion',
     multiplier: '1x Credit / Scene',
     desc: '60fps Dynamic Ken Burns Camera Motion powered by FLUX.1',
     badge: 'Free Demo & All Plans',
@@ -193,8 +193,8 @@ function CreateVideoWizardContent() {
   const modalCardRef = useRef<HTMLDivElement | null>(null);
 
   const isFree = userPlan === 'free';
-  const freeVoices = AUTORA_VOICE_CATALOG.filter((v) => v.tier === 'free');
-  const proVoices = AUTORA_VOICE_CATALOG.filter((v) => v.tier === 'paid');
+  const freeVoices = TILLERCAST_VOICE_CATALOG.filter((v) => v.tier === 'free');
+  const proVoices = TILLERCAST_VOICE_CATALOG.filter((v) => v.tier === 'paid');
 
   useEffect(() => {
     fetchUserData();
@@ -2398,7 +2398,7 @@ function CreateVideoWizardContent() {
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', color: '#e4e4e7', lineHeight: 1.4 }}>
                 <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>
                 <div>
-                  <strong>No Watermarks:</strong> Remove the &ldquo;Created with Autora.ai&rdquo; watermark on all exported videos.
+                  <strong>No Watermarks:</strong> Remove the &ldquo;Created with Tillercast.ai&rdquo; watermark on all exported videos.
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', color: '#e4e4e7', lineHeight: 1.4 }}>

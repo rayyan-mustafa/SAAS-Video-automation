@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ AUTORA — Autonomous Multi-Platform AI Video SaaS
+# ⚡ Tillercast — Autonomous Multi-Platform AI Video SaaS
 
 **Produce, Schedule, and Auto-Publish High-Retention Short-Form & Long-Form Video Channels with Zero Manual Editing.**
 
@@ -25,9 +25,9 @@
 
 ## 📖 Overview
 
-**AUTORA** (`autora.live`) is an enterprise-grade autonomous video generation and social publishing platform. It bridges generative AI scripting, multimodal video generation, neural speech synthesis, and direct social media publishing APIs into a continuous background automation engine.
+**Tillercast** (`tillercast.live`) is an enterprise-grade autonomous video generation and social publishing platform. It bridges generative AI scripting, multimodal video generation, neural speech synthesis, and direct social media publishing APIs into a continuous background automation engine.
 
-From identifying viral competitor topics to generating dynamic FFmpeg video renders and auto-publishing to YouTube Shorts, TikTok, Instagram Reels, and Facebook Reels — AUTORA operates completely hands-free.
+From identifying viral competitor topics to generating dynamic FFmpeg video renders and auto-publishing to YouTube Shorts, TikTok, Instagram Reels, and Facebook Reels — Tillercast operates completely hands-free.
 
 ---
 
@@ -121,7 +121,7 @@ Key environment variables:
 ADMIN_SECRET="your-32-char-min-admin-secret"
 JWT_SECRET="your-32-char-min-jwt-secret"
 ENCRYPTION_KEY="your-32-char-min-encryption-key"
-ADMIN_USER="autora_admin"
+ADMIN_USER="tillercast_admin"
 ADMIN_PASSWORD="YourStrongPassword123!"
 
 # AI Video & Speech Providers
@@ -164,21 +164,21 @@ npm run build
 
 ## 🐳 Docker Deployment
 
-You can build and deploy AUTORA as a lightweight Docker container:
+You can build and deploy Tillercast as a lightweight Docker container:
 
 ```bash
 # Build Docker image
-docker build -t autora-saas .
+docker build -t tillercast-saas .
 
 # Run Docker container
-docker run -p 3000:3000 --env-file .env autora-saas
+docker run -p 3000:3000 --env-file .env tillercast-saas
 ```
 
 ---
 
 ## 🏢 Turnkey Commercial SaaS Architecture & Asset Overview
 
-AUTORA is engineered as an enterprise-grade, turn-key Software-as-a-Service (SaaS) business asset:
+Tillercast is engineered as an enterprise-grade, turn-key Software-as-a-Service (SaaS) business asset:
 
 | Component | Architecture & Valuation Highlights |
 |---|---|

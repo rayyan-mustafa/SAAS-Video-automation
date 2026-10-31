@@ -82,7 +82,7 @@ function VerifyEmailContent() {
             ✓
           </div>
           <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#fff', marginBottom: '10px' }}>Email Verified!</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '14px' }}>Your account is active and verified. You have full access to AUTORA Studio.</p>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '14px' }}>Your account is active and verified. You have full access to Tillercast Studio.</p>
           <Link href="/" className="btn btn-primary" style={{ width: '100%' }}>Launch Studio ➔</Link>
         </div>
       </div>

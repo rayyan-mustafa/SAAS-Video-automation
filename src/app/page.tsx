@@ -699,7 +699,7 @@ export default function HomePage() {
     <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '28px', padding: '4px 0 48px' }}>
 
       {/* ─────────────────────────────────────────────────────────────
-          1. TOP STAT CARDS (AUTORA DASHBOARD)
+          1. TOP STAT CARDS (TILLERCAST DASHBOARD)
       ───────────────────────────────────────────────────────────── */}
       <div className="dashboard-stats-row">
         {/* Card 1: Total Views (Only Connected Platforms) */}
@@ -1718,7 +1718,7 @@ export default function HomePage() {
                   Your first video starts here.
                 </span>
                 <p style={{ fontSize: '12px', color: '#71717a', margin: '4px 0 14px' }}>
-                  Enter a topic above and let AUTORA handle the rest.
+                  Enter a topic above and let Tillercast handle the rest.
                 </p>
                 <button
                   type="button"

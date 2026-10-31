@@ -369,7 +369,7 @@ export default function SuperAdminPage() {
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
             </div>
-            <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', marginBottom: '6px' }}>AUTORA Super Admin</h1>
+            <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', marginBottom: '6px' }}>Tillercast Super Admin</h1>
             <p style={{ fontSize: '13px', color: '#94a3b8' }}>Sign in to manage users, subscriptions, credits & platform infrastructure</p>
           </div>
 
@@ -451,7 +451,7 @@ export default function SuperAdminPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 10px #22c55e' }} />
               <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#38bdf8', letterSpacing: '0.08em' }}>
-                AUTORA Console • Logged in as sanin5
+                Tillercast Console • Logged in as sanin5
               </span>
             </div>
             <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', margin: 0 }}>

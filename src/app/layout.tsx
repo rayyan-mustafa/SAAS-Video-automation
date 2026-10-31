@@ -10,35 +10,35 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'AUTORA — AI Video Automation',
+  title: 'Tillercast — AI Video Automation',
   description:
-    'Create ready-to-publish videos with AI-powered scripts, voiceovers, visuals and captions using AUTORA.',
+    'Create ready-to-publish videos with AI-powered scripts, voiceovers, visuals and captions using Tillercast.',
   keywords: [
-    'AUTORA',
+    'Tillercast',
     'AI Video Automation',
     'AI Video Generator',
     'YouTube Automation',
     'Neural Voiceover',
     'Video Studio',
     'Content Calendar',
-    'autora.live',
+    'tillercast.live',
   ],
-  authors: [{ name: 'AUTORA Team' }],
-  metadataBase: new URL('https://autora.live'),
+  authors: [{ name: 'Tillercast Team' }],
+  metadataBase: new URL('https://tillercast.live'),
   alternates: {
-    canonical: 'https://autora.live',
+    canonical: 'https://tillercast.live',
   },
   openGraph: {
-    title: 'AUTORA — AI Video Automation',
+    title: 'Tillercast — AI Video Automation',
     description:
       'Turn your ideas into ready-to-publish videos with AI-powered scripting, voiceovers, visuals, captions, and rendering.',
     type: 'website',
-    url: 'https://autora.live',
-    siteName: 'AUTORA',
+    url: 'https://tillercast.live',
+    siteName: 'Tillercast',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AUTORA — AI Video Automation',
+    title: 'Tillercast — AI Video Automation',
     description:
       'Turn your ideas into ready-to-publish videos with AI-powered scripting, voiceovers, visuals, captions, and rendering.',
   },

@@ -1,6 +1,6 @@
 # Security Policy
 
-AUTORA takes the security of its infrastructure, multi-tenant databases, API vaults, and automated publishing channels seriously.
+Tillercast takes the security of its infrastructure, multi-tenant databases, API vaults, and automated publishing channels seriously.
 
 ---
 
@@ -19,7 +19,7 @@ Only the latest release on the `main` branch receives active security updates an
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-If you discover a security vulnerability in AUTORA, please disclose it responsibly:
+If you discover a security vulnerability in Tillercast, please disclose it responsibly:
 
 1. **GitHub Security Advisory**: Use the private reporting tool under the repository's [Security Advisories](https://github.com/rayyan-mustafa/SAAS-Video-automation/security/advisories/new) tab.
 2. **Direct Contact**: Email the maintainer directly with reproduction steps, technical impact analysis, and proof of concept.

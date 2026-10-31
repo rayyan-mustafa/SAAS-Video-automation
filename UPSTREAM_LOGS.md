@@ -2,7 +2,7 @@
 
 > **Repository Monitored**: `https://github.com/saninabbas/youtube-automation-`  
 > **Target Private Repo**: `https://github.com/rayyan-mustafa/SAAS-Video-automation`  
-> **Sole IP Owner**: Rayyan Mustafa (AUTORA)  
+> **Sole IP Owner**: Rayyan Mustafa (Tillercast)  
 > **Security Protocol**: `upstream` remote push is permanently locked (`push = DISABLE`). All code reviews and merges are strictly opt-in after founder approval.
 
 ---
@@ -47,7 +47,7 @@ When reviewing upstream changes or executing sync commands:
       * `characterManager.ts` & [presets.ts](file:///src/lib/video/presets.ts): 10 viral short-form and documentary presets (`REALISTIC_HUMAN`, `TALKING_FOOD`, `CINEMATIC_DOC`, `AI_ANIMALS`, `REALISTIC_COOKING`, etc.) with customized camera movements, lighting, and negative prompts.
       * `project_characters` SQLite registry storing character identity, reference images, gender, and voice IDs.
   * **Preserved Proprietary Modules**:
-    * Preserved 100% of AUTORA 8 Master Modules (`module-1` through `module-8`).
+    * Preserved 100% of Tillercast 8 Master Modules (`module-1` through `module-8`).
     * Preserved Competitor Intelligence repository (`competitor_channels` & `competitor_viral_cache`).
     * Preserved Multi-Platform Duration & OAuth modules for TikTok, Instagram, and Facebook.
     * Preserved 2-tier pricing model ($49 Creator / $99 Pro).

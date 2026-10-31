@@ -1,6 +1,6 @@
-# CLAUDE.md — AutoVideo SaaS Developer & AI Assistant Guide
+# CLAUDE.md — Tillercast SaaS Developer & AI Assistant Guide
 
-> **Project:** AutoVideo SaaS (v2.1.0)  
+> **Project:** Tillercast SaaS (v2.1.0)  
 > **Repository:** `youtube-automation-`  
 > **Core Purpose:** Autonomous AI-native video generation & YouTube automation studio. Transforms topics/niches into fully animated, captioned, voiced, and rendered 9:16 vertical shorts (TikTok, YouTube Shorts, Reels) and horizontal videos using FFmpeg, OpenRouter/DeepSeek, Cloudflare Flux 1 Schnell, and neural TTS.
 

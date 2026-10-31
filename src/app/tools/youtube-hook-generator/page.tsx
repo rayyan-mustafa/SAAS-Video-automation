@@ -329,7 +329,7 @@ export default function YoutubeHookGeneratorPage() {
                           boxShadow: '0 2px 10px rgba(255,255,255,0.2)'
                         }}
                       >
-                        Turn Hook into Full 1080p Video on AutoRA ➔
+                        Turn Hook into Full 1080p Video on Tillercast ➔
                       </Link>
                     </div>
                   </div>
@@ -366,7 +366,7 @@ export default function YoutubeHookGeneratorPage() {
             <div style={{ background: '#121215', padding: '20px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
               <div style={{ fontSize: '18px', fontWeight: 700, color: '#10b981', marginBottom: '8px' }}>3. Multi-Platform Syndication</div>
               <p style={{ color: '#a1a1aa', fontSize: '13.5px', lineHeight: 1.6, margin: 0 }}>
-                The exact same hook works across YouTube Shorts, TikTok, and Instagram Reels. AutoRA renders and publishes to all 3 platforms automatically.
+                The exact same hook works across YouTube Shorts, TikTok, and Instagram Reels. Tillercast renders and publishes to all 3 platforms automatically.
               </p>
             </div>
           </div>
@@ -376,7 +376,7 @@ export default function YoutubeHookGeneratorPage() {
               Want 30 Days of Automated Videos Ready to Publish?
             </h3>
             <p style={{ color: '#a1a1aa', fontSize: '15px', maxWidth: '520px', margin: '0 auto 24px', lineHeight: 1.6 }}>
-              AutoRA writes the scripts, generates true generative AI video clips, records studio voiceovers, and auto-schedules to your YouTube channel.
+              Tillercast writes the scripts, generates true generative AI video clips, records studio voiceovers, and auto-schedules to your YouTube channel.
             </p>
             <Link
               href="/signup"
@@ -392,7 +392,7 @@ export default function YoutubeHookGeneratorPage() {
                 boxShadow: '0 0 24px rgba(0, 240, 255, 0.4)'
               }}
             >
-              Start Creating with AutoRA Free ➔
+              Start Creating with Tillercast Free ➔
             </Link>
           </div>
         </section>

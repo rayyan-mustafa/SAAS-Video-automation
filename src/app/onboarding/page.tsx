@@ -76,7 +76,7 @@ export default function OnboardingPage() {
                 autoFocus
               />
               <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                This will be the name of your AUTORA workspace.
+                This will be the name of your Tillercast workspace.
               </span>
             </div>
             <button

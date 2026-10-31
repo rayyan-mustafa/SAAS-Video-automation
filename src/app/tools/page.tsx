@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Free YouTube & Social Video Tools — AutoRA',
+  title: 'Free YouTube & Social Video Tools — Tillercast',
   description: 'Free creator tools for YouTube automation, viral hook generation, title CTR analysis, and faceless channel scaling.',
 };
 

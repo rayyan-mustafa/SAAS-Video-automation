@@ -10,8 +10,8 @@ import { isCloudflareConfigured, runCloudflareBinary } from './cloudflareAiClien
 
 const execFileAsync = util.promisify(execFile);
 
-import { AUTORA_VOICE_CATALOG, VoicePreset } from '../video/voiceCatalog';
-export { AUTORA_VOICE_CATALOG };
+import { TILLERCAST_VOICE_CATALOG, AUTORA_VOICE_CATALOG, VoicePreset } from '../video/voiceCatalog';
+export { TILLERCAST_VOICE_CATALOG, AUTORA_VOICE_CATALOG };
 export type { VoicePreset };
 
 export interface VoiceProvider {
@@ -91,8 +91,8 @@ class MultiEngineVoiceProvider implements VoiceProvider {
     if (MultiEngineVoiceProvider.ELEVENLABS_VOICE_MAP[lower]) {
       return MultiEngineVoiceProvider.ELEVENLABS_VOICE_MAP[lower];
     }
-    // Check AUTORA_VOICE_CATALOG
-    const catalogMatch = AUTORA_VOICE_CATALOG.find(
+    // Check TILLERCAST_VOICE_CATALOG
+    const catalogMatch = TILLERCAST_VOICE_CATALOG.find(
       (v) => v.id.toLowerCase() === lower || v.providerVoiceId.toLowerCase() === lower
     );
     if (catalogMatch && catalogMatch.provider === 'elevenlabs') {
@@ -228,7 +228,7 @@ class MultiEngineVoiceProvider implements VoiceProvider {
           'Ocp-Apim-Subscription-Key': apiKey,
           'Content-Type': 'application/ssml+xml',
           'X-Microsoft-OutputFormat': 'audio-24khz-96kbitrate-mono-mp3',
-          'User-Agent': 'AUTORA-SaaS-Engine',
+          'User-Agent': 'Tillercast-SaaS-Engine',
         },
         body: ssml,
       });
@@ -481,7 +481,7 @@ $synth.Dispose()
       const isPaidRequested =
         requested.startsWith('el-') ||
         requested.startsWith('elevenlabs:') ||
-        AUTORA_VOICE_CATALOG.some(
+        TILLERCAST_VOICE_CATALOG.some(
           (v) => v.tier === 'paid' && (v.id.toLowerCase() === requested || v.providerVoiceId === requested)
         );
 

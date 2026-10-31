@@ -111,7 +111,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Action is required' }, { status: 400 });
     }
 
-    const systemInstruction = `You are AUTORA Studio Copilot, an elite cinematic YouTube director, viral scriptwriter, and prompt engineer. You produce ultra-high retention video concepts, punchy narrations, and vivid visual prompts in the "${niche}" niche.`;
+    const systemInstruction = `You are Tillercast Studio Copilot, an elite cinematic YouTube director, viral scriptwriter, and prompt engineer. You produce ultra-high retention video concepts, punchy narrations, and vivid visual prompts in the "${niche}" niche.`;
 
     let userPrompt = '';
     let fallbackText = '';
@@ -168,7 +168,7 @@ export async function POST(req: Request) {
       case 'generate_description':
       case 'description':
         userPrompt = `Write an SEO-optimized YouTube video description with timestamps, key takeaways, and relevant hashtags for "${topic}".`;
-        fallbackText = `In this deep-dive, we break down the definitive truth about ${topic}.\n\n📌 Timestamps:\n0:00 - Introduction & The Core Problem\n1:30 - The Breakdown\n4:00 - What Most People Miss\n6:30 - Final Verdict\n\n#${niche.replace(/\s+/g, '')} #${topic.replace(/\s+/g, '')} #AUTORA`;
+        fallbackText = `In this deep-dive, we break down the definitive truth about ${topic}.\n\n📌 Timestamps:\n0:00 - Introduction & The Core Problem\n1:30 - The Breakdown\n4:00 - What Most People Miss\n6:30 - Final Verdict\n\n#${niche.replace(/\s+/g, '')} #${topic.replace(/\s+/g, '')} #Tillercast`;
         break;
 
       default:

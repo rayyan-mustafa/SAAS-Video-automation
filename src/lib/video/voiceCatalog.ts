@@ -9,7 +9,7 @@ export interface VoicePreset {
   description: string;
 }
 
-export const AUTORA_VOICE_CATALOG: VoicePreset[] = [
+export const TILLERCAST_VOICE_CATALOG: VoicePreset[] = [
   // === FREE DEMO TIER VOICES (Cloudflare Deepgram Aura-2) ===
   {
     id: 'cf-aura-orion',
@@ -84,3 +84,6 @@ export const AUTORA_VOICE_CATALOG: VoicePreset[] = [
     description: 'Hyper-realistic emotional inflection for Reddit & true stories',
   },
 ];
+
+export const AUTORA_VOICE_CATALOG = TILLERCAST_VOICE_CATALOG;
+

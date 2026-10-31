@@ -1,5 +1,5 @@
 name: "Bug Report"
-description: "Report an issue, defect, or unexpected behavior in AUTORA"
+description: "Report an issue, defect, or unexpected behavior in Tillercast"
 title: "[Bug]: "
 labels: ["bug", "triage"]
 body:

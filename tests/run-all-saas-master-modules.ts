@@ -12,7 +12,7 @@ const testFiles = [
 ];
 
 console.log('================================================================');
-console.log('   AUTORA SAAS PRODUCTION MASTER PLAN: COMPLETE AUDIT RUNNER   ');
+console.log('   TILLERCAST SAAS PRODUCTION MASTER PLAN: COMPLETE AUDIT RUNNER');
 console.log('================================================================\n');
 
 let passedCount = 0;

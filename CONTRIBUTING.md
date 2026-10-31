@@ -1,6 +1,6 @@
 # Engineering & Contribution Standards
 
-These guidelines outline internal engineering standards, git workflows, and pull request verification protocols for authorized engineers, contractors, and maintainers collaborating on AUTORA.
+These guidelines outline internal engineering standards, git workflows, and pull request verification protocols for authorized engineers, contractors, and maintainers collaborating on Tillercast.
 
 ---
 

@@ -34,8 +34,8 @@ jobs:
 
       - name: Configure Upstream Git Remote
         run: |
-          git config --global user.name "autora-intelligence-bot"
-          git config --global user.email "bot@autora.live"
+          git config --global user.name "tillercast-bot"
+          git config --global user.email "bot@tillercast.live"
           git remote add upstream https://github.com/saninabbas/youtube-automation-.git || true
           git remote set-url --push upstream DISABLE
           git fetch upstream

@@ -53,7 +53,7 @@ async function runSchedulerTests() {
       // Insert video_outputs record
       db.prepare(`
         INSERT INTO video_outputs (id, project_id, storage_key, url, duration_sec, resolution, filesize_bytes, created_at)
-        VALUES (?, ?, ?, 'https://cdn.autora.live/videos/test.mp4', 45, '1080x1920', 1024, ?)
+        VALUES (?, ?, ?, 'https://cdn.tillercast.live/videos/test.mp4', 45, '1080x1920', 1024, ?)
       `).run(uuidv4(), projId, testVideoPath, now.toISOString());
     }
 
@@ -75,7 +75,7 @@ async function runSchedulerTests() {
 
     db.prepare(`
       INSERT INTO video_outputs (id, project_id, storage_key, url, duration_sec, resolution, filesize_bytes, created_at)
-      VALUES (?, ?, ?, 'https://cdn.autora.live/videos/test.mp4', 30, '1080x1920', 512, ?)
+      VALUES (?, ?, ?, 'https://cdn.tillercast.live/videos/test.mp4', 30, '1080x1920', 512, ?)
     `).run(uuidv4(), futureProjId, testVideoPath, now.toISOString());
 
     // Mock publishingProvider.publishVideo

@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     }
 
     const finalTitle = title || project.topic || 'New Video';
-    const finalDescription = description || `${project.topic}\n\nAutomated via AUTORA AI`;
+    const finalDescription = description || `${project.topic}\n\nAutomated via Tillercast AI`;
 
     const results: PublishResult[] = [];
     let anySuccess = false;

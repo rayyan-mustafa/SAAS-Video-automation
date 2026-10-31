@@ -150,7 +150,7 @@ export async function POST(req: Request) {
         );
       }
 
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://autora.live';
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tillercast.live';
 
       const session = await stripe.checkout.sessions.create({
         mode: 'subscription',

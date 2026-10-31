@@ -4,8 +4,8 @@ import { Metadata } from 'next';
 import { getAllBlogPosts, getFeaturedBlogPost } from '@/lib/blog/posts';
 
 export const metadata: Metadata = {
-  title: 'AUTORA Blog — AI Video Automation, YouTube Growth & Faceless Channels',
-  description: 'Master AI video creation, YouTube Shorts automation, high-CPM faceless channel growth, and generative AI content workflows with AUTORA.',
+  title: 'Tillercast Blog — AI Video Automation, YouTube Growth & Faceless Channels',
+  description: 'Master AI video creation, YouTube Shorts automation, high-CPM faceless channel growth, and generative AI content workflows with Tillercast.',
   keywords: [
     'AI Video Automation',
     'YouTube Shorts Automation',
@@ -13,31 +13,31 @@ export const metadata: Metadata = {
     'AI Video Generator',
     'YouTube Growth Guide',
     'High CPM Niches',
-    'AUTORA Blog',
+    'Tillercast Blog',
   ],
   openGraph: {
-    title: 'AUTORA Blog — AI Video Automation & YouTube Growth',
+    title: 'Tillercast Blog — AI Video Automation & YouTube Growth',
     description: 'Master AI video creation, YouTube Shorts automation, and faceless channel growth.',
-    url: 'https://autora.live/blog',
-    siteName: 'AUTORA.LIVE',
+    url: 'https://tillercast.live/blog',
+    siteName: 'Tillercast.live',
     type: 'website',
     images: [
       {
         url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
         width: 1200,
         height: 630,
-        alt: 'AUTORA Blog',
+        alt: 'Tillercast Blog',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AUTORA Blog — AI Video Automation & YouTube Growth',
+    title: 'Tillercast Blog — AI Video Automation & YouTube Growth',
     description: 'Master AI video creation, YouTube Shorts automation, and faceless channel growth.',
     images: ['https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80'],
   },
   alternates: {
-    canonical: 'https://autora.live/blog',
+    canonical: 'https://tillercast.live/blog',
   },
 };
 
@@ -49,22 +49,22 @@ export default function BlogIndexPage() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Blog',
-    name: 'AUTORA Blog — AI Video Automation & YouTube Growth',
-    url: 'https://autora.live/blog',
+    name: 'Tillercast Blog — AI Video Automation & YouTube Growth',
+    url: 'https://tillercast.live/blog',
     description: 'Master AI video creation, YouTube Shorts automation, and faceless channel growth.',
     publisher: {
       '@type': 'Organization',
-      name: 'AUTORA.LIVE',
+      name: 'Tillercast.live',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://autora.live/icon.svg',
+        url: 'https://tillercast.live/icon.svg',
       },
     },
     blogPost: posts.map((post) => ({
       '@type': 'BlogPosting',
       headline: post.title,
       description: post.excerpt,
-      url: `https://autora.live/blog/${post.slug}`,
+      url: `https://tillercast.live/blog/${post.slug}`,
       datePublished: post.publishDate,
       author: {
         '@type': 'Person',
@@ -98,7 +98,7 @@ export default function BlogIndexPage() {
               </svg>
             </div>
             <span style={{ fontSize: '20px', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff' }}>
-              Auto<span style={{ background: 'linear-gradient(135deg, #a855f7, #ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>RA</span>
+              Tiller<span style={{ background: 'linear-gradient(135deg, #a855f7, #ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>cast</span>
             </span>
           </Link>
 
@@ -120,7 +120,7 @@ export default function BlogIndexPage() {
         {/* Blog Hero Section */}
         <div style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 56px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '9999px', background: 'rgba(168, 85, 247, 0.12)', border: '1px solid rgba(168, 85, 247, 0.3)', color: '#c084fc', fontSize: '13px', fontWeight: 600, marginBottom: '20px' }}>
-            ✨ AUTORA Content Lab & SEO Hub
+            ✨ Tillercast Content Lab & SEO Hub
           </div>
           <h1 style={{ fontSize: 'clamp(2.2rem, 5vw, 3.4rem)', fontWeight: 800, lineHeight: 1.15, letterSpacing: '-0.03em', marginBottom: '20px', color: '#ffffff' }}>
             AI Video Automation & <span style={{ background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>YouTube Growth</span>
@@ -266,7 +266,7 @@ export default function BlogIndexPage() {
             Ready to Automate Your YouTube Channel?
           </h2>
           <p style={{ fontSize: '16px', color: '#a1a1aa', maxWidth: '600px', margin: '0 auto 32px', lineHeight: 1.6 }}>
-            Join thousands of creators using AUTORA to generate 30 days of high-retention AI videos, voiceovers, and photorealistic visuals on autopilot.
+            Join thousands of creators using Tillercast to generate 30 days of high-retention AI videos, voiceovers, and photorealistic visuals on autopilot.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
             <Link href="/signup" style={{
@@ -300,7 +300,7 @@ export default function BlogIndexPage() {
 
       {/* Footer */}
       <footer style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', padding: '36px 24px', textAlign: 'center', color: '#71717a', fontSize: '14px' }}>
-        <p style={{ margin: 0 }}>© 2026 AUTORA.LIVE — All Rights Reserved. Empowering AI Content Creators Worldwide.</p>
+        <p style={{ margin: 0 }}>© 2026 Tillercast.live — All Rights Reserved. Empowering AI Content Creators Worldwide.</p>
       </footer>
     </div>
   );

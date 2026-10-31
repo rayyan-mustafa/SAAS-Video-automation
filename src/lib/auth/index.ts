@@ -168,7 +168,7 @@ export function validateSession(sessionToken: string): { valid: boolean; user: U
         db.prepare(`
           INSERT OR IGNORE INTO users (id, email, password_hash, salt, name, email_verified, role, status, onboarding_completed, created_at, updated_at)
           VALUES (?, ?, '', '', 'Creator', 1, 'CUSTOMER', 'ACTIVE', 1, ?, ?)
-        `).run(verification.userId, `user_${verification.userId.substring(0, 8)}@autovideo.local`, nowIso, nowIso);
+        `).run(verification.userId, `user_${verification.userId.substring(0, 8)}@tillercast.local`, nowIso, nowIso);
         u = db.prepare('SELECT * FROM users WHERE id = ?').get(verification.userId) as any;
       }
       if (u) {
@@ -350,7 +350,7 @@ export function buildVerificationEmail(name: string, token: string) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const link = `${appUrl}/verify-email?token=${token}`;
   return {
-    subject: 'Verify your email — AUTORA',
+    subject: 'Verify your email — Tillercast',
     text: `Hi ${name},\n\nPlease verify your email address by clicking the link below:\n${link}\n\nThis link expires in 24 hours.`,
     html: `<p>Hi ${name},</p><p>Please verify your email address:</p><p><a href="${link}">${link}</a></p><p>This link expires in 24 hours.</p>`,
   };
@@ -360,7 +360,7 @@ export function buildPasswordResetEmail(name: string, token: string) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const link = `${appUrl}/reset-password?token=${token}`;
   return {
-    subject: 'Reset your password — AUTORA',
+    subject: 'Reset your password — Tillercast',
     text: `Hi ${name},\n\nClick the link below to reset your password:\n${link}\n\nThis link expires in 1 hour. If you did not request this, please ignore this email.`,
     html: `<p>Hi ${name},</p><p>Reset your password:</p><p><a href="${link}">Reset Password</a></p><p>Link expires in 1 hour.</p>`,
   };

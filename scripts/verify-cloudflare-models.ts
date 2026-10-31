@@ -31,7 +31,7 @@ interface StepResult {
 
 async function main() {
   console.log('\n========================================================================');
-  console.log('   AUTORA SAAS - CLOUDFLARE WORKERS AI LIVE SUITE VERIFICATION');
+  console.log('   TILLERCAST SAAS - CLOUDFLARE WORKERS AI LIVE SUITE VERIFICATION');
   console.log('========================================================================\n');
 
   const creds = getCloudflareCredentials();
@@ -149,7 +149,7 @@ async function main() {
   const t4 = Date.now();
   try {
     const buf = await runCloudflareBinary('@cf/deepgram/aura-2-en', {
-      text: 'Welcome to AUTORA video automation engine.',
+      text: 'Welcome to Tillercast video automation engine.',
       speaker: 'asteria',
     });
     const passed = buf && buf.length > 500;

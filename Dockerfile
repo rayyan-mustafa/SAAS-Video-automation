@@ -1,4 +1,4 @@
-# Production Dockerfile for AUTORA Next.js SaaS (Debian glibc for rock-solid better-sqlite3 and ffmpeg)
+# Production Dockerfile for Tillercast Next.js SaaS (Debian glibc for rock-solid better-sqlite3 and ffmpeg)
 FROM node:20-slim AS base
 
 # Install ffmpeg, python, make, g++ for native C++ addons

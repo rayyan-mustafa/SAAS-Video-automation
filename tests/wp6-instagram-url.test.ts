@@ -59,7 +59,7 @@ async function runInstagramUrlTests() {
   console.log('\n[Test 3] Attempting to publish video exceeding 90s duration ceiling...');
   const longRes = await instagramProvider.publishReel({
     userId: testUserId,
-    videoUrl: 'https://cdn.autora.live/videos/project123/final.mp4',
+    videoUrl: 'https://cdn.tillercast.live/videos/project123/final.mp4',
     caption: 'Overlength test',
     durationSeconds: 110,
   });
@@ -106,7 +106,7 @@ async function runInstagramUrlTests() {
   try {
     const validRes = await instagramProvider.publishReel({
       userId: testUserId,
-      videoUrl: 'https://cdn.autora.live/videos/project123/final.mp4',
+      videoUrl: 'https://cdn.tillercast.live/videos/project123/final.mp4',
       caption: 'Valid public reel',
       durationSeconds: 45,
     });

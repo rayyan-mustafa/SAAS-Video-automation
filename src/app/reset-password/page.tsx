@@ -66,7 +66,7 @@ function ResetPasswordForm() {
           </div>
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#fff', marginBottom: '10px' }}>Password Reset Complete</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>Your password has been securely updated. You can now sign in.</p>
-          <Link href="/login" className="btn btn-primary" style={{ width: '100%' }}>Sign In to AUTORA</Link>
+          <Link href="/login" className="btn btn-primary" style={{ width: '100%' }}>Sign In to Tillercast</Link>
         </div>
       </div>
     );

@@ -22,8 +22,8 @@ export interface BlogPost {
 export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'google-veo-3-vs-sora-ai-video-generator-comparison-2026',
-    title: 'Google Veo 3 vs OpenAI Sora vs AUTORA: The Ultimate 2026 AI Video Benchmark',
-    excerpt: 'A deep technical benchmark comparing Google Veo 3, OpenAI Sora, and AUTORA on rendering speed, photorealism, and 30-day auto-publishing.',
+    title: 'Google Veo 3 vs OpenAI Sora vs Tillercast: The Ultimate 2026 AI Video Benchmark',
+    excerpt: 'A deep technical benchmark comparing Google Veo 3, OpenAI Sora, and Tillercast on rendering speed, photorealism, and 30-day auto-publishing.',
     category: 'AI Automation',
     readTime: '7 min read',
     publishDate: 'October 9, 2026',
@@ -35,9 +35,9 @@ export const BLOG_POSTS: BlogPost[] = [
     },
     coverImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
     gradient: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-    tags: ['Google Veo 3', 'OpenAI Sora', 'AI Video Generator', 'Text to Video', 'AUTORA Engine', 'Video Benchmarks'],
-    seoTitle: 'Google Veo 3 vs Sora vs AUTORA: Best AI Video Generator (2026)',
-    seoDescription: 'Compare Google Veo 3, OpenAI Sora, and AUTORA on visual quality, 1080p rendering speed, pricing, and automated YouTube channel publishing.',
+    tags: ['Google Veo 3', 'OpenAI Sora', 'AI Video Generator', 'Text to Video', 'Tillercast Engine', 'Video Benchmarks'],
+    seoTitle: 'Google Veo 3 vs Sora vs Tillercast: Best AI Video Generator (2026)',
+    seoDescription: 'Compare Google Veo 3, OpenAI Sora, and Tillercast on visual quality, 1080p rendering speed, pricing, and automated YouTube channel publishing.',
     content: `
 ## The Battle for Next-Generation AI Video Models
 
@@ -45,7 +45,7 @@ In late 2026, generative video AI has reached photographic realism. The launch o
 
 For content creators, marketers, and faceless YouTube automation channels, choosing the right AI video model is the difference between spending $500/month on manual generation or running an autonomous 30-day publishing pipeline.
 
-In this deep-dive technical comparison, we benchmark **Google Veo 3**, **OpenAI Sora**, and **AUTORA.LIVE** across 4 critical pillars: **Visual Quality**, **Rendering Latency**, **Channel Automation**, and **Cost Efficiency**.
+In this deep-dive technical comparison, we benchmark **Google Veo 3**, **OpenAI Sora**, and **Tillercast.live** across 4 critical pillars: **Visual Quality**, **Rendering Latency**, **Channel Automation**, and **Cost Efficiency**.
 
 ---
 
@@ -57,8 +57,8 @@ Google Veo 3 excels in physical camera simulation and spatial lighting coherence
 ### OpenAI Sora:
 Sora remains the benchmark for complex multi-subject 3D interactions and fluid physics simulations (e.g., water ripples, fabric motion, complex crowd dynamics).
 
-### AUTORA Real-Time Engine (Cloudflare Flux 1 Schnell & Leonardo Phoenix):
-AUTORA integrates specialized real-time diffusion models optimized specifically for **high-contrast documentary cinematics and vertical Shorts retention**. Visual scenes render in 4K clarity with zero prompt hallucination.
+### Tillercast Real-Time Engine (Cloudflare Flux 1 Schnell & Leonardo Phoenix):
+Tillercast integrates specialized real-time diffusion models optimized specifically for **high-contrast documentary cinematics and vertical Shorts retention**. Visual scenes render in 4K clarity with zero prompt hallucination.
 
 ---
 
@@ -66,9 +66,9 @@ AUTORA integrates specialized real-time diffusion models optimized specifically 
 
 * **OpenAI Sora:** Average 90 to 180 seconds per 5-second video clip.
 * **Google Veo 3:** Average 45 to 90 seconds per 5-second video clip.
-* **AUTORA Engine:** **Under 4 seconds per frame** using direct Cloudflare Workers AI edge processing.
+* **Tillercast Engine:** **Under 4 seconds per frame** using direct Cloudflare Workers AI edge processing.
 
-> **Key Takeaway:** AUTORA synthesizes a complete 60-second video with 12 distinct visual scenes in under 45 seconds total.
+> **Key Takeaway:** Tillercast synthesizes a complete 60-second video with 12 distinct visual scenes in under 45 seconds total.
 
 ---
 
@@ -77,17 +77,17 @@ AUTORA integrates specialized real-time diffusion models optimized specifically 
 This is where traditional standalone models (Sora, Veo 3) fall short for business creators:
 
 * **Sora & Veo 3:** Require you to manually type prompts, download clips, open an external video editor (Premiere/CapCut), add voiceovers, generate subtitles, export, and manually upload to YouTube.
-* **AUTORA.LIVE:** Handles the **entire end-to-end pipeline**. From topic input -> Gemini script -> neural voice synthesis -> AI visual generation -> FFmpeg motion compositing -> direct automated YouTube channel upload.
+* **Tillercast.live:** Handles the **entire end-to-end pipeline**. From topic input -> Gemini script -> neural voice synthesis -> AI visual generation -> FFmpeg motion compositing -> direct automated YouTube channel upload.
 
 ---
 
 ## Technical Comparison Matrix
 
-* **Photorealism Score:** Veo 3 (9.7/10), Sora (9.8/10), AUTORA (9.6/10).
-* **Generation Speed (60s video):** Sora (15-20 mins), Veo 3 (8-12 mins), AUTORA (45 seconds).
-* **Automated YouTube Upload:** Sora (No), Veo 3 (No), AUTORA (Yes - Direct API).
-* **30-Day Batch Scheduler:** Sora (No), Veo 3 (No), AUTORA (Yes - Built-in Daemon).
-* **Cost Per Video:** Sora ($2 - $5), Veo 3 ($1.50 - $3), AUTORA (Included in Creator Subscription).
+* **Photorealism Score:** Veo 3 (9.7/10), Sora (9.8/10), Tillercast (9.6/10).
+* **Generation Speed (60s video):** Sora (15-20 mins), Veo 3 (8-12 mins), Tillercast (45 seconds).
+* **Automated YouTube Upload:** Sora (No), Veo 3 (No), Tillercast (Yes - Direct API).
+* **30-Day Batch Scheduler:** Sora (No), Veo 3 (No), Tillercast (Yes - Built-in Daemon).
+* **Cost Per Video:** Sora ($2 - $5), Veo 3 ($1.50 - $3), Tillercast (Included in Creator Subscription).
 
 ---
 
@@ -95,9 +95,9 @@ This is where traditional standalone models (Sora, Veo 3) fall short for busines
 
 If you are an independent VFX director creating a cinematic short film, **OpenAI Sora** and **Google Veo 3** offer unmatched standalone video clip generation.
 
-If your goal is to **scale a profitable YouTube channel, publish daily Shorts, and build a faceless content asset**, **[AUTORA.LIVE](/signup)** is the clear winner.
+If your goal is to **scale a profitable YouTube channel, publish daily Shorts, and build a faceless content asset**, **[Tillercast.live](/signup)** is the clear winner.
 
-Create your free account on AUTORA today and experience instant AI video creation.
+Create your free account on Tillercast today and experience instant AI video creation.
     `,
   },
   {
@@ -149,7 +149,7 @@ To pass YouTube Partner Program review with flying colors, your videos must sati
 Use modern **Neural Text-to-Speech (NTTS)** voices with natural emotional cadence, breathing pauses, and proper punctuation. Avoid monotone legacy voices.
 
 ### Rule 2: Original Real-Time AI Visual Synthesis
-Instead of reusing stock footage clips that appear on thousands of other channels, generate **unique photorealistic AI visuals** for every single scene using AUTORA's Cloudflare Flux / Leonardo Phoenix engine.
+Instead of reusing stock footage clips that appear on thousands of other channels, generate **unique photorealistic AI visuals** for every single scene using Tillercast's Cloudflare Flux / Leonardo Phoenix engine.
 
 ### Rule 3: Structured Educational or Entertainment Value
 Ensure your script follows a clear narrative structure:
@@ -163,9 +163,9 @@ Incorporate animated karaoke captions and subtle background audio mixing (-20dB)
 
 ---
 
-## 3. How AUTORA Maximizes Monetization Compliance
+## 3. How Tillercast Maximizes Monetization Compliance
 
-AUTORA was designed from the ground up to comply with YouTube's strict Partner Program guidelines:
+Tillercast was designed from the ground up to comply with YouTube's strict Partner Program guidelines:
 
 1. **Unique Script Writing:** Gemini 2.0 Flash creates original, research-backed scripts customized to your exact niche and channel tone.
 2. **Dynamic AI Frames:** Every scene receives a unique, photorealistic visual generated on-demand.
@@ -180,7 +180,7 @@ AUTORA was designed from the ground up to comply with YouTube's strict Partner P
 * Link an active Google AdSense Account.
 * Ensure all 30 scheduled videos on your channel use unique AI visuals and high-fidelity neural voices.
 
-**Start building a fully monetizable channel:** [Launch your channel on AUTORA now](/signup).
+**Start building a fully monetizable channel:** [Launch your channel on Tillercast now](/signup).
     `,
   },
   {
@@ -205,7 +205,7 @@ AUTORA was designed from the ground up to comply with YouTube's strict Partner P
 
 In modern video creation, your background visuals are the primary visual hook holding the audience's attention. High-performing faceless channels on YouTube use **cinematic prompt frameworks** to ensure every scene looks like a $50,000 documentary film.
 
-Here are 10 copy-paste AI prompt recipes optimized for **AUTORA**, **Flux 1 Schnell**, **Midjourney v6**, and **Leonardo Phoenix**.
+Here are 10 copy-paste AI prompt recipes optimized for **Tillercast**, **Flux 1 Schnell**, **Midjourney v6**, and **Leonardo Phoenix**.
 
 ---
 
@@ -289,11 +289,11 @@ Here are 10 copy-paste AI prompt recipes optimized for **AUTORA**, **Flux 1 Schn
 
 ---
 
-## How AUTORA Injects Prompt DNA Automatically
+## How Tillercast Injects Prompt DNA Automatically
 
-With **AUTORA**, you never have to manually write 50-word prompts for every scene. Our system automatically applies **Visual Style DNA** (Cinematic High-Contrast, Documentary, Cyberpunk, or Minimalist) to your script scenes in real time.
+With **Tillercast**, you never have to manually write 50-word prompts for every scene. Our system automatically applies **Visual Style DNA** (Cinematic High-Contrast, Documentary, Cyberpunk, or Minimalist) to your script scenes in real time.
 
-**Try AUTORA's prompt engine today:** [Generate your first video](/signup).
+**Try Tillercast's prompt engine today:** [Generate your first video](/signup).
     `,
   },
   {
@@ -320,7 +320,7 @@ The YouTube landscape has undergone a monumental shift. You no longer need expen
 
 In 2026, **faceless YouTube channels** powered by generative AI represent one of the highest-leverage digital business models in the world. Channels in finance, technology, space, stoicism, and history are generating **$5,000 to $30,000+ per month** in YouTube AdSense revenue alone—without a single human presenter.
 
-In this guide, we break down the exact 5-step framework to launch and scale a $10K/month faceless channel from scratch using **AUTORA.LIVE** and autonomous AI automation.
+In this guide, we break down the exact 5-step framework to launch and scale a $10K/month faceless channel from scratch using **Tillercast.live** and autonomous AI automation.
 
 ---
 
@@ -349,7 +349,7 @@ Retention is the single most important metric for the YouTube algorithm. If view
 * **Micro-Pillars (Acts 1 to 5):** Break the video into distinct 45-second acts with continuous narrative bridges between scenes.
 * **The Outro Call to Action:** Guide the viewer directly to another video on your channel to boost session watch time.
 
-With **AUTORA**, you simply type your topic (e.g., "10 Dark Psychological Tricks People Use on You"), and our specialized Gemini 2.0 Flash engine automatically generates a full multi-scene script with cinematic visual prompts and retention hooks.
+With **Tillercast**, you simply type your topic (e.g., "10 Dark Psychological Tricks People Use on You"), and our specialized Gemini 2.0 Flash engine automatically generates a full multi-scene script with cinematic visual prompts and retention hooks.
 
 ---
 
@@ -361,13 +361,13 @@ Static stock footage is dead. Modern audiences demand **hyper-engaging, cinemati
 Natural neural voices (like Microsoft EdgeTTS or ElevenLabs) deliver documentary-grade delivery. Choose deep, authoritative voices for documentary channels or energetic voices for Shorts.
 
 ### Visual Synthesis:
-Using AUTORA's Tier 1 **Cloudflare Workers AI (Flux 1 Schnell & Leonardo Phoenix 1.0)** integration, every scene in your script gets a custom photorealistic 4K visual generated in real time.
+Using Tillercast's Tier 1 **Cloudflare Workers AI (Flux 1 Schnell & Leonardo Phoenix 1.0)** integration, every scene in your script gets a custom photorealistic 4K visual generated in real time.
 
 ---
 
 ## Step 4: Automated Video Compositing with FFmpeg
 
-Once visuals and voiceovers are ready, they must be combined into a broadcast-ready MP4. AUTORA automates this entire pipeline:
+Once visuals and voiceovers are ready, they must be combined into a broadcast-ready MP4. Tillercast automates this entire pipeline:
 * **Dynamic Pan-and-Zoom (Ken Burns Effect):** Prevents static imagery by adding smooth cinematic camera motion to every clip.
 * **Synchronized Burnt-In Subtitles:** Animated karaoke-style captions keep mobile viewers engaged even when sound is muted.
 * **Atmospheric Sound Design & Background Music:** Subtly mixed backtracks enhance emotional impact.
@@ -378,18 +378,18 @@ Once visuals and voiceovers are ready, they must be combined into a broadcast-re
 
 The secret to YouTube success is **unbroken consistency**. Posting 1 video every day at the same time signals to the YouTube algorithm that your channel is active.
 
-Using AUTORA's **30-Day Content Planner Wizard**:
+Using Tillercast's **30-Day Content Planner Wizard**:
 1. Select your target niche and posting schedule (e.g., Daily at 18:00 UTC).
 2. Generate 30 AI video topics with 1 click.
-3. AUTORA's background queue daemon automatically renders and publishes your videos directly to your connected YouTube channel every day without you touching a button.
+3. Tillercast's background queue daemon automatically renders and publishes your videos directly to your connected YouTube channel every day without you touching a button.
 
 ---
 
 ## Conclusion: Start Your Faceless Empire Today
 
-Building a profitable $10K/month YouTube channel used to require a production team, editors, and months of manual work. Today, AUTORA puts a full production studio inside your browser.
+Building a profitable $10K/month YouTube channel used to require a production team, editors, and months of manual work. Today, Tillercast puts a full production studio inside your browser.
 
-**Ready to launch your channel?** Create your free AUTORA account today and generate your first video in under 60 seconds!
+**Ready to launch your channel?** Create your free Tillercast account today and generate your first video in under 60 seconds!
     `,
   },
   {
@@ -420,9 +420,9 @@ In this comprehensive review, we benchmark the top 5 AI video generators on the 
 
 ---
 
-## 1. AUTORA.LIVE — Best Overall for Automated Channel Scaling
+## 1. Tillercast.live — Best Overall for Automated Channel Scaling
 
-**AUTORA** is built specifically for creators and marketers who want an end-to-end autonomous video engine rather than just an edit suite.
+**Tillercast** is built specifically for creators and marketers who want an end-to-end autonomous video engine rather than just an edit suite.
 
 ### Key Features:
 * **Real-Time AI Visual Synthesis:** Uses Cloudflare Workers AI (Flux 1 Schnell & Leonardo Phoenix) to generate dynamic 9:16 photorealistic visual frames per scene.
@@ -478,7 +478,7 @@ CapCut offers built-in AI script-to-video tools alongside its popular mobile edi
 
 ## Summary Comparison Matrix
 
-* **AUTORA.LIVE:** Real-Time AI Visuals (Flux / Phoenix), 30-Day Auto-Scheduling, Burnt-in Captions, Direct YouTube API Upload.
+* **Tillercast.live:** Real-Time AI Visuals (Flux / Phoenix), 30-Day Auto-Scheduling, Burnt-in Captions, Direct YouTube API Upload.
 * **InVideo AI:** Stock Footage, Manual Upload, Standard Captions.
 * **Runway Gen-3:** Gen-3 AI Visuals, High Cost per Second, No Scheduling.
 * **CapCut AI:** Mobile Editor, Free Tier, Manual Export Required.
@@ -487,7 +487,7 @@ CapCut offers built-in AI script-to-video tools alongside its popular mobile edi
 
 ## Get Started Today
 
-If your goal is to automate daily YouTube Shorts creation without spending hours editing, try AUTORA.LIVE today.
+If your goal is to automate daily YouTube Shorts creation without spending hours editing, try Tillercast.live today.
     `,
   },
   {
@@ -526,13 +526,13 @@ Here is how to set up an automated daily publishing workflow that runs without y
 
 ---
 
-## Setting Up Your Automated Shorts Queue in AUTORA
+## Setting Up Your Automated Shorts Queue in Tillercast
 
-1. **Log in to AUTORA:** Go to the Calendar page.
+1. **Log in to Tillercast:** Go to the Calendar page.
 2. **Open 30-Day Content Wizard:** Enter your channel topic (e.g., "Daily Wealth Mindset Tips").
 3. **Select Publish Time:** Choose your target daily time (e.g., 18:00 UTC).
-4. **Click Batch Schedule All 30 Videos:** AUTORA creates 30 queued video slots in the database.
-5. **Relax:** AUTORA's background queue daemon automatically processes, renders, and publishes your video 2 hours before the scheduled time every single day.
+4. **Click Batch Schedule All 30 Videos:** Tillercast creates 30 queued video slots in the database.
+5. **Relax:** Tillercast's background queue daemon automatically processes, renders, and publishes your video 2 hours before the scheduled time every single day.
 
 ---
 
@@ -542,7 +542,7 @@ Here is how to set up an automated daily publishing workflow that runs without y
 * **Mistake 2: Forgetting captions.** Over 70% of Shorts viewers watch with sound off or low in public. Always enable burnt-in animated captions.
 * **Mistake 3: Inconsistent publishing times.** Set a strict publishing schedule so your audience knows when to expect new content.
 
-Launch your 30-day queue on AUTORA now.
+Launch your 30-day queue on Tillercast now.
     `,
   },
   {
@@ -588,9 +588,9 @@ YouTube's **Reused Content & Repetitive Content policies** target low-effort cha
 
 ---
 
-## Best Neural Voice Models in AUTORA
+## Best Neural Voice Models in Tillercast
 
-AUTORA includes native support for high-fidelity neural voice synthesis:
+Tillercast includes native support for high-fidelity neural voice synthesis:
 
 * **Adam (Deep, Authoritative Narrator):** Perfect for documentaries, history, space, and stoicism channels.
 * **Christopher (Professional Studio Presenter):** Ideal for tech breakdowns, news commentary, and business tutorials.
@@ -604,7 +604,7 @@ AUTORA includes native support for high-fidelity neural voice synthesis:
 2. **Background Audio Mixing:** Always mix background music at -18dB to -22dB below the primary voiceover track so the speech is crystal clear.
 3. **Pacing:** Aim for a natural spoken cadence of 135 to 145 words per minute.
 
-Build a free video on AUTORA now.
+Build a free video on Tillercast now.
     `,
   },
   {
@@ -653,14 +653,14 @@ Once a viewer clicks, APV measures how much of your video they watch before clic
 
 ---
 
-## How AUTORA Automates Algorithm Optimization
+## How Tillercast Automates Algorithm Optimization
 
-AUTORA is engineered specifically around these 3 algorithmic metrics:
+Tillercast is engineered specifically around these 3 algorithmic metrics:
 1. Generates high-impact curiosity script hooks.
 2. Changes visual scenes every 4 seconds dynamically.
 3. Automatically formats burnt-in subtitles for 9:16 mobile retention.
 
-Try AUTORA for free today.
+Try Tillercast for free today.
     `,
   },
   {
@@ -710,17 +710,17 @@ Here are the top 10 highest-paying faceless YouTube niches in 2026.
 
 ---
 
-## Launch Your High-CPM Channel with AUTORA
+## Launch Your High-CPM Channel with Tillercast
 
-With AUTORA, you don't need to be an expert in these niches. Select your target niche in our 30-Day Calendar Wizard, and AUTORA generates research-backed AI scripts and visual scenes automatically.
+With Tillercast, you don't need to be an expert in these niches. Select your target niche in our 30-Day Calendar Wizard, and Tillercast generates research-backed AI scripts and visual scenes automatically.
 
-Start building your high-CPM channel today with AUTORA.LIVE.
+Start building your high-CPM channel today with Tillercast.live.
     `,
   },
   {
-    slug: 'invideo-vs-fliki-vs-pictory-vs-autora-best-ai-video-generator-2026',
-    title: 'InVideo vs Fliki vs Pictory vs AUTORA: Best AI Video Generator for YouTube Automation (2026)',
-    excerpt: 'An in-depth 2026 comparison of InVideo AI, Fliki, Pictory, and AUTORA. Discover which platform delivers the best prompt-to-video workflow, automated YouTube publishing, and lowest cost per video.',
+    slug: 'invideo-vs-fliki-vs-pictory-vs-tillercast-best-ai-video-generator-2026',
+    title: 'InVideo vs Fliki vs Pictory vs Tillercast: Best AI Video Generator for YouTube Automation (2026)',
+    excerpt: 'An in-depth 2026 comparison of InVideo AI, Fliki, Pictory, and Tillercast. Discover which platform delivers the best prompt-to-video workflow, automated YouTube publishing, and lowest cost per video.',
     category: 'AI Automation',
     readTime: '9 min read',
     publishDate: 'October 10, 2026',
@@ -731,9 +731,9 @@ Start building your high-CPM channel today with AUTORA.LIVE.
     },
     coverImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
     gradient: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
-    tags: ['InVideo AI', 'Fliki', 'Pictory', 'AUTORA', 'AI Video Generator 2026', 'Faceless YouTube Automation', 'Text to Video', 'AI SaaS Comparison'],
-    seoTitle: 'InVideo vs Fliki vs Pictory vs AUTORA: Best AI Video Generator (2026)',
-    seoDescription: 'Compare InVideo AI, Fliki, Pictory, and AUTORA for faceless YouTube automation. In-depth analysis of AI video quality, ElevenLabs voices, pricing, and 30-day scheduling.',
+    tags: ['InVideo AI', 'Fliki', 'Pictory', 'Tillercast', 'AI Video Generator 2026', 'Faceless YouTube Automation', 'Text to Video', 'AI SaaS Comparison'],
+    seoTitle: 'InVideo vs Fliki vs Pictory vs Tillercast: Best AI Video Generator (2026)',
+    seoDescription: 'Compare InVideo AI, Fliki, Pictory, and Tillercast for faceless YouTube automation. In-depth analysis of AI video quality, ElevenLabs voices, pricing, and 30-day scheduling.',
     content: `
 ## The State of AI Video Generators in 2026
 
@@ -743,7 +743,7 @@ Today, four platforms dominate the conversation for faceless content creators an
 1. **InVideo AI** — The industry heavyweight for prompt-to-video editing.
 2. **Fliki** — The voice-first text-to-video creator.
 3. **Pictory** — The long-form blog and webinar repurposing engine.
-4. **AUTORA (autora.live)** — The autonomous end-to-end YouTube automation SaaS with direct channel scheduling and multi-engine neural generation.
+4. **Tillercast (tillercast.live)** — The autonomous end-to-end YouTube automation SaaS with direct channel scheduling and multi-engine neural generation.
 
 In this deep benchmark, we compare all four platforms on **prompt accuracy**, **visual quality**, **voice synthesis**, **automation workflow**, and **overall return on investment (ROI)**.
 
@@ -751,7 +751,7 @@ In this deep benchmark, we compare all four platforms on **prompt accuracy**, **
 
 ## 1. Feature Comparison Matrix (2026 Edition)
 
-| Feature / Capability | InVideo AI | Fliki | Pictory | AUTORA.LIVE |
+| Feature / Capability | InVideo AI | Fliki | Pictory | Tillercast.live |
 | :--- | :--- | :--- | :--- | :--- |
 | **Primary Workflow** | Prompt $\\rightarrow$ Editable Timeline | Script $\\rightarrow$ Voice + Stock | URL/Blog $\\rightarrow$ Storyboard | Topic $\\rightarrow$ Autonomous 30-Day Queue |
 | **Generative AI Visuals** | Limited (Stock footage heavy) | Basic AI Images | Stock footage only | Real-Time Diffusion (Flux 1 + Leonardo) |
@@ -802,15 +802,15 @@ In this deep benchmark, we compare all four platforms on **prompt accuracy**, **
 
 ---
 
-## 5. AUTORA.LIVE: The Autonomous Automation Stack
+## 5. Tillercast.live: The Autonomous Automation Stack
 
-AUTORA was engineered specifically to solve the biggest flaw of InVideo, Fliki, and Pictory: **the manual creation bottleneck**.
+Tillercast was engineered specifically to solve the biggest flaw of InVideo, Fliki, and Pictory: **the manual creation bottleneck**.
 
-### Why AUTORA Outperforms Competitors in 2026:
-1. **Zero Stock Footage Dependence:** AUTORA generates **100% bespoke AI visuals** using Cloudflare Workers AI edge models (Flux 1 Schnell & Leonardo Phoenix). Every video has unique, uncopyable visuals that never trigger YouTube's "Reused Content" filters.
-2. **End-to-End Autonomous Publishing:** Connect your channel once via Google OAuth 2.0. AUTORA generates the script, voiceover, subtitles, thumbnail, and **publishes directly to YouTube via official APIs**.
-3. **30-Day Calendar Batch Generator:** Instead of spending 2 hours every day making videos, open the AUTORA Calendar Wizard, pick your niche (Finance, Tech, Stoicism, True Crime), and schedule an entire month of daily Shorts in **under 3 minutes**.
-4. **Built-in Studio Voice Recorder:** Want to use your real voice instead of AI? AUTORA includes an interactive Teleprompter and Audio Visualizer directly in your browser.
+### Why Tillercast Outperforms Competitors in 2026:
+1. **Zero Stock Footage Dependence:** Tillercast generates **100% bespoke AI visuals** using Cloudflare Workers AI edge models (Flux 1 Schnell & Leonardo Phoenix). Every video has unique, uncopyable visuals that never trigger YouTube's "Reused Content" filters.
+2. **End-to-End Autonomous Publishing:** Connect your channel once via Google OAuth 2.0. Tillercast generates the script, voiceover, subtitles, thumbnail, and **publishes directly to YouTube via official APIs**.
+3. **30-Day Calendar Batch Generator:** Instead of spending 2 hours every day making videos, open the Tillercast Calendar Wizard, pick your niche (Finance, Tech, Stoicism, True Crime), and schedule an entire month of daily Shorts in **under 3 minutes**.
+4. **Built-in Studio Voice Recorder:** Want to use your real voice instead of AI? Tillercast includes an interactive Teleprompter and Audio Visualizer directly in your browser.
 
 ---
 
@@ -819,9 +819,9 @@ AUTORA was engineered specifically to solve the biggest flaw of InVideo, Fliki, 
 * Choose **InVideo AI** if you want to make one-off promotional marketing videos and prefer editing on a text-based timeline.
 * Choose **Pictory** if your main business is turning old blog posts into simple narrated summaries.
 * Choose **Fliki** if you focus primarily on multilingual voiceover podcasts with basic imagery.
-* Choose **[AUTORA.LIVE](/signup)** if your goal is to **build a profitable, scalable, 100% automated faceless YouTube empire** with zero manual editing and automated daily publishing.
+* Choose **[Tillercast.live](/signup)** if your goal is to **build a profitable, scalable, 100% automated faceless YouTube empire** with zero manual editing and automated daily publishing.
 
-Ready to automate your YouTube channel? [Get started on AUTORA today](/signup).
+Ready to automate your YouTube channel? [Get started on Tillercast today](/signup).
     `,
   },
   {
@@ -838,7 +838,7 @@ Ready to automate your YouTube channel? [Get started on AUTORA today](/signup).
     },
     coverImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
     gradient: 'linear-gradient(135deg, #3b82f6 0%, #10b981 100%)',
-    tags: ['Faceless YouTube Channel', 'YouTube Automation 2026', 'Start Faceless Channel', 'AI Scripting', 'Neural Voiceover', 'YouTube Partner Program', 'AUTORA Blueprint'],
+    tags: ['Faceless YouTube Channel', 'YouTube Automation 2026', 'Start Faceless Channel', 'AI Scripting', 'Neural Voiceover', 'YouTube Partner Program', 'Tillercast Blueprint'],
     seoTitle: 'How to Start a Faceless YouTube Channel in 2026 (AI Blueprint)',
     seoDescription: 'Step-by-step 2026 guide to creating a profitable faceless YouTube channel with AI. Learn niche selection, script generation, neural voiceover, and automated 30-day scheduling.',
     content: `
@@ -881,7 +881,7 @@ YouTube Shorts and long-form videos live or die by **Average Percentage Viewed (
 * **The Data Payoff (15-45s):** Fast-paced, information-dense insights with smooth visual transitions every 3 to 4 seconds.
 * **The Loop CTA (45-60s):** End with a seamless transition sentence that connects the ending right back to the opening hook, encouraging viewers to watch twice.
 
-> **AUTORA Advantage:** In [AUTORA.LIVE](/), our integrated Gemini 3.8 Flash engine automatically formats every script using this 4-part viral architecture with timestamps and visual prompts.
+> **Tillercast Advantage:** In [Tillercast.live](/), our integrated Gemini 3.8 Flash engine automatically formats every script using this 4-part viral architecture with timestamps and visual prompts.
 
 ---
 
@@ -891,7 +891,7 @@ Gone are the robotic text-to-speech voices of 2022. YouTube's review team active
 
 In 2026, you must use **neural audio models with dynamic inflection, natural breathing pauses, and emotional resonance**.
 
-AUTORA integrates **EdgeTTS Neural Engine** (free high-fidelity neural voices with 48kHz sampling) and direct **ElevenLabs Studio integration**. Whether you choose a dramatic documentary narrator (like *Christopher Neural*) or an engaging conversational guide, the audio sounds indistinguishable from a professional studio recording.
+Tillercast integrates **EdgeTTS Neural Engine** (free high-fidelity neural voices with 48kHz sampling) and direct **ElevenLabs Studio integration**. Whether you choose a dramatic documentary narrator (like *Christopher Neural*) or an engaging conversational guide, the audio sounds indistinguishable from a professional studio recording.
 
 ---
 
@@ -904,7 +904,7 @@ To maximize monetization approval chances:
 * Apply smooth camera dynamics (cinematic zoom, dolly glides, and subtle Ken Burns movement).
 * Use consistent color palettes (e.g., Cyberpunk blue/gold or Emerald documentary tones).
 
-AUTORA handles this automatically with its **Cloudflare Flux 1 Schnell and Leonardo Phoenix diffusion pipeline**, generating crisp 1080p scenes in under 4 seconds.
+Tillercast handles this automatically with its **Cloudflare Flux 1 Schnell and Leonardo Phoenix diffusion pipeline**, generating crisp 1080p scenes in under 4 seconds.
 
 ---
 
@@ -912,11 +912,11 @@ AUTORA handles this automatically with its **Cloudflare Flux 1 Schnell and Leona
 
 Consistency is the ultimate algorithm hack. Channels that upload **1 high-quality Short per day for 90 consecutive days** have a 91% higher chance of breaking 100,000 subscribers than channels that upload erratically.
 
-With AUTORA:
-1. Open the **30-Day Calendar Wizard** at [autora.live/calendar](/calendar).
+With Tillercast:
+1. Open the **30-Day Calendar Wizard** at [tillercast.live/calendar](/calendar).
 2. Select your topic theme and target publishing time (e.g., 2:00 PM UTC).
 3. Click **Generate 30-Day Batch**.
-4. AUTORA writes the scripts, renders the clips, and schedules them into your queue.
+4. Tillercast writes the scripts, renders the clips, and schedules them into your queue.
 5. Our automated daemon connects to your YouTube channel via official OAuth 2.0 and publishes on schedule without you having to lift a finger.
 
 ---
@@ -936,7 +936,7 @@ Once your channel hits **1,000 subscribers and 4,000 watch hours** (or 10 millio
 
 The barrier to entry for video creation has never been lower, but the requirement for **systems and speed** has never been higher.
 
-Stop editing manually for hours every day. Build your autonomous video channel with **[AUTORA.LIVE](/signup)** and let AI do the heavy lifting.
+Stop editing manually for hours every day. Build your autonomous video channel with **[Tillercast.live](/signup)** and let AI do the heavy lifting.
     `,
   },
   {
@@ -954,7 +954,7 @@ Stop editing manually for hours every day. Build your autonomous video channel w
     coverImage: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1200&q=80',
     gradient: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
     tags: ['High CPM Niches 2026', 'YouTube RPM', 'Faceless Channel Niches', 'Personal Finance Niche', 'AI SaaS Niche', 'YouTube Earnings', 'Profitable YouTube Ideas'],
-    seoTitle: 'Top 10 High-CPM YouTube Niches in 2026 ($25–$80 RPM) | AUTORA',
+    seoTitle: 'Top 10 High-CPM YouTube Niches in 2026 ($25–$80 RPM) | Tillercast',
     seoDescription: 'Explore the highest-paying YouTube niches in 2026 for faceless channels. Learn which niches generate $25-$80 per 1,000 views and how to automate them with AI.',
     content: `
 ## Why CPM and RPM Matter More Than Raw Views
@@ -966,7 +966,7 @@ A business or AI software channel getting 100,000 views at a $45.00 RPM earns **
 
 Advertisers bid aggressively on viewers who possess **disposable income, decision-making authority, or purchasing intent** (such as software buyers, investors, business owners, and career professionals).
 
-Here are the **Top 10 highest-paying niches for faceless YouTube channels in late 2026**, ranked by verified industry RPM data, along with why they work and how to automate them with AUTORA.
+Here are the **Top 10 highest-paying niches for faceless YouTube channels in late 2026**, ranked by verified industry RPM data, along with why they work and how to automate them with Tillercast.
 
 ---
 
@@ -1057,14 +1057,14 @@ Here are the **Top 10 highest-paying niches for faceless YouTube channels in lat
 
 Traditionally, creating content in these research-heavy niches required days of reading whitepapers and editing complex timelines.
 
-With **[AUTORA.LIVE](/signup)**, you can launch a channel in any of these 10 niches today:
+With **[Tillercast.live](/signup)**, you can launch a channel in any of these 10 niches today:
 1. Select your target niche from the preset dropdown in **Workflow Studio**.
-2. AUTORA automatically generates research-backed, retention-optimized scripts using **Gemini 3.8 Flash**.
+2. Tillercast automatically generates research-backed, retention-optimized scripts using **Gemini 3.8 Flash**.
 3. Voice synthesis produces documentary-grade neural narration.
 4. Generative AI renders bespoke 1080p visual scenes.
 5. Our **30-Day Calendar Daemon** publishes your video directly to YouTube on your designated schedule.
 
-Pick your niche, start your queue, and scale your faceless digital asset with **[AUTORA.LIVE](/signup)**.
+Pick your niche, start your queue, and scale your faceless digital asset with **[Tillercast.live](/signup)**.
     `,
   },
   {
@@ -1091,7 +1091,7 @@ In 2026, relying solely on one distribution channel is suicide for digital creat
 
 Yet, most solo creators and agencies don't syndicate across all platforms because manual downloading, tag re-entry, caption rewriting, and smartphone uploading consumes 2+ hours daily.
 
-In this guide, we break down how to set up an autonomous **multi-platform publishing pipeline** using **[AutoRA](/signup)**.
+In this guide, we break down how to set up an autonomous **multi-platform publishing pipeline** using **[Tillercast](/signup)**.
 
 ---
 
@@ -1108,7 +1108,7 @@ Each social video platform enforces distinct constraints:
 
 ## 2. Setting Up 1-Click Multi-Platform Auto-Publishing
 
-With **AutoRA**, you connect each platform once via official OAuth:
+With **Tillercast**, you connect each platform once via official OAuth:
 1. **Google OAuth 2.0:** Direct YouTube Data API v3 integration with automated thumbnail and metadata upload.
 2. **Meta Graph API:** Direct Instagram Creator / Professional Reels container generation.
 3. **TikTok Direct Post:** Direct creator channel push with automated AI disclosure flags.
@@ -1158,15 +1158,15 @@ For example:
 
 ---
 
-## How AutoRA Automates Competitor Outlier Discovery
+## How Tillercast Automates Competitor Outlier Discovery
 
-AutoRA includes a built-in **Competitor Intelligence Engine**:
+Tillercast includes a built-in **Competitor Intelligence Engine**:
 1. Add up to 5 top channels in your niche (e.g., in History, Tech, or Finance).
-2. AutoRA scans their uploads over the last 7 to 30 days and calculates their baseline view velocity.
-3. When an outlier is detected (>1.5× average), AutoRA highlights it in your Competitor Radar.
-4. **1-Click Remix:** Click "Add Variation to Calendar", and AutoRA's AI generates a fresh, original script using a different narrative framework to prevent any reused content flags.
+2. Tillercast scans their uploads over the last 7 to 30 days and calculates their baseline view velocity.
+3. When an outlier is detected (>1.5× average), Tillercast highlights it in your Competitor Radar.
+4. **1-Click Remix:** Click "Add Variation to Calendar", and Tillercast's AI generates a fresh, original script using a different narrative framework to prevent any reused content flags.
 
-Start discovering competitor outliers today inside **[AutoRA](/signup)**.
+Start discovering competitor outliers today inside **[Tillercast](/signup)**.
     `,
   },
 ];

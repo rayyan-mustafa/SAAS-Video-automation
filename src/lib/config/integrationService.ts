@@ -96,7 +96,7 @@ export const KNOWN_INTEGRATIONS: Record<string, IntegrationDefinition> = {
     credentialFields: [
       { key: 'accountId', label: 'Cloudflare Account ID', placeholder: 'aac50d67f3ec9133524158d1379bce23', type: 'text', required: true, envFallbackKey: 'CLOUDFLARE_ACCOUNT_ID' },
       { key: 'apiToken', label: 'Cloudflare API Token', placeholder: 'cfat_...', type: 'password', required: true, envFallbackKey: 'CLOUDFLARE_API_TOKEN' },
-      { key: 'gatewayId', label: 'AI Gateway ID (Optional)', placeholder: 'autora-gateway', type: 'text', required: false, envFallbackKey: 'CLOUDFLARE_AI_GATEWAY_ID' },
+      { key: 'gatewayId', label: 'AI Gateway ID (Optional)', placeholder: 'tillercast-gateway', type: 'text', required: false, envFallbackKey: 'CLOUDFLARE_AI_GATEWAY_ID' },
     ],
   },
 
@@ -140,7 +140,7 @@ export const KNOWN_INTEGRATIONS: Record<string, IntegrationDefinition> = {
     credentialFields: [
       { key: 'accountId', label: 'Cloudflare Account ID', placeholder: 'aac50d67f3ec9133524158d1379bce23', type: 'text', required: true, envFallbackKey: 'CLOUDFLARE_ACCOUNT_ID' },
       { key: 'apiToken', label: 'Cloudflare API Token', placeholder: 'cfat_...', type: 'password', required: true, envFallbackKey: 'CLOUDFLARE_API_TOKEN' },
-      { key: 'gatewayId', label: 'AI Gateway ID (Optional)', placeholder: 'autora-gateway', type: 'text', required: false, envFallbackKey: 'CLOUDFLARE_AI_GATEWAY_ID' },
+      { key: 'gatewayId', label: 'AI Gateway ID (Optional)', placeholder: 'tillercast-gateway', type: 'text', required: false, envFallbackKey: 'CLOUDFLARE_AI_GATEWAY_ID' },
     ],
   },
   veo: {
@@ -282,15 +282,15 @@ export const KNOWN_INTEGRATIONS: Record<string, IntegrationDefinition> = {
     displayName: 'Cloudflare R2 / AWS S3',
     description: 'High-speed object storage for generated videos, audio clips, and thumbnails',
     defaultSettings: {
-      bucket: 'autora-assets',
+      bucket: 'tillercast-assets',
       region: 'auto',
-      publicUrlPrefix: 'https://cdn.autora.live',
+      publicUrlPrefix: 'https://cdn.tillercast.live',
     },
     credentialFields: [
       { key: 'accountId', label: 'R2 Account ID / S3 Host', placeholder: '14312a5d4555742372b860ffcbcb116a', type: 'text', required: true, envFallbackKey: 'R2_ACCOUNT_ID' },
       { key: 'accessKeyId', label: 'Access Key ID', placeholder: 'e3b0c44298fc...', type: 'text', required: true, envFallbackKey: 'R2_ACCESS_KEY_ID' },
       { key: 'secretAccessKey', label: 'Secret Access Key', placeholder: '85e2b0c44298fc...', type: 'password', required: true, envFallbackKey: 'R2_SECRET_ACCESS_KEY' },
-      { key: 'bucket', label: 'Bucket Name', placeholder: 'autora-assets', type: 'text', required: true, envFallbackKey: 'R2_BUCKET' },
+      { key: 'bucket', label: 'Bucket Name', placeholder: 'tillercast-assets', type: 'text', required: true, envFallbackKey: 'R2_BUCKET' },
     ],
   },
 
@@ -308,7 +308,7 @@ export const KNOWN_INTEGRATIONS: Record<string, IntegrationDefinition> = {
     credentialFields: [
       { key: 'clientId', label: 'Google Client ID', placeholder: '123456789-xxx.apps.googleusercontent.com', type: 'text', required: true, envFallbackKey: 'GOOGLE_CLIENT_ID' },
       { key: 'clientSecret', label: 'Google Client Secret', placeholder: 'GOCSPX-...', type: 'password', required: true, envFallbackKey: 'GOOGLE_CLIENT_SECRET' },
-      { key: 'redirectUri', label: 'Authorized Redirect URI', placeholder: 'https://autora.live/api/auth/youtube/callback', type: 'text', required: false, envFallbackKey: 'GOOGLE_REDIRECT_URI' },
+      { key: 'redirectUri', label: 'Authorized Redirect URI', placeholder: 'https://tillercast.live/api/auth/youtube/callback', type: 'text', required: false, envFallbackKey: 'GOOGLE_REDIRECT_URI' },
     ],
   },
 };
@@ -746,7 +746,7 @@ export class IntegrationService {
       maskedCreds[f.key] = val ? maskSecret(val) : '';
     }
 
-    const host = process.env.NEXT_PUBLIC_APP_URL || 'https://autora.live';
+    const host = process.env.NEXT_PUBLIC_APP_URL || 'https://tillercast.live';
     const webhookUrl = norm === 'stripe' ? `${host}/api/billing/webhook` : `${host}/api/billing/polar-webhook`;
 
     return {
@@ -843,7 +843,7 @@ export class IntegrationService {
       db.prepare('UPDATE payment_gateways SET is_default = 0').run();
     }
 
-    const host = process.env.NEXT_PUBLIC_APP_URL || 'https://autora.live';
+    const host = process.env.NEXT_PUBLIC_APP_URL || 'https://tillercast.live';
     const webhookUrl = norm === 'stripe' ? `${host}/api/billing/webhook` : `${host}/api/billing/polar-webhook`;
 
     db.prepare(`
@@ -969,7 +969,7 @@ export class IntegrationService {
   static getYoutubeConfig() {
     const creds = this.getDecryptedCredentials('youtube');
     const integration = this.getIntegration('youtube');
-    const host = process.env.NEXT_PUBLIC_APP_URL || 'https://autora.live';
+    const host = process.env.NEXT_PUBLIC_APP_URL || 'https://tillercast.live';
 
     return {
       clientId: creds.clientId || process.env.GOOGLE_CLIENT_ID || process.env.YOUTUBE_CLIENT_ID || '',

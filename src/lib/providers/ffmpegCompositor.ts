@@ -91,7 +91,7 @@ export class FfmpegCompositor {
 
     const isFreeTier = Boolean(watermark || (userPlan && (userPlan.toLowerCase() === 'free' || userPlan.toLowerCase() === 'demo')));
     if (isFreeTier) {
-      videoFilter += `,drawtext=text='Created with Autora.ai':fontcolor=white@0.7:fontsize=28:x=w-tw-30:y=30:box=1:boxcolor=black@0.4:boxborderw=8`;
+      videoFilter += `,drawtext=text='Created with Tillercast.ai':fontcolor=white@0.7:fontsize=28:x=w-tw-30:y=30:box=1:boxcolor=black@0.4:boxborderw=8`;
     }
 
     if (subtitleFilePath && fs.existsSync(subtitleFilePath)) {

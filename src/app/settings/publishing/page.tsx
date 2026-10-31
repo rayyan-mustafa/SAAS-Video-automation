@@ -179,7 +179,7 @@ export default function PublishingSettingsPage() {
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', borderTop: '1px solid var(--border-subtle)', paddingTop: '16px' }}>
               <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                AUTORA is authorized to publish and schedule videos directly to this channel.
+                Tillercast is authorized to publish and schedule videos directly to this channel.
               </p>
               <button
                 type="button"

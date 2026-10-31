@@ -1,7 +1,7 @@
 {
   "name": "ai-video-automation",
   "version": "2.1.0",
-  "description": "AUTORA — AI Video Automation (autora.live)",
+  "description": "Tillercast — AI Video Automation (tillercast.live)",
   "main": "index.js",
   "scripts": {
     "dev": "next dev",
@@ -19,7 +19,7 @@
     "prepare": "husky"
   },
   "keywords": [
-    "autora",
+    "tillercast",
     "ai-video",
     "video-automation",
     "youtube-automation",
@@ -28,7 +28,7 @@
     "saas",
     "nextjs"
   ],
-  "author": "AUTORA Team",
+  "author": "Tillercast Team",
   "license": "MIT",
   "type": "commonjs",
   "dependencies": {

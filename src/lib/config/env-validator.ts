@@ -1,5 +1,5 @@
 /**
- * AUTORA SaaS Production Environment Validator
+ * Tillercast SaaS Production Environment Validator
  * Enforces security and operational requirements before allowing production workloads.
  */
 

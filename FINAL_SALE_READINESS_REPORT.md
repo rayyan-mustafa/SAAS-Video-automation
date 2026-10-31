@@ -1,4 +1,4 @@
-# AutoVideo Final Sale Readiness Report
+# Tillercast Final Sale Readiness Report
 
 ## Overall Status
 
@@ -148,7 +148,7 @@ YES
 
 ### Explanation of Deployment Configuration:
 
-AutoVideo is commercially functional and sale-ready. The application can be sold today as a self-hosted or dedicated video automation platform using its built-in commercial engine:
+Tillercast is commercially functional and sale-ready. The application can be sold today as a self-hosted or dedicated video automation platform using its built-in commercial engine:
 
 1. **Core Value Proposition Works**: Enter Topic → Pick Voice (or Clone Real Voice via Mic/Upload) → Generate Video → 1080p MP4 Ready → Download or Schedule.
 2. **Quota & Security Are Production-Grade**: Multi-tenant isolation, 30 videos/month quota enforcement, Zero-Waste Policy, and Admin key vaults are 100% verified.
