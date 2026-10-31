@@ -151,9 +151,10 @@ AUTORA is designed as a turnkey commercial SaaS where customers purchase subscri
 
 ### 8.1 Customer Experience (No API Keys Required)
 - **Zero API Configuration:** Customers do NOT enter OpenAI, Google Gemini, ElevenLabs, Cloudflare, Pexels, or Pixabay API keys.
-- **Reconciled 2-Tier Pricing (Preserving $\ge 60\%$ Gross Margin):**
-  - **Creator Plan ($49/mo, 750 credits):** 30 Band 1 videos ($\le 60$s, 25 credits/video, includes up to $0.47 AI budget).
-  - **Pro Plan ($99/mo, 1,500 credits):** 60 Band 1 videos ($\le 60$s, 25 credits/video, includes up to $0.47 AI budget).
+- **Reconciled 3-Tier Pricing with 20% Annual Discount (Preserving $\ge 60\%$ Gross Margin):**
+  - **Starter Plan ($29/mo, $23/mo billed annually, 375 credits):** 15 Band 1 videos (<= 60s, 25 credits/video).
+  - **Creator Plan ($49/mo, $39/mo billed annually, 750 credits):** 30 Band 1 videos (<= 60s, 25 credits/video).
+  - **Pro Automation Plan ($99/mo, $79/mo billed annually, 1,500 credits):** 60 Band 1 videos (<= 60s, 25 credits/video).
 - **Zero-Waste Credit Policy:** Worst-case quote ceiling with automatic delta-refund on actual delivery; 100% refund on unhandled pipeline failure.
 - **Multi-Platform Integration:** Customers connect their social accounts (YouTube, TikTok, Instagram, Facebook) via OAuth with automated background scheduling.
 - **Studio Preferences:** Customers configure their video duration defaults, language, and auto-publishing schedule triggers.

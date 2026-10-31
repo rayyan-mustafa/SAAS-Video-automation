@@ -6,12 +6,13 @@
 **AUTORA** (`autora.live`) is an Autonomous Multi-Platform AI Video Creation & Social Publishing SaaS. It empowers creators and businesses to run automated, high-retention video channels across **YouTube** (Shorts & Longform), **TikTok**, **Instagram Reels**, and **Facebook Reels** with zero manual editing.
 
 ### Core 8 Production Modules
-1. **Module 1 — Production Security & 2-Tier Pricing**:
+1. **Module 1 — Production Security & 3-Tier Pricing**:
    - Sliding-window in-memory IP rate limiter (guards login, calendar generation, and rendering).
    - Tamper-proof HMAC SHA-256 admin tokens with constant-time comparison.
-   - Reconciled 2-tier pricing architecture (guaranteeing $\ge 60\%$ gross margins):
-     - **Creator Plan** ($49/mo, 750 credits): 30 Band 1 videos ($\le 60$s, 25 credits/video, includes up to $0.47 AI budget).
-     - **Pro Plan** ($99/mo, 1,500 credits): 60 Band 1 videos ($\le 60$s, 25 credits/video, includes up to $0.47 AI budget).
+   - Reconciled 3-tier pricing architecture with 20% annual discount (guaranteeing $\ge 60\%$ gross margins):
+     - **Starter Plan** ($29/mo, $23/mo annual, 375 credits): 15 Band 1 videos (<= 60s, 25 credits/video).
+     - **Creator Plan** ($49/mo, $39/mo annual, 750 credits): 30 Band 1 videos (<= 60s, 25 credits/video).
+     - **Pro Automation Plan** ($99/mo, $79/mo annual, 1,500 credits): 60 Band 1 videos (<= 60s, 25 credits/video).
    - Worst-case quote ceiling price-lock with zero-waste delta-refund on actual delivery.
    - Purged admin routes from public sitemaps and disallow directives in `robots.txt`.
 2. **Module 2 — Zero-Waste Credit Ledger & Auto-Refund System**:
