@@ -142,20 +142,30 @@ export async function generateVideoPlan(params: PlanGenerationParams): Promise<G
       }
     }
 
-    // 3-Second Pacing Guard for Short-Form Videos:
-    // Scene 1 & 2: 2.0 to 3.0 seconds (6-9 spoken words)
-    // Scenes 3+: 3.0 to 4.5 seconds (never exceed 5.0s)
+    // Length Band Spoken Word Budget & Pacing Guard:
     let durationSec = s.estimatedDurationSec;
+    let narrationText = s.narration;
+    const words = narrationText.split(/\s+/).filter(Boolean);
+    const maxAllowedWordsPerScene = Math.max(7, Math.floor((maxWords / rawScenes.length) * 1.15));
+
+    if (words.length > maxAllowedWordsPerScene) {
+      narrationText = words.slice(0, maxAllowedWordsPerScene).join(' ').replace(/[,;:]+$/, '') + '.';
+    }
+
     if (isShorts) {
       if (idx < 2) {
         durationSec = Math.max(2.0, Math.min(3.0, durationSec));
       } else {
         durationSec = Math.max(3.0, Math.min(4.5, durationSec));
       }
+    } else {
+      durationSec = Math.max(3.5, Math.min(12.0, Math.round((narrationText.split(/\s+/).length / 2.3) * 10) / 10));
     }
 
     return {
       ...s,
+      narration: narrationText,
+      subtitleText: narrationText,
       estimatedDurationSec: durationSec,
       visualTier: tier,
     } as any;

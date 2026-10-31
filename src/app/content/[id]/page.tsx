@@ -424,7 +424,10 @@ export default function VideoStudioPage({ params }: { params?: any }) {
     : null;
 
   // Active clip URL for the displayed scene (cuts dynamically in MULTI_SCENE_AUTO mode)
-  const activeVideoUrl = displayedScene && project?.id
+  const isMasterReady = Boolean(data?.output?.storage_key || data?.output?.url);
+  const activeVideoUrl = (playbackMode === 'MULTI_SCENE_AUTO' && isMasterReady && finalVideoUrl)
+    ? finalVideoUrl
+    : displayedScene && project?.id
     ? `/api/assets/clips/${project.id}/scene_${displayedSceneNum}_clip_1.mp4?topic=${encodeURIComponent(project.topic)}&scene=${displayedSceneNum}&r=${currentReroll}&prompt=${encodeURIComponent(displayedScene.visual_prompt || '')}`
     : finalVideoUrl;
 
@@ -1355,8 +1358,8 @@ export default function VideoStudioPage({ params }: { params?: any }) {
                   }),
             }}
           >
-            {/* Background continuous narration audio */}
-            {audioUrl && <audio ref={audioRef} src={audioUrl} preload="auto" />}
+            {/* Background continuous narration audio (only if not playing master final video directly) */}
+            {audioUrl && activeVideoUrl !== finalVideoUrl && <audio ref={audioRef} src={audioUrl} preload="auto" />}
 
             {/* Scene info banner overlay */}
             {displayedScene && (
@@ -1405,11 +1408,10 @@ export default function VideoStudioPage({ params }: { params?: any }) {
                     }
                   }}
                   className="theater-video"
-                  crossOrigin="anonymous"
                   autoPlay={isPlaying}
                   loop={playbackMode === 'SOLO_SCENE'}
                   playsInline
-                  muted={true}
+                  muted={activeVideoUrl !== finalVideoUrl}
                   style={{
                     width: '100%',
                     height: '100%',
@@ -1444,19 +1446,24 @@ export default function VideoStudioPage({ params }: { params?: any }) {
                   >
                     <div
                       style={{
-                        display: 'inline-block',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
                         background: 'rgba(0, 0, 0, 0.75)',
                         backdropFilter: 'blur(12px)',
                         border: '1px solid rgba(255, 255, 255, 0.18)',
                         borderRadius: '8px',
-                        padding: '8px 18px',
+                        padding: '6px 14px',
                         color: '#ffffff',
-                        fontSize: '13px',
+                        fontSize: '12px',
                         fontWeight: 600,
                         letterSpacing: '0.015em',
-                        lineHeight: 1.4,
+                        lineHeight: 1.35,
                         boxShadow: '0 8px 32px rgba(0,0,0,0.8)',
                         maxWidth: '90%',
+                        margin: '0 auto',
                       }}
                     >
                       {displayedScene.subtitle_text || displayedScene.narration}

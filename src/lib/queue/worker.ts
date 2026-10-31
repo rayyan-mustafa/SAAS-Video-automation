@@ -1,9 +1,12 @@
 import path from 'path';
 import fs from 'fs';
+import { execFile } from 'child_process';
+import util from 'util';
+const execFileAsync = util.promisify(execFile);
 import { v4 as uuidv4 } from 'uuid';
 import { getDb, ContentProject, Channel, VideoScene, GeneratedAsset, VideoJob, ProjectTelemetry, ProjectMetadata, getUserCredits } from '../db';
 import { aiProvider, ScriptStructure, GeneratedScene } from '../providers/aiProvider';
-import { videoProvider } from '../providers/videoProvider';
+import { videoProvider, getFfmpegPath } from '../providers/videoProvider';
 import { voiceProvider } from '../providers/voiceProvider';
 import { subtitleProvider } from '../providers/subtitleProvider';
 import { ffmpegCompositor } from '../providers/ffmpegCompositor';
@@ -463,12 +466,36 @@ export class VideoPipelineWorker {
 
         // Band-overflow guard check
         const targetDuration = project.target_length_minutes || 1;
+        const bandConfig = resolveLengthBand(targetDuration);
+        let effectiveAudioDuration = finalAudioDuration;
+
         if (!isWithinBandLimit(targetDuration, finalAudioDuration)) {
-          const bandConfig = resolveLengthBand(targetDuration);
-          throw new EngineError(
-            'BAND_OVERFLOW',
-            `Master audio duration (${finalAudioDuration.toFixed(1)}s) exceeds max limit for band [${bandConfig.label}] (${bandConfig.maxDurationSec}s + 0.5s tolerance). Auto-refund triggered.`
-          );
+          // Self-healing: If within 35% of max limit, compress playback speed with atempo to conform to band ceiling
+          if (finalAudioDuration <= bandConfig.maxDurationSec * 1.35) {
+            const tempo = Math.min(1.35, Math.max(1.05, finalAudioDuration / (bandConfig.maxDurationSec - 0.5)));
+            console.log(`[VideoPipeline] Audio duration (${finalAudioDuration.toFixed(1)}s) exceeded band ceiling (${bandConfig.maxDurationSec}s). Auto-conforming with atempo ${tempo.toFixed(2)}x...`);
+            const conformedPath = masterPath.replace(/\.mp3$/, '_conformed.mp3');
+            try {
+              const ffmpegPath = getFfmpegPath();
+              await execFileAsync(ffmpegPath, [
+                '-y', '-i', masterPath, '-filter:a', `atempo=${tempo.toFixed(3)}`, '-c:a', 'libmp3lame', '-b:a', '192k', conformedPath
+              ]);
+              if (fs.existsSync(conformedPath)) {
+                await fs.promises.rename(conformedPath, masterPath);
+                effectiveAudioDuration = Math.min(bandConfig.maxDurationSec, finalAudioDuration / tempo);
+                console.log(`[VideoPipeline] Audio successfully conformed to ${effectiveAudioDuration.toFixed(1)}s.`);
+              }
+            } catch (tempoErr: any) {
+              console.warn(`[VideoPipeline] Audio tempo conformance skipped: ${tempoErr.message}`);
+            }
+          }
+
+          if (!isWithinBandLimit(targetDuration, effectiveAudioDuration)) {
+            throw new EngineError(
+              'BAND_OVERFLOW',
+              `Master audio duration (${finalAudioDuration.toFixed(1)}s) exceeds max limit for band [${bandConfig.label}] (${bandConfig.maxDurationSec}s + 0.5s tolerance). Auto-refund triggered.`
+            );
+          }
         }
 
         db.prepare("DELETE FROM generated_assets WHERE project_id = ? AND asset_type = 'audio'").run(project.id);

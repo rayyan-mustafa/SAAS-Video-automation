@@ -131,6 +131,17 @@ const MOTION_ENGINE_TIERS = [
 
 type ModalState = 'idle' | 'recording' | 'recorded' | 'uploading' | 'cloning' | 'success' | 'error';
 
+const VIRAL_IDEAS_BANK = [
+  'Top 5 mysterious places in the world science still cannot explain',
+  'Dark psychological facts about human decision making',
+  'What happens to your cognitive performance when you drink black coffee',
+  '3 ancient lost civilizations uncovered with satellite radar',
+  'High-performance habits that separate senior founders from novices',
+  'Mind-blowing artificial intelligence breakthroughs scheduled for late 2026',
+  '5 optical illusions that reveal how the human visual cortex processes light',
+  'Why the global tech sector is restructuring around agentic automation',
+];
+
 function CreateVideoWizardContent() {
   const router = useRouter();
   const toast = useToast();
@@ -144,6 +155,22 @@ function CreateVideoWizardContent() {
   const [monthlyUsage, setMonthlyUsage] = useState({ used: 0, limit: 1, remaining: 1 });
   const [userPlan, setUserPlan] = useState<string>('free');
   const [creating, setCreating] = useState(false);
+
+  const handleSurpriseMe = () => {
+    const randomTopic = VIRAL_IDEAS_BANK[Math.floor(Math.random() * VIRAL_IDEAS_BANK.length)];
+    setTopic(randomTopic);
+    toast.info('Loaded viral concept: ' + randomTopic.substring(0, 35) + '... ✨');
+  };
+
+  const handleResetConfig = () => {
+    setTopic('');
+    setStorytellingFormat('viral-documentary');
+    setVisualStyle('dark-cinematic-8k');
+    setVisualMotionTier('motion_still');
+    setAspectRatio('9:16');
+    setVideoLength(1);
+    toast.info('Configuration reset to defaults.');
+  };
 
   // 3 Outcome-Driven Creator Selectors
   const [storytellingFormat, setStorytellingFormat] = useState('viral-documentary');
@@ -719,33 +746,148 @@ function CreateVideoWizardContent() {
         </p>
 
         <form onSubmit={handleCreateVideo} style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-          {/* STEP 1: TOPIC INPUT */}
-          <div>
-            <label htmlFor="video-topic-input" style={{ display: 'block', fontSize: '14px', fontWeight: 700, color: '#f4f4f5', marginBottom: '6px' }}>
-              What do you want to make a video about?
-            </label>
-            <textarea
-              id="video-topic-input"
-              className="form-input"
-              rows={3}
-              style={{
-                width: '100%',
-                padding: '14px',
-                fontSize: '14px',
-                background: '#09090b',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '8px',
-                color: '#fff',
-                resize: 'none',
-                lineHeight: 1.5,
-                boxSizing: 'border-box',
-              }}
-              placeholder="e.g. 5 hidden signs of extreme high intelligence that people mistake for weirdness"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-            />
-            <div style={{ fontSize: '12px', color: '#71717a', marginTop: '6px' }}>
-              Tip: Enter a shocking hook, contrarian question, or detailed outline. Our 3-stage engine writes for maximum 3-second retention.
+          {/* Prompt-to-Video Engine Panel (InVideo AI / Runway class workflow) */}
+          <div className="autora-panel" style={{
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '12px',
+            padding: '20px',
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div>
+                <h2 style={{ fontSize: '17px', fontWeight: 800, color: '#ffffff', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>⚡ Prompt-to-Video Engine</span>
+                  <span style={{
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    background: 'rgba(168, 85, 247, 0.15)',
+                    border: '1px solid rgba(168, 85, 247, 0.3)',
+                    color: '#c084fc',
+                    padding: '2px 8px',
+                    borderRadius: '9999px'
+                  }}>
+                    Agentic Studio (WP8 / WP5)
+                  </span>
+                </h2>
+                <p style={{ fontSize: '12px', color: '#71717a', margin: '4px 0 0' }}>
+                  One prompt → Multi-scene storyboard cut → Interactive Timeline Editor
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleResetConfig}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#71717a',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  padding: '4px 8px'
+                }}
+              >
+                Reset Config
+              </button>
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <label htmlFor="creator-topic-input" style={{ fontSize: '12px', fontWeight: 700, color: '#e4e4e7' }}>
+                  AI Video Prompt (Describe topic, visuals, pacing & tone)
+                </label>
+                <button
+                  type="button"
+                  onClick={handleSurpriseMe}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '6px',
+                    color: '#c084fc',
+                    cursor: 'pointer',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    padding: '3px 8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                  aria-label="Randomize viral concept prompt"
+                >
+                  <span>🎲 Surprise Me</span>
+                </button>
+              </div>
+              <div style={{ position: 'relative' }}>
+                <textarea
+                  id="creator-topic-input"
+                  rows={4}
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  placeholder="Describe your video in detail... (e.g. A 45-second high-retention documentary exploring how quantum computers will break RSA encryption. Fast pacing, dark cyberpunk aesthetic, high-contrast visuals, dramatic narrator voice, and clear subtitle captions)..."
+                  className="autora-input"
+                  style={{
+                    width: '100%',
+                    background: '#111216',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '10px',
+                    padding: '14px',
+                    color: '#ffffff',
+                    fontSize: '13px',
+                    lineHeight: '1.5',
+                    resize: 'vertical',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                  aria-label="AI Video Prompt"
+                />
+              </div>
+
+              {/* Prompt Enhancer Quick-Chips */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
+                <span style={{ fontSize: '11px', color: '#71717a', alignSelf: 'center', marginRight: '4px' }}>
+                  Add Enhancers:
+                </span>
+                {[
+                  { label: '⚡ High-Impact Hook', append: ', starts with a shocking 3-second hook question' },
+                  { label: '💎 4K Generative AI', append: ', photorealistic cinematic visuals with slow dramatic camera motion' },
+                  { label: '📊 Data & Stats', append: ', backed by verified data, research numbers and crisp motion graphics' },
+                  { label: '🎙️ Deep Docu-Tone', append: ', serious investigative documentary narration style' },
+                  { label: '📱 Viral Retention', append: ', ultra high-tempo scene transitions every 3 to 4 seconds' },
+                ].map((chip, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      setTopic((prev) => (prev ? prev.trim() + chip.append : chip.label.replace(/^.*? /, '')));
+                      toast.info(`Added enhancer: ${chip.label}`);
+                    }}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '6px',
+                      color: '#a1a1aa',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      padding: '4px 8px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(168, 85, 247, 0.4)';
+                      e.currentTarget.style.color = '#ffffff';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                      e.currentTarget.style.color = '#a1a1aa';
+                    }}
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

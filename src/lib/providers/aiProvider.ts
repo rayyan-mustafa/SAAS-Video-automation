@@ -625,6 +625,13 @@ class DefaultAiProvider implements AiProvider {
     visualStyle: string = 'Cinematic High-Contrast'
   ): ScriptStructure {
     const cleanTopic = topic.trim();
+    // Clean spoken topic for natural narrator voiceover (strip off technical prompt modifiers / enhancer instructions)
+    const spokenTopic = cleanTopic
+      .split(/,\s*(?:starts with|photorealistic|backed by|verified data|serious investigative|deep docu|ultra high-tempo|viral retention|shot variation|cinematic|4k|high-impact|fast pacing|dark cyberpunk|dramatic narrator|clear subtitle)/i)[0]
+      .replace(/^(?:video of|a video about|create a video about|explain|documentary about)\s+/i, '')
+      .replace(/["']/g, '')
+      .trim() || cleanTopic;
+
     const normalized = ` ${cleanTopic.toLowerCase().replace(/[^a-z0-9]/g, ' ')} `;
     const hasAnyWord = (words: string[]) => words.some((w) => normalized.includes(` ${w} `));
 
@@ -744,7 +751,7 @@ class DefaultAiProvider implements AiProvider {
     ];
 
     const bible = resolveProductionBible(cleanTopic, niche, visualStyle);
-    const pillars = generateTopicPillars(cleanTopic, niche, domainFocus);
+    const pillars = generateTopicPillars(spokenTopic, niche, domainFocus);
 
     const sections = [];
     for (let i = 0; i < numSections; i++) {
@@ -753,9 +760,9 @@ class DefaultAiProvider implements AiProvider {
 
       // In shorts mode, provide concise punchy narration; in long-form, provide full multi-sentence paragraphs
       const narrationA = isUltraShort
-        ? `Here is what you need to know about ${cleanTopic}: ${p.sub1}.`
+        ? `Here is what you need to know about ${spokenTopic}: ${p.sub1}.`
         : isShorts
-        ? `Look closely at ${p.title}. When analyzing ${cleanTopic}, ${p.desc1.slice(0, 110)}.`
+        ? `Look closely at ${p.title}. When analyzing ${spokenTopic}, ${p.desc1.slice(0, 110)}.`
         : `${p.desc1}`;
 
       const narrationB = isUltraShort
@@ -815,22 +822,22 @@ class DefaultAiProvider implements AiProvider {
     }
 
     const hookText = isUltraShort
-      ? `Did you know this about ${cleanTopic}? Watch until the end.`
+      ? `Did you know this about ${spokenTopic}? Watch until the end.`
       : isShorts
-      ? `What is the real secret behind ${cleanTopic}? In the next 60 seconds, everything you thought you knew changes.`
-      : `What is the true power behind ${cleanTopic}? Across ${niche}, this breakthrough is reshaping how we understand ${domainFocus}. Here is the complete breakdown.`;
+      ? `What is the real secret behind ${spokenTopic}? In the next 60 seconds, everything you thought you knew changes.`
+      : `What is the true power behind ${spokenTopic}? Across ${niche}, this breakthrough is reshaping how we understand ${domainFocus}. Here is the complete breakdown.`;
 
     const introText = isUltraShort
       ? `Here is the key fact:`
       : isShorts
-      ? `Welcome to ${channelName}. Most people misunderstand ${cleanTopic}, but the actual mechanisms are far more fascinating.`
-      : `Welcome back to ${channelName}. Today, we are conducting an in-depth analysis of ${cleanTopic}. What you are about to discover will give you a strategic advantage in ${niche}.`;
+      ? `Welcome to ${channelName}. Most people misunderstand ${spokenTopic}, but the actual mechanisms are far more fascinating.`
+      : `Welcome back to ${channelName}. Today, we are conducting an in-depth analysis of ${spokenTopic}. What you are about to discover will give you a strategic advantage in ${niche}.`;
 
     const conclusionText = isUltraShort
       ? `Save this video for later.`
       : isShorts
-      ? `Understanding ${cleanTopic} is the key to mastering ${niche}. Apply these principles today.`
-      : `The analysis of ${cleanTopic} proves how rapidly ${niche} is evolving. By understanding these core mechanisms, you stay ahead of the curve and position yourself for long-term success.`;
+      ? `Understanding ${spokenTopic} is the key to mastering ${niche}. Apply these principles today.`
+      : `The analysis of ${spokenTopic} proves how rapidly ${niche} is evolving. By understanding these core mechanisms, you stay ahead of the curve and position yourself for long-term success.`;
 
     const ctaText = isUltraShort
       ? `Follow for more.`
@@ -882,17 +889,28 @@ class DefaultAiProvider implements AiProvider {
     targetWordCount: number,
     visualStyle: string
   ): void {
+    // Never inflate short-form scripts (<= 130 words) with filler paragraphs to respect strict 60s length band
+    if (targetWordCount <= 130) {
+      return;
+    }
+
     let currentWords = this.countScriptWords(script);
     if (currentWords >= targetWordCount * 0.85) return;
 
     console.log(`[AiProvider] Script word count (${currentWords}) is below target (${targetWordCount}). Auto-enriching narrative depth...`);
 
     const cleanTopic = topic.trim();
+    const spokenTopic = cleanTopic
+      .split(/,\s*(?:starts with|photorealistic|backed by|verified data|serious investigative|deep docu|ultra high-tempo|viral retention|shot variation|cinematic|4k|high-impact)/i)[0]
+      .replace(/^(?:video of|a video about|create a video about|explain|documentary about)\s+/i, '')
+      .replace(/["']/g, '')
+      .trim() || cleanTopic;
+
     const additions = [
-      `A critical dimension that experimental testing highlights is the hidden mechanics of ${cleanTopic}. When analyzing the secondary impact, researchers note that the interactions produce compound feedback loops. Initial disruptions do not simply resolve—they compound over time, amplifying stress across the entire system.`,
-      `To fully understand the real-world implications, we have to look at the historical data. Every data point confirms that the margin between stability and sudden failure is razor thin, requiring us to re-examine our assumptions about ${cleanTopic}.`,
+      `A critical dimension that experimental testing highlights is the hidden mechanics of ${spokenTopic}. When analyzing the secondary impact, researchers note that the interactions produce compound feedback loops. Initial disruptions do not simply resolve—they compound over time, amplifying stress across the entire system.`,
+      `To fully understand the real-world implications, we have to look at the historical data. Every data point confirms that the margin between stability and sudden failure is razor thin, requiring us to re-examine our assumptions about ${spokenTopic}.`,
       `Furthermore, direct observations demonstrate that adaptation under these conditions follows very specific rules. As the primary forces reshape the landscape, secondary patterns emerge rapidly, proving that systemic resilience is both necessary and complex.`,
-      `The strategic takeaway goes far beyond theory. By studying what happens when the core mechanisms of ${cleanTopic} are pushed to their absolute limits, we gain invaluable insights into how everyday systems operate, and what it takes to maintain lasting performance.`,
+      `The strategic takeaway goes far beyond theory. By studying what happens when the core mechanisms of ${spokenTopic} are pushed to their absolute limits, we gain invaluable insights into how everyday systems operate, and what it takes to maintain lasting performance.`,
     ];
 
     let addIdx = 0;

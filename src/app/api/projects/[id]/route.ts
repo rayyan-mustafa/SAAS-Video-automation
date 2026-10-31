@@ -157,6 +157,7 @@ export async function GET(request: Request, { params }: { params: any }) {
           targetLengthMinutes: project.target_length_minutes || 3,
         });
 
+        db.prepare('DELETE FROM video_scenes WHERE project_id = ?').run(id);
         for (const s of genScenes) {
           db.prepare(
             `INSERT INTO video_scenes (

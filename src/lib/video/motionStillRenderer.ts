@@ -94,6 +94,10 @@ export class MotionStillRenderer {
             `${zoompanFilter},format=yuv420p`,
             '-c:v',
             'libx264',
+            '-preset',
+            'ultrafast',
+            '-tune',
+            'stillimage',
             '-t',
             String(durationSec),
             '-pix_fmt',
@@ -102,7 +106,7 @@ export class MotionStillRenderer {
             String(fps),
             outputPath,
           ],
-          { timeout: 20000 }
+          { timeout: 60000 }
         );
         rendered = true;
       } catch (err: any) {
@@ -124,13 +128,17 @@ export class MotionStillRenderer {
           `boxblur=10:1,format=yuv420p`,
           '-c:v',
           'libx264',
+          '-preset',
+          'ultrafast',
+          '-tune',
+          'stillimage',
           '-pix_fmt',
           'yuv420p',
           '-t',
           String(durationSec),
           outputPath,
         ];
-        await execFileAsync(ffmpegPath, colorArgs, { timeout: 15000 });
+        await execFileAsync(ffmpegPath, colorArgs, { timeout: 60000 });
         rendered = true;
       } catch (fallbackErr: any) {
         throw new Error(`Motion still rendering failed for project ${projectId}: ${fallbackErr.message}`);

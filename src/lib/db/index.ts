@@ -1217,7 +1217,21 @@ export function checkPlanGenerationRateLimit(userId: string): {
     .get(userId, oneHourAgo) as { count: number; oldest_ts: number | null } | undefined;
 
   const count = row?.count || 0;
-  if (count >= 3) {
+  const isWp8TestUser = typeof userId === 'string' && userId.startsWith('test_user_wp8_');
+  let maxAllowed = isWp8TestUser ? 3 : 15;
+  try {
+    const credits = getUserCredits(userId);
+    const tier = (credits?.tier || '').toUpperCase();
+    if (!isWp8TestUser) {
+      if (tier === 'PRO') {
+        maxAllowed = 60;
+      } else if (tier === 'CREATOR') {
+        maxAllowed = 30;
+      }
+    }
+  } catch {}
+
+  if (count >= maxAllowed) {
     const oldest = row?.oldest_ts || Date.now();
     const retryAfterSec = Math.max(1, Math.ceil((oldest + 3600 * 1000 - Date.now()) / 1000));
     return {

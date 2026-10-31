@@ -153,7 +153,7 @@ export default function HomePage() {
   const [connectHandleInput, setConnectHandleInput] = useState('');
   const [connectEmailInput, setConnectEmailInput] = useState('');
   const [connectSubmitting, setConnectSubmitting] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Video Creator State
   const [quickTopic, setQuickTopic] = useState('');
@@ -975,7 +975,7 @@ export default function HomePage() {
                   </span>
                   {[
                     { label: '⚡ High-Impact Hook', append: ', starts with a shocking 3-second hook question' },
-                    { label: '🌌 4K Generative AI', append: ', photorealistic cinematic visuals with slow dramatic camera motion' },
+                    { label: '💎 4K Generative AI', append: ', photorealistic cinematic visuals with slow dramatic camera motion' },
                     { label: '📊 Data & Stats', append: ', backed by verified data, research numbers and crisp motion graphics' },
                     { label: '🎙️ Deep Docu-Tone', append: ', serious investigative documentary narration style' },
                     { label: '📱 Viral Retention', append: ', ultra high-tempo scene transitions every 3 to 4 seconds' },
