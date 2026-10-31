@@ -44,6 +44,7 @@ screenshot-*.png
 qa-screenshots/
 mobile-ux-audit-results.json
 /output-videos/
+/proof-recordings/
 public/output-*.mp4
 *.mp3
 

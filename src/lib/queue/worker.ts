@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { getDb, ContentProject, Channel, VideoScene, GeneratedAsset, VideoJob, ProjectTelemetry, ProjectMetadata } from '../db';
+import { getDb, ContentProject, Channel, VideoScene, GeneratedAsset, VideoJob, ProjectTelemetry, ProjectMetadata, getUserCredits } from '../db';
 import { aiProvider, ScriptStructure, GeneratedScene } from '../providers/aiProvider';
 import { videoProvider } from '../providers/videoProvider';
 import { voiceProvider } from '../providers/voiceProvider';
@@ -293,6 +293,8 @@ export class VideoPipelineWorker {
     switch (stage) {
       case 'PLAN':
       case ('SCRIPT' as any): {
+        const credits = project.user_id ? getUserCredits(project.user_id) : null;
+        const planTier = (credits?.tier || 'free').toLowerCase();
         const planResult = await generateVideoPlan({
           topic: project.topic,
           niche: channel.niche,
@@ -300,6 +302,7 @@ export class VideoPipelineWorker {
           targetLengthMinutes: project.target_length_minutes,
           language: project.language || channel.language,
           visualStyle: channel.visual_style,
+          userPlan: planTier,
         });
 
         const planKey = `plans/${project.id}/plan.json`;
@@ -945,8 +948,10 @@ export class VideoPipelineWorker {
         let projectUserPlan = 'free';
         if (project.user_id) {
           try {
-            const u = db.prepare('SELECT plan FROM users WHERE id = ?').get(project.user_id) as { plan?: string } | undefined;
-            if (u?.plan) projectUserPlan = u.plan.toLowerCase();
+            const credits = getUserCredits(project.user_id);
+            if (credits?.tier) {
+              projectUserPlan = credits.tier.toLowerCase();
+            }
           } catch {}
         }
 

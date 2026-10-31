@@ -11,6 +11,9 @@ export interface User {
   role: string;
   status: string;
   onboarding_completed: number;
+  plan?: string;
+  tier?: string;
+  subscription_status?: string;
   created_at: string;
   updated_at: string;
 }
@@ -131,9 +134,12 @@ export function validateSession(sessionToken: string): { valid: boolean; user: U
   try {
     const session = db
       .prepare(`
-        SELECT s.*, u.id as u_id, u.email, u.name, u.avatar, u.email_verified, u.role, u.status, u.onboarding_completed, u.created_at as u_created, u.updated_at as u_updated
+        SELECT s.*, u.id as u_id, u.email, u.name, u.avatar, u.email_verified, u.role, u.status, u.onboarding_completed, u.created_at as u_created, u.updated_at as u_updated,
+               COALESCE(uc.tier, 'FREE') as user_tier,
+               COALESCE(uc.subscription_status, 'DEMO') as sub_status
         FROM user_sessions s
         JOIN users u ON s.user_id = u.id
+        LEFT JOIN user_credits uc ON uc.user_id = u.id
         WHERE s.session_token = ? AND s.expires_at > ?
       `)
       .get(sessionToken, now) as any;
@@ -148,6 +154,9 @@ export function validateSession(sessionToken: string): { valid: boolean; user: U
         role: session.role,
         status: session.status,
         onboarding_completed: session.onboarding_completed,
+        plan: session.user_tier || 'FREE',
+        tier: session.user_tier || 'FREE',
+        subscription_status: session.sub_status || 'DEMO',
         created_at: session.u_created,
         updated_at: session.u_updated,
       };
@@ -161,7 +170,14 @@ export function validateSession(sessionToken: string): { valid: boolean; user: U
   const verification = verifySignedToken(sessionToken);
   if (verification.valid && verification.userId) {
     try {
-      let u = db.prepare('SELECT * FROM users WHERE id = ?').get(verification.userId) as any;
+      let u = db.prepare(`
+        SELECT u.*,
+               COALESCE(uc.tier, 'FREE') as user_tier,
+               COALESCE(uc.subscription_status, 'DEMO') as sub_status
+        FROM users u
+        LEFT JOIN user_credits uc ON uc.user_id = u.id
+        WHERE u.id = ?
+      `).get(verification.userId) as any;
       if (!u) {
         // Auto-provision user in local container DB
         const nowIso = new Date().toISOString();
@@ -181,6 +197,9 @@ export function validateSession(sessionToken: string): { valid: boolean; user: U
           role: u.role || 'CUSTOMER',
           status: u.status || 'ACTIVE',
           onboarding_completed: u.onboarding_completed || 1,
+          plan: u.user_tier || 'FREE',
+          tier: u.user_tier || 'FREE',
+          subscription_status: u.sub_status || 'DEMO',
           created_at: u.created_at || now,
           updated_at: u.updated_at || now,
         };

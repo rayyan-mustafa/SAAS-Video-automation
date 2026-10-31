@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import { getDb, getUserCredits } from '@/lib/db';
 import { verifyPassword, hashPassword, createSession, checkRateLimit, getUserIdFromEmail, getEmailSalt } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -90,6 +90,8 @@ export async function POST(req: Request) {
       avatar: user.avatar,
       email_verified: user.email_verified,
       role: user.role,
+      plan: getUserCredits(user.id)?.tier || 'FREE',
+      tier: getUserCredits(user.id)?.tier || 'FREE',
       onboarding_completed: user.onboarding_completed,
     };
 

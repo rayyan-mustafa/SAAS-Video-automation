@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDb, DEFAULT_USER_ID, ContentProject, Channel, VideoOutput, GeneratedAsset } from '@/lib/db';
+import { getDb, DEFAULT_USER_ID, ContentProject, Channel, VideoOutput, GeneratedAsset, getUserCredits } from '@/lib/db';
 import { publishingProvider, SupportedPlatform, PublishResult } from '@/lib/providers/publishingProvider';
 import { storage } from '@/lib/storage';
 import { getCurrentUser } from '@/lib/auth';
@@ -39,8 +39,10 @@ export async function POST(request: Request, { params }: { params: any }) {
     }
 
     // Free Demo Conversion Lock: Auto-Publishing is locked for free tier users
-    const userPlan = ((user as any).plan || 'free').toLowerCase();
-    if (userPlan === 'free' && !isAdmin) {
+    const userCredits = getUserCredits(user.id);
+    const userPlan = (userCredits?.tier || (user as any).plan || 'free').toLowerCase();
+    const isFreeUser = (userPlan === 'free' || userPlan === 'demo') && userCredits?.subscription_status !== 'ACTIVE';
+    if (isFreeUser && !isAdmin) {
       return NextResponse.json(
         {
           error: 'UPGRADE_REQUIRED',

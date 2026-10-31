@@ -93,8 +93,9 @@ export async function POST(request: Request) {
     }
 
     // Check monthly quota (30 videos/month server-side enforcement)
-    const userPlan = ((user as any)?.plan || 'free').toLowerCase();
-    const isFreeUser = userPlan === 'free' || userPlan === 'demo';
+    const userCredits = getUserCredits(userId);
+    const userPlan = (userCredits?.tier || (user as any)?.plan || 'free').toLowerCase();
+    const isFreeUser = (userPlan === 'free' || userPlan === 'demo') && userCredits?.subscription_status !== 'ACTIVE' && userCredits?.subscription_status !== 'TRIALING';
 
     // Free Demo Guardrail: Free users are limited to 1 Demo Video
     if (isFreeUser) {
@@ -216,11 +217,11 @@ export async function POST(request: Request) {
     });
 
     const shouldAutoRender = body.auto_render !== false && body.autoRender !== false;
-    const userCredits = getUserCredits(userId);
+    const currentCredits = getUserCredits(userId);
     let approvedAt: string | null = null;
     let quotedCredits = 0;
 
-    if (shouldAutoRender && userCredits && userCredits.balance >= 25) {
+    if (shouldAutoRender && currentCredits && currentCredits.balance >= 25) {
       try {
         deductUserCredits(
           userId,
