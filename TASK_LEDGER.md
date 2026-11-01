@@ -10,9 +10,10 @@ Status: IN_PROGRESS — Phase 0 Ready
 > **Self-Sustaining Loop Mandate for Claude Opus / Antigravity Agents**:
 > 1. At the start of each session, read this `TASK_LEDGER.md` to identify the first unchecked `[ ]` task.
 > 2. Execute tasks sequentially. Run `npm run typecheck` after every single phase.
-> 3. If a task or phase passes verification, mark it `[x]` and commit code via Git with Conventional Commits.
+> 3. If a task or phase passes verification, mark it `[x]`, commit code via Git with Conventional Commits, and push directly to `origin main` (`git push origin main`).
+>    - **FOUNDER CLEARANCE**: Full autonomous permission granted to push verified phase milestones directly to GitHub `origin main`.
 > 4. **QUOTA RELAY RULE**: If rate limits or quota warnings are encountered, OR before your context window closes while unchecked `[ ]` tasks remain:
->    - Commit all current progress to git.
+>    - Commit and push all current progress (`git push origin main`).
 >    - Update this `TASK_LEDGER.md`.
 >    - Immediately call `schedule(DurationSeconds=18000, ...)` (5-hour window) to schedule your next autonomous wakeup.
 > 5. Repeat this cycle until all 7 Phases and the Playwright Autonomous Verification pass 100%!
