@@ -34,8 +34,8 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1111.0",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@trigger.dev/sdk": "4.8.3",
     "better-sqlite3": "^13.0.3",
-
     "next": "^14.2.15",
     "pg": "^8.23.0",
     "react": "^18.3.1",
@@ -47,6 +47,7 @@
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
     "@ngrok/ngrok": "^1.7.0",
+    "@trigger.dev/build": "4.8.3",
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^26.2.0",
     "@types/pg": "^8.23.1",
