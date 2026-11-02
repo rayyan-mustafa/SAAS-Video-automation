@@ -35,20 +35,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const [userRes, chanRes] = await Promise.all([
-          fetch('/api/auth/me'),
-          fetch('/api/channels'),
-        ]);
+        const userRes = await fetch('/api/auth/me');
         if (userRes.ok) {
           const data = await userRes.json();
           if (data.authenticated && data.user) {
             setCurrentUser(data.user);
             setCredits(data.credits);
+            const chanRes = await fetch('/api/channels');
+            if (chanRes && chanRes.ok) {
+              const chanData = await chanRes.json();
+              setChannels(chanData.channels || []);
+            }
           }
-        }
-        if (chanRes.ok) {
-          const chanData = await chanRes.json();
-          setChannels(chanData.channels || []);
         }
       } catch {}
     };

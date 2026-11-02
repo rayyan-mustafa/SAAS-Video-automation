@@ -10,7 +10,10 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   try {
     const user = await getCurrentUser(request);
-    const userId = user?.id || DEFAULT_USER_ID;
+    if (!user) {
+      return NextResponse.json({ channels: [] });
+    }
+    const userId = user.id;
 
     const db = getDb();
     let channels = db
