@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { AgentChatPanel } from './AgentChatPanel';
 import { ScriptReviewPanel } from './ScriptReviewPanel';
+import { VideoPreviewPanel } from './VideoPreviewPanel';
 import { CreditEstimateBar } from './CreditEstimateBar';
 import { QuickStartChips } from './QuickStartChips';
 import { AgentMessage, AgentScript, InterviewQuestion, AgentConfig } from '@/lib/agent/types';
@@ -26,6 +27,8 @@ export const AgentStudioView: React.FC<AgentStudioViewProps> = ({
   const [currentQuestion, setCurrentQuestion] = useState<InterviewQuestion | null>(null);
   const [readyForScript, setReadyForScript] = useState<boolean>(false);
   const [currentScript, setCurrentScript] = useState<AgentScript | null>(null);
+  const [activeRightTab, setActiveRightTab] = useState<'script' | 'preview'>('script');
+  const [previewData, setPreviewData] = useState<{ projectId?: string; previewUrl?: string } | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [creditEstimate, setCreditEstimate] = useState<{
     totalCredits: number;
@@ -170,6 +173,37 @@ export const AgentStudioView: React.FC<AgentStudioViewProps> = ({
     }
   };
 
+  // 6. Generate Video Preview
+  const handleGeneratePreview = async () => {
+    if (!sessionId) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/agent/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPreviewData({
+          projectId: data.projectId,
+          previewUrl: data.previewUrl,
+        });
+        setActiveRightTab('preview');
+        // Refresh chat
+        const chatRes = await fetch(`/api/agent/chat?sessionId=${sessionId}`);
+        const chatData = await chatRes.json();
+        if (chatData.history) setMessages(chatData.history);
+      } else {
+        alert(data.error || 'Failed to generate preview');
+      }
+    } catch (err) {
+      console.error('[AgentStudioView] Preview error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className={`space-y-4 ${className}`}>
       {/* Top Banner: Quick chips and Credit Quote */}
@@ -199,15 +233,26 @@ export const AgentStudioView: React.FC<AgentStudioViewProps> = ({
           />
         </div>
 
-        {/* Right Pane: Script & Storyboard Review */}
+        {/* Right Pane: Script or Video Preview */}
         <div className="lg:col-span-7 h-full">
-          <ScriptReviewPanel
-            script={currentScript}
-            isLoading={isLoading}
-            onRefineScene={handleRefineScene}
-            onGeneratePreview={() => alert('Preview Engine connected in Phase 3!')}
-            onGenerateFinal={() => alert('Final video generator connected in Phase 3!')}
-          />
+          {activeRightTab === 'preview' && currentScript ? (
+            <VideoPreviewPanel
+              script={currentScript}
+              previewUrl={previewData?.previewUrl}
+              projectId={previewData?.projectId}
+              onBackToScript={() => setActiveRightTab('script')}
+              onGenerateFinal={() => alert('Final video composition dispatched! Background worker is composing.')}
+              onRefineScene={handleRefineScene}
+            />
+          ) : (
+            <ScriptReviewPanel
+              script={currentScript}
+              isLoading={isLoading}
+              onRefineScene={handleRefineScene}
+              onGeneratePreview={handleGeneratePreview}
+              onGenerateFinal={() => alert('Final video composition dispatched! Background worker is composing.')}
+            />
+          )}
         </div>
       </div>
     </div>
