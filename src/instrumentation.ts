@@ -7,6 +7,17 @@
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
+    const isServerless =
+      process.env.NETLIFY === 'true' ||
+      process.env.VERCEL === '1' ||
+      !!process.env.AWS_LAMBDA_FUNCTION_NAME ||
+      !!process.env.LAMBDA_TASK_ROOT;
+
+    if (isServerless) {
+      console.log('[Tillercast] ⚡ Serverless runtime detected (Netlify/Lambda). Background scheduler daemon skipped.');
+      return;
+    }
+
     // In local development, avoid auto-running the background worker/scheduler loop
     // so npm run dev doesn't automatically generate videos or burn API credits without user interaction.
     if (process.env.NODE_ENV === 'development' && process.env.ENABLE_DEV_SCHEDULER !== 'true') {

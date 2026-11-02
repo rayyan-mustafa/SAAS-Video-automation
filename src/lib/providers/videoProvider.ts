@@ -328,7 +328,7 @@ class DefaultVideoProvider implements VideoProvider {
 
     const clips: GeneratedClip[] = [];
 
-    const isServerless = process.env.VERCEL === '1' || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+    const isServerless = process.env.NETLIFY === 'true' || process.env.VERCEL === '1' || !!process.env.AWS_LAMBDA_FUNCTION_NAME || !!process.env.LAMBDA_TASK_ROOT;
     const clipDurations: number[] = [];
     if (isServerless) {
       clipDurations.push(durationSec);

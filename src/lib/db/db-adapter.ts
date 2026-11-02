@@ -64,7 +64,7 @@ export function getPgPool(): Pool {
  */
 export function getSqliteDb(): BetterSqlite3.Database {
   if (!sqliteInstance) {
-    const isServerless = process.env.VERCEL === '1' || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+    const isServerless = process.env.NETLIFY === 'true' || process.env.VERCEL === '1' || !!process.env.AWS_LAMBDA_FUNCTION_NAME || !!process.env.LAMBDA_TASK_ROOT;
     const dataDir = isServerless ? path.join('/tmp', 'data') : path.join(process.cwd(), 'data');
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true });

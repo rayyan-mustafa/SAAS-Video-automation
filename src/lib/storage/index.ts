@@ -13,6 +13,16 @@ export interface StorageProvider {
   checkHealth(): Promise<{ status: 'CONFIGURED' | 'NOT_CONFIGURED' | 'FAILED'; details?: string }>;
 }
 
+
+function isServerlessRuntime(): boolean {
+  return (
+    process.env.NETLIFY === 'true' ||
+    process.env.VERCEL === '1' ||
+    !!process.env.AWS_LAMBDA_FUNCTION_NAME ||
+    !!process.env.LAMBDA_TASK_ROOT
+  );
+}
+
 class R2StorageProvider implements StorageProvider {
   name = 'r2' as const;
   private s3Client: S3Client;
@@ -32,10 +42,19 @@ class R2StorageProvider implements StorageProvider {
       },
     });
 
-    const isServerless = process.env.VERCEL === '1' || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+    const isServerless = isServerlessRuntime();
     this.localCacheDir = isServerless ? path.join('/tmp', 'storage') : path.join(process.cwd(), 'storage');
-    if (!fs.existsSync(this.localCacheDir)) {
-      fs.mkdirSync(this.localCacheDir, { recursive: true });
+    try {
+      if (!fs.existsSync(this.localCacheDir)) {
+        fs.mkdirSync(this.localCacheDir, { recursive: true });
+      }
+    } catch {
+      this.localCacheDir = path.join('/tmp', 'storage');
+      try {
+        if (!fs.existsSync(this.localCacheDir)) {
+          fs.mkdirSync(this.localCacheDir, { recursive: true });
+        }
+      } catch {}
     }
   }
 
@@ -141,10 +160,19 @@ class LocalStorageProvider implements StorageProvider {
   private baseDir: string;
 
   constructor() {
-    const isServerless = process.env.VERCEL === '1' || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+    const isServerless = isServerlessRuntime();
     this.baseDir = isServerless ? path.join('/tmp', 'storage') : path.join(process.cwd(), 'storage');
-    if (!fs.existsSync(this.baseDir)) {
-      fs.mkdirSync(this.baseDir, { recursive: true });
+    try {
+      if (!fs.existsSync(this.baseDir)) {
+        fs.mkdirSync(this.baseDir, { recursive: true });
+      }
+    } catch {
+      this.baseDir = path.join('/tmp', 'storage');
+      try {
+        if (!fs.existsSync(this.baseDir)) {
+          fs.mkdirSync(this.baseDir, { recursive: true });
+        }
+      } catch {}
     }
   }
 
@@ -226,11 +254,21 @@ function createStorageProvider(): StorageProvider {
 export const storage: StorageProvider = createStorageProvider();
 
 export function getTempDir(sub?: string): string {
-  const isServerless = process.env.VERCEL === '1' || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+  const isServerless = isServerlessRuntime();
   const base = isServerless ? path.join('/tmp', 'temp') : path.join(process.cwd(), 'temp');
   const target = sub ? path.join(base, sub) : base;
-  if (!fs.existsSync(target)) {
-    fs.mkdirSync(target, { recursive: true });
+  try {
+    if (!fs.existsSync(target)) {
+      fs.mkdirSync(target, { recursive: true });
+    }
+  } catch {
+    const fallback = path.join('/tmp', 'temp', sub || '');
+    try {
+      if (!fs.existsSync(fallback)) {
+        fs.mkdirSync(fallback, { recursive: true });
+      }
+    } catch {}
+    return fallback;
   }
   return target;
 }

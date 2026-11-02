@@ -10,7 +10,7 @@ let dbInstance: Database.Database | null = null;
 
 export function getDb(): Database.Database {
   if (!dbInstance) {
-    const isServerless = process.env.VERCEL === '1' || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+    const isServerless = process.env.NETLIFY === 'true' || process.env.VERCEL === '1' || !!process.env.AWS_LAMBDA_FUNCTION_NAME || !!process.env.LAMBDA_TASK_ROOT;
     let dataDir = isServerless ? path.join('/tmp', 'data') : path.join(process.cwd(), 'data');
 
     // Ensure directory exists and is writable, fallback to /tmp/data if permission denied
@@ -168,7 +168,11 @@ export function getDb(): Database.Database {
         CREATE INDEX IF NOT EXISTS idx_jobs_project ON video_jobs(project_id, stage);
       `;
     }
-    dbInstance.exec(schemaSql);
+    try {
+      dbInstance.exec(schemaSql);
+    } catch (schemaErr: any) {
+      console.warn('[DB] Schema init warning:', schemaErr.message);
+    }
 
     // Apply incremental migrations for existing DB instances safely
     const safeAddColumn = (table: string, column: string, typeDef: string) => {

@@ -155,7 +155,7 @@ export default function HomePage() {
   const [connectHandleInput, setConnectHandleInput] = useState('');
   const [connectEmailInput, setConnectEmailInput] = useState('');
   const [connectSubmitting, setConnectSubmitting] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Video Creator State
   const [quickTopic, setQuickTopic] = useState('');

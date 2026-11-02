@@ -75,7 +75,7 @@ export class FfmpegCompositor {
 
     let composed = false;
 
-    const isServerless = process.env.VERCEL === '1' || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+    const isServerless = process.env.NETLIFY === 'true' || process.env.VERCEL === '1' || !!process.env.AWS_LAMBDA_FUNCTION_NAME || !!process.env.LAMBDA_TASK_ROOT;
 
     // Instant copy on serverless environments to guarantee sub-second execution
     if (isServerless) {
