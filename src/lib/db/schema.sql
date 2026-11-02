@@ -222,3 +222,56 @@ CREATE TABLE IF NOT EXISTS user_voices (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_user_voices_user ON user_voices(user_id);
+
+-- ============================================================
+-- AGENTIC CONVERSATION TABLES (Tillercast v3.0)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS agent_sessions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  title TEXT,
+  status TEXT NOT NULL DEFAULT 'active', -- active, interview, script_ready, preview_ready, rendering, completed, abandoned
+  config_json TEXT, -- extracted params (aspect_ratio, duration, vibe, audience, voice, visual_tier)
+  script_json TEXT, -- scene-by-scene script JSON array
+  preview_project_id TEXT, -- FK to content_projects for preview render
+  final_project_id TEXT, -- FK to content_projects for final render
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_agent_sessions_user ON agent_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_agent_sessions_status ON agent_sessions(user_id, status);
+
+CREATE TABLE IF NOT EXISTS agent_messages (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  role TEXT NOT NULL, -- 'user' | 'agent' | 'system'
+  content TEXT NOT NULL,
+  metadata_json TEXT, -- action cards, option chips, script updates, credit estimates
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (session_id) REFERENCES agent_sessions(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_agent_messages_session ON agent_messages(session_id, created_at);
+
+-- ============================================================
+-- EXTRA CREDIT PURCHASE TABLES (Variable Credit Engine v3.0)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS credit_purchases (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  pack_id TEXT NOT NULL, -- 'boost_200', 'power_500', 'mega_1500', 'ultra_5000'
+  credits_amount INTEGER NOT NULL,
+  credits_remaining INTEGER NOT NULL, -- decremented as consumed (FIFO)
+  amount_paid_cents INTEGER NOT NULL,
+  provider TEXT NOT NULL DEFAULT 'polar', -- 'polar' | 'stripe'
+  provider_payment_id TEXT,
+  status TEXT NOT NULL DEFAULT 'active', -- 'active' | 'expired' | 'exhausted'
+  purchased_at TEXT NOT NULL DEFAULT (datetime('now')),
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_credit_purchases_user ON credit_purchases(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_credit_purchases_expiry ON credit_purchases(expires_at);

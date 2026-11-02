@@ -293,3 +293,53 @@ CREATE INDEX IF NOT EXISTS idx_pg_assets_project ON generated_assets(project_id)
 CREATE INDEX IF NOT EXISTS idx_pg_jobs_project ON video_jobs(project_id, stage);
 CREATE INDEX IF NOT EXISTS idx_pg_user_voices_user ON user_voices(user_id);
 CREATE INDEX IF NOT EXISTS idx_pg_credit_tx_user ON credit_transactions(user_id, created_at DESC);
+
+-- ============================================================
+-- AGENTIC CONVERSATION TABLES (Tillercast v3.0)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS agent_sessions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  title TEXT,
+  status TEXT NOT NULL DEFAULT 'active',
+  config_json TEXT,
+  script_json TEXT,
+  preview_project_id TEXT,
+  final_project_id TEXT,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_pg_agent_sessions_user ON agent_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_pg_agent_sessions_status ON agent_sessions(user_id, status);
+
+CREATE TABLE IF NOT EXISTS agent_messages (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL REFERENCES agent_sessions(id) ON DELETE CASCADE,
+  role TEXT NOT NULL,
+  content TEXT NOT NULL,
+  metadata_json TEXT,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_pg_agent_messages_session ON agent_messages(session_id, created_at);
+
+-- ============================================================
+-- EXTRA CREDIT PURCHASE TABLES (Variable Credit Engine v3.0)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS credit_purchases (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  pack_id TEXT NOT NULL,
+  credits_amount INTEGER NOT NULL,
+  credits_remaining INTEGER NOT NULL,
+  amount_paid_cents INTEGER NOT NULL,
+  provider TEXT NOT NULL DEFAULT 'polar',
+  provider_payment_id TEXT,
+  status TEXT NOT NULL DEFAULT 'active',
+  purchased_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_pg_credit_purchases_user ON credit_purchases(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_pg_credit_purchases_expiry ON credit_purchases(expires_at);
