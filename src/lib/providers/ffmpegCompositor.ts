@@ -160,7 +160,7 @@ export class FfmpegCompositor {
       }
 
       try {
-        await execFileAsync(ffmpegPath, args, { timeout: encodingTimeout });
+        await execFileAsync(ffmpegPath, args, { timeout: encodingTimeout, maxBuffer: 50 * 1024 * 1024 });
         composed = true;
       } catch (err: any) {
         console.warn('[FfmpegCompositor] Primary composition failed, trying fallback merge...', err.message);
@@ -206,7 +206,7 @@ export class FfmpegCompositor {
               '-t', String(totalDurationSec || 60),
               finalFilePath,
             ];
-        await execFileAsync(ffmpegPath, fallbackArgs, { timeout: encodingTimeout });
+        await execFileAsync(ffmpegPath, fallbackArgs, { timeout: encodingTimeout, maxBuffer: 50 * 1024 * 1024 });
         composed = true;
       } catch (fbErr: any) {
         console.warn('[FfmpegCompositor] Concat merge fallback error:', fbErr.message);

@@ -720,7 +720,7 @@ a {
 .studio-workspace,
 .studio-grid {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr) 380px;
   gap: 16px;
   min-height: calc(100vh - var(--topbar-height) - 100px);
   width: 100%;

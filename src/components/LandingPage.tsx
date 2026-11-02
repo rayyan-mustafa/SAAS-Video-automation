@@ -2,678 +2,419 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { InteractiveWorkflowCanvas } from './InteractiveWorkflowCanvas';
+import { useRouter } from 'next/navigation';
 
 export function LandingPage() {
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const router = useRouter();
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
+  const [heroPrompt, setHeroPrompt] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activePlatform, setActivePlatform] = useState<'youtube' | 'tiktok' | 'instagram' | 'facebook'>('youtube');
 
+  const handleHeroGenerate = (e: React.FormEvent) => {
+    e.preventDefault();
+    const prompt = heroPrompt.trim() || 'A 45-second high-retention documentary about the Mariana Trench in 9:16';
+    router.push(`/content/new?prompt=${encodeURIComponent(prompt)}`);
+  };
+
+  const handleQuickChipClick = (starter: string) => {
+    setHeroPrompt(starter);
+  };
+
   const faqs = [
     {
-      q: 'How does Multi-Platform Auto-Publishing work across YouTube, TikTok & Instagram?',
-      a: 'Tillercast connects directly to official developer APIs: YouTube Data API v3, Meta Graph API v20.0 (Instagram Reels & Facebook Pages), and TikTok Direct Post API v2. Once connected via OAuth, you plan your content calendar once, and Tillercast automatically renders, formats, adds required AI disclosure tags, and publishes your 1080p videos to all 4 platforms simultaneously.'
+      q: 'How does the 300 Free Trial Credits & 1 Free Social Publish work?',
+      a: 'When you create an account, you instantly receive 300 credits valid for 15 days. You can test our full conversational agent, generate scripts, and preview videos. In addition, you get 1 free, 100% watermark-free direct social publish to your YouTube Shorts or TikTok account so you can see live views on your own channel before paying a dime.',
     },
     {
-      q: 'What is the Competitor Outlier Intelligence feature?',
-      a: 'Tillercast scans top channels in your niche over the last 7 to 30 days and calculates their baseline view velocity. When a video hits >1.5× to 3× the channel’s average views, Tillercast flags it as a Viral Outlier. With 1 click, you can add a variation of that winning topic to your calendar, synthesized with a fresh narrative framework to prevent duplicate content flags.'
+      q: 'How does Multi-Platform Auto-Publishing work across 4 platforms?',
+      a: 'Tillercast connects directly to official APIs: YouTube Data API v3, TikTok Direct Post API v2, Instagram Reels Graph API, and Facebook Pages API. Once you approve a video, Tillercast publishes directly with platform-compliant safe-zones (no UI button cutoff), AI synthetic media disclosure tags, and viral hashtags.',
     },
     {
-      q: 'What is the Zero-Waste Credit Policy & Auto-Refund guarantee?',
-      a: 'If any video render fails due to a network glitch, AI provider timeout, or FFmpeg encoding error, our automated transaction ledger detects the failure and instantly refunds 100% of your credits back to your account. You only pay for completed, 1080p ready-to-publish videos.'
+      q: 'What is the Zero-Waste Instant Auto-Refund guarantee?',
+      a: 'Unlike other video platforms that charge credits for failed or glitched videos, Tillercast has a fail-closed refund engine. If a render ever encounters a network timeout or provider glitch, 100% of consumed credits are refunded to your wallet instantly and automatically.',
     },
     {
-      q: 'Will my channel get monetized by YouTube with AI videos in 2026?',
-      a: 'Yes! YouTube’s 2026 Inauthentic Content policy specifically targets repetitive, low-effort slideshows and monotone robotic voices. Tillercast is engineered with 5 rotating psychological narrative frameworks (Provocative Questions, Case Studies, Counter-Intuitive Truths, Tactical Systems, Mystery Boxes) plus licensed commercial voices (Azure Speech & ElevenLabs) and true generative AI video clips to ensure 100% AdSense compliance.'
+      q: 'What voices are included across the plans?',
+      a: 'All plans (including Free Trial and Starter) include Google Cloud Neural2 multi-accent studio narrators in American (US), British (UK), Australian (AU), and Indian (IN) English. The Creator and Pro plans unlock hyper-realistic ElevenLabs narrators (Adam, Brian, Chris, Rachel) and custom voice cloning.',
     },
     {
-      q: 'Can I clone and use my own personal voice?',
-      a: 'Yes. In addition to our 40+ studio neural voices, you can connect your ElevenLabs account and provide your custom Voice ID. Tillercast will narrate all your videos in your exact vocal cadence and tone.'
+      q: 'Can I purchase extra credit packs if I run out?',
+      a: 'Yes! Active subscribers can top up with 4 flexible extra credit packs starting at $9.99 for 200 credits up to 5,000 credits for $129.99 with up to 48% volume savings. Extra credits stack on top of your plan and remain valid for up to 365 days.',
     },
-    {
-      q: 'Can I download the raw MP4 video files?',
-      a: 'Absolutely. Every single video generated by Tillercast is available for immediate 1-click download as a crisp, full 1080p MP4 file with AAC stereo audio and optional burned-in word-level subtitles.'
-    }
-  ];
-
-  const platforms = [
-    {
-      id: 'youtube',
-      name: 'YouTube Shorts & Longform',
-      icon: '▶',
-      color: '#ef4444',
-      badge: 'Official Data API v3',
-      description: 'Resumable 1080p upload, custom high-CTR thumbnails, automated AI synthetic media disclosure, and 30-day release queue.',
-      stats: 'Supports 60s Shorts & 10-min Longform'
-    },
-    {
-      id: 'tiktok',
-      name: 'TikTok Direct Post',
-      icon: '♪',
-      color: '#00f2fe',
-      badge: 'Direct Post API v2',
-      description: 'One-click direct publish to creator profiles with commercial sound clearance and viral hashtag placement.',
-      stats: 'Highest algorithmic velocity'
-    },
-    {
-      id: 'instagram',
-      name: 'Instagram Reels',
-      icon: '📸',
-      color: '#e1306c',
-      badge: 'Meta Graph API v20',
-      description: 'Containerized media upload directly to Instagram Creator & Professional feeds with automated caption formatting.',
-      stats: 'Fast-Start MP4 with AAC Audio'
-    },
-    {
-      id: 'facebook',
-      name: 'Facebook Pages & Watch',
-      icon: 'f',
-      color: '#1877f2',
-      badge: 'Meta Pages API',
-      description: 'Syndicate your vertical videos to high-engagement Facebook Pages and reach the lucrative 35+ viewer demographic.',
-      stats: 'Maximum viral share rate'
-    }
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#09090b', color: '#f4f4f5', fontFamily: 'var(--font-sans, system-ui, -apple-system, sans-serif)', overflowX: 'hidden', width: '100%', maxWidth: '100vw' }}>
-      <style>{`
-        .nav-pill-link {
-          color: #a1a1aa;
-          text-decoration: none;
-          font-size: 13.5px;
-          font-weight: 500;
-          padding: 6px 14px;
-          border-radius: 20px;
-          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .nav-pill-link:hover {
-          color: #ffffff;
-          background: rgba(255, 255, 255, 0.08);
-        }
-        .autora-btn-gleam {
-          position: relative;
-          overflow: hidden;
-          transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .autora-btn-gleam:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 0 30px rgba(0, 240, 255, 0.4) !important;
-        }
-        .autora-card-glow {
-          transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
-        }
-        .autora-card-glow:hover {
-          border-color: rgba(0, 240, 255, 0.4) !important;
-          transform: translateY(-2px);
-          box-shadow: 0 12px 32px rgba(0, 240, 255, 0.08);
-        }
-        @media (max-width: 768px) {
-          .desktop-nav { display: none !important; }
-          .desktop-auth { display: none !important; }
-          .mobile-only-controls { display: flex !important; }
-          .landing-header-inner { padding: 0 16px !important; }
-        }
-        @media (min-width: 769px) {
-          .mobile-only-controls { display: none !important; }
-          .mobile-menu-btn { display: none !important; }
-          .mobile-nav-drawer { display: none !important; }
-        }
-        @media (max-width: 640px) {
-          .hero-cta-btn { width: 100% !important; justify-content: center !important; }
-          .hero-canvas-container { display: none !important; }
-        }
-      `}</style>
-
+    <div className="min-h-screen bg-[radial-gradient(100%_100%_at_50%_0%,#F5F3FF_0%,#FAF7FF_40%,#FFFFFF_100%)] text-slate-900 font-sans antialiased overflow-x-hidden selection:bg-purple-100 selection:text-purple-900">
       {/* ─────────────────────────────────────────────────────────────
-          1. TOP ANNOUNCEMENT TICKER (v2.1 Master Launch)
+          1. TOP NOTIFICATION BANNER
       ───────────────────────────────────────────────────────────── */}
-      <div style={{
-        background: 'linear-gradient(90deg, #09090b 0%, #1e1b4b 50%, #09090b 100%)',
-        borderBottom: '1px solid rgba(112, 0, 255, 0.3)',
-        padding: '8px 16px',
-        textAlign: 'center',
-        fontSize: '12.5px',
-        fontWeight: 600,
-        color: '#c084fc',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '10px'
-      }}>
-        <span style={{ background: '#7000ff', color: '#fff', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 800 }}>
-          NEW v2.1
-        </span>
+      <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-pink-600 text-white text-xs font-semibold py-2 px-4 text-center shadow-inner flex items-center justify-center gap-2">
+        <span>⚡</span>
         <span>
-          Multi-Platform Auto-Publishing (YouTube + TikTok + Reels) & Competitor Intelligence Live!
+          <strong>AUTONOMOUS AI VIDEO AGENT v3.0:</strong> Try the conversational studio with 300 free trial credits + 1 watermark-free social publish!
         </span>
-        <Link href="/tools/youtube-hook-generator" style={{ color: '#00f0ff', textDecoration: 'underline', marginLeft: '6px' }}>
-          Try Free Hook Generator ➔
+        <Link
+          href="/content/new"
+          className="underline font-bold hover:text-purple-200 ml-1"
+        >
+          Try Live Demo →
         </Link>
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
-          2. MINIMAL HEADER / NAVBAR
+          2. LIGHT-MODERN NAVBAR
       ───────────────────────────────────────────────────────────── */}
-      <header style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
-        background: 'rgba(9, 9, 11, 0.85)',
-        backdropFilter: 'blur(16px) saturate(180%)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
-      }}>
-        <div className="landing-header-inner" style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 24px', height: '68px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-          <Link href="/" className="brand-logo" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', color: '#fff', flexShrink: 0 }}>
-            <div style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '9px',
-              background: 'linear-gradient(135deg, #00f0ff 0%, #7000ff 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 0 16px rgba(0, 240, 255, 0.4)'
-            }}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="10 8 16 12 10 16 10 8" fill="#000"></polygon>
-              </svg>
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-purple-100/80 px-4 sm:px-8 py-3.5 transition-all">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white shadow-md shadow-purple-200 font-black text-sm">
+              ⚡
             </div>
-            <span style={{ fontSize: '20px', fontWeight: 900, letterSpacing: '-0.03em' }}>
-              Tiller<span style={{ color: '#00f0ff' }}>cast</span>
+            <span className="text-xl font-extrabold tracking-tight text-slate-900">
+              Tiller<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500">cast</span>
+            </span>
+            <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200">
+              v3.0 Agentic
             </span>
           </Link>
 
           {/* Desktop Nav Links */}
-          <nav className="desktop-nav" style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            background: 'rgba(255, 255, 255, 0.03)',
-            border: '1px solid rgba(255, 255, 255, 0.07)',
-            padding: '4px 6px',
-            borderRadius: '24px',
-            backdropFilter: 'blur(8px)'
-          }}>
-            <a href="#multi-platform" className="nav-pill-link">Multi-Platform</a>
-            <a href="#competitor-intelligence" className="nav-pill-link">Competitor Radar</a>
-            <a href="#how-it-works" className="nav-pill-link">How It Works</a>
-            <Link href="/tools" className="nav-pill-link" style={{ color: '#00f0ff', fontWeight: 600 }}>
-              Free Tools <span style={{ fontSize: '10px', background: 'rgba(0,240,255,0.15)', padding: '1px 5px', borderRadius: '8px' }}>Free</span>
+          <nav className="hidden md:flex items-center gap-1 bg-purple-50/50 p-1 rounded-full border border-purple-100/80 text-xs font-semibold text-slate-600">
+            <a href="#features" className="px-4 py-1.5 rounded-full hover:text-purple-700 hover:bg-white transition-all">
+              Features
+            </a>
+            <a href="#showcase" className="px-4 py-1.5 rounded-full hover:text-purple-700 hover:bg-white transition-all">
+              Showcase
+            </a>
+            <a href="#comparison" className="px-4 py-1.5 rounded-full hover:text-purple-700 hover:bg-white transition-all">
+              Compare
+            </a>
+            <a href="#pricing" className="px-4 py-1.5 rounded-full hover:text-purple-700 hover:bg-white transition-all">
+              Pricing
+            </a>
+            <Link href="/blog" className="px-4 py-1.5 rounded-full hover:text-purple-700 hover:bg-white transition-all text-purple-600 font-bold">
+              Blog
             </Link>
-            <a href="#pricing" className="nav-pill-link">Pricing</a>
-            <Link href="/blog" className="nav-pill-link" style={{ color: '#c084fc', fontWeight: 600 }}>Blog</Link>
           </nav>
 
-          {/* Desktop Auth Links */}
-          <div className="desktop-auth" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <Link href="/login" className="nav-pill-link" style={{ padding: '7px 14px' }}>
+          {/* Auth Controls */}
+          <div className="flex items-center gap-3">
+            <Link
+              href="/login"
+              className="hidden sm:inline-block text-xs font-bold text-slate-600 hover:text-purple-700 px-3 py-1.5"
+            >
               Log In
             </Link>
-            <Link href="/signup" className="autora-btn-gleam" style={{
-              background: '#00f0ff',
-              color: '#000000',
-              padding: '9px 20px',
-              borderRadius: '20px',
-              fontSize: '13.5px',
-              fontWeight: 800,
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              boxShadow: '0 0 24px rgba(0, 240, 255, 0.35)'
-            }}>
-              Launch Free Channel ➔
-            </Link>
-          </div>
-
-          {/* Mobile Right Controls */}
-          <div className="mobile-only-controls" style={{ display: 'none', alignItems: 'center', gap: '8px' }}>
-            <Link href="/signup" className="autora-btn-gleam" style={{
-              background: '#00f0ff',
-              color: '#000',
-              padding: '8px 16px',
-              borderRadius: '20px',
-              fontSize: '13px',
-              fontWeight: 800,
-              textDecoration: 'none',
-            }}>
-              Start ➔
-            </Link>
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="mobile-menu-btn"
-              style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '10px',
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                color: '#fff',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer'
-              }}
-              aria-label="Toggle Menu"
+            <Link
+              href="/content/new"
+              className="px-4 py-2 rounded-2xl text-xs font-bold bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-md shadow-purple-200 hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer flex items-center gap-1.5"
             >
-              ☰
-            </button>
+              <span>⚡</span> 300 Free Credits
+            </Link>
           </div>
         </div>
-
-        {/* Mobile Navigation Drawer */}
-        {mobileMenuOpen && (
-          <div className="mobile-nav-drawer" style={{
-            background: '#111215',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '16px 20px 24px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px'
-          }}>
-            <a href="#multi-platform" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e4e4e7', textDecoration: 'none', padding: '8px 0' }}>Multi-Platform</a>
-            <a href="#competitor-intelligence" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e4e4e7', textDecoration: 'none', padding: '8px 0' }}>Competitor Radar</a>
-            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e4e4e7', textDecoration: 'none', padding: '8px 0' }}>How It Works</a>
-            <Link href="/tools" onClick={() => setMobileMenuOpen(false)} style={{ color: '#00f0ff', textDecoration: 'none', padding: '8px 0' }}>Free Creator Tools</Link>
-            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ color: '#e4e4e7', textDecoration: 'none', padding: '8px 0' }}>Pricing</a>
-            <Link href="/blog" onClick={() => setMobileMenuOpen(false)} style={{ color: '#c084fc', textDecoration: 'none', padding: '8px 0' }}>Blog</Link>
-            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-              <Link href="/login" onClick={() => setMobileMenuOpen(false)} style={{ flex: 1, textAlign: 'center', padding: '10px', background: 'rgba(255,255,255,0.08)', borderRadius: '8px', color: '#fff', textDecoration: 'none' }}>Log In</Link>
-              <Link href="/signup" onClick={() => setMobileMenuOpen(false)} style={{ flex: 1, textAlign: 'center', padding: '10px', background: '#00f0ff', color: '#000', fontWeight: 800, borderRadius: '8px', textDecoration: 'none' }}>Sign Up</Link>
-            </div>
-          </div>
-        )}
       </header>
 
       {/* ─────────────────────────────────────────────────────────────
-          3. HERO SECTION (High-Conversion CRO Architecture)
+          3. HERO SECTION WITH INTERACTIVE PROMPT BOX (CRO BLUEPRINT)
       ───────────────────────────────────────────────────────────── */}
-      <section style={{ padding: 'clamp(48px, 8vw, 90px) clamp(16px, 4vw, 24px) clamp(40px, 6vw, 70px)', maxWidth: '1200px', margin: '0 auto', textAlign: 'center', position: 'relative' }}>
-        {/* Glow Aura */}
-        <div style={{
-          position: 'absolute',
-          top: '10%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 'min(90vw, 750px)',
-          height: '350px',
-          background: 'radial-gradient(circle, rgba(0, 240, 255, 0.12) 0%, rgba(112, 0, 255, 0.08) 50%, transparent 80%)',
-          filter: 'blur(70px)',
-          pointerEvents: 'none',
-          zIndex: 0
-        }} />
+      <section className="relative pt-12 pb-16 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto text-center">
+        {/* Soft Violet Radial Backdrop Glow */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-purple-300/20 blur-[90px] rounded-full pointer-events-none -z-10" />
 
-        {/* Live System Badge */}
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '6px 16px',
-          background: 'rgba(0, 240, 255, 0.08)',
-          border: '1px solid rgba(0, 240, 255, 0.25)',
-          borderRadius: '24px',
-          marginBottom: '24px',
-          position: 'relative',
-          zIndex: 1
-        }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00f0ff', boxShadow: '0 0 10px #00f0ff' }} />
-          <span style={{ fontSize: '12.5px', fontWeight: 700, letterSpacing: '0.04em', color: '#00f0ff' }}>
-            AUTONOMOUS VIDEO ENGINE FOR YOUTUBE, TIKTOK & REELS
-          </span>
+        {/* Hero Pill Badge */}
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-50 border border-purple-200 text-purple-700 text-xs font-bold mb-6 shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-purple-600 animate-pulse" />
+          <span>AUTONOMOUS AI VIDEO CREATION & SOCIAL PUBLISHING</span>
         </div>
 
-        {/* Razor Sharp Headline */}
-        <h1 style={{
-          fontSize: 'clamp(36px, 6vw, 68px)',
-          fontWeight: 900,
-          letterSpacing: '-0.035em',
-          lineHeight: 1.08,
-          margin: '0 auto 24px',
-          maxWidth: '1000px',
-          color: '#ffffff',
-          position: 'relative',
-          zIndex: 1
-        }}>
-          Turn 1 Topic into a 30-Day Automated Channel Across{' '}
-          <span style={{
-            background: 'linear-gradient(135deg, #00f0ff 0%, #a855f7 50%, #ec4899 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}>
-            YouTube, TikTok & Instagram.
+        {/* Razor-Sharp Value Headline */}
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-950 max-w-4xl mx-auto leading-[1.08]">
+          Turn Simple Prompts Into{' '}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500">
+            Viral Videos.
           </span>
+          <br className="hidden sm:inline" /> Published Across 4 Platforms While You Sleep.
         </h1>
 
-        <p style={{
-          fontSize: 'clamp(16px, 2vw, 20px)',
-          color: '#a1a1aa',
-          maxWidth: '820px',
-          margin: '0 auto 36px',
-          lineHeight: 1.6,
-          position: 'relative',
-          zIndex: 1
-        }}>
-          The first multi-platform automation SaaS with <strong>Competitor Outlier Radar</strong>, true <strong>generative AI video clips</strong>, and <strong>Zero-Waste credit auto-refunds</strong>. From raw idea to 1080p scheduled release in 45 seconds.
+        <p className="mt-5 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          The conversational AI agent that researches viral hooks, drafts the script, narrates in human studio voices, and automatically publishes to <strong>YouTube, TikTok, Instagram & Facebook</strong> with zero manual editing.
         </p>
 
-        {/* Primary Call to Action */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap', marginBottom: '32px', position: 'relative', zIndex: 1 }}>
-          <Link href="/signup" className="autora-btn-gleam hero-cta-btn" style={{
-            background: '#00f0ff',
-            color: '#000',
-            padding: '16px 36px',
-            borderRadius: '10px',
-            fontSize: '16px',
-            fontWeight: 800,
-            textDecoration: 'none',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            boxShadow: '0 4px 24px rgba(0, 240, 255, 0.4)'
-          }}>
-            Automate My Channel Free ➔
-          </Link>
-          <Link href="/tools/youtube-hook-generator" className="hero-cta-btn" style={{
-            background: 'rgba(255, 255, 255, 0.06)',
-            color: '#e4e4e7',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            padding: '16px 28px',
-            borderRadius: '10px',
-            fontSize: '15px',
-            fontWeight: 600,
-            textDecoration: 'none',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px'
-          }}>
-            ⚡ Free Viral Hook Generator
-          </Link>
-        </div>
+        {/* ─────────────────────────────────────────────────────────────
+            INTERACTIVE HERO PROMPT BOX (Converts Visitors in 60s)
+        ───────────────────────────────────────────────────────────── */}
+        <div className="mt-8 max-w-3xl mx-auto">
+          <form
+            onSubmit={handleHeroGenerate}
+            className="p-3 bg-white rounded-3xl border border-purple-100 shadow-xl shadow-purple-900/5 focus-within:border-purple-300 focus-within:ring-4 focus-within:ring-purple-100/50 transition-all text-left"
+          >
+            <div className="p-3">
+              <label htmlFor="hero-prompt-input" className="text-[11px] font-bold uppercase tracking-wider text-purple-700 flex items-center gap-1 mb-1">
+                <span>✨</span> Try it live: Describe any video topic...
+              </label>
+              <textarea
+                id="hero-prompt-input"
+                value={heroPrompt}
+                onChange={(e) => setHeroPrompt(e.target.value)}
+                placeholder='e.g. "A 45-second high-retention documentary about the Mariana Trench in 9:16 with suspenseful pacing and dramatic visuals..."'
+                rows={2}
+                className="w-full text-sm text-slate-900 placeholder:text-slate-400 bg-transparent border-0 outline-none resize-none font-medium leading-relaxed"
+              />
+            </div>
 
-        {/* Trust Badges */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px', flexWrap: 'wrap', color: '#71717a', fontSize: '13px', position: 'relative', zIndex: 1, marginBottom: '48px' }}>
-          <span>✓ Official YouTube Data API v3</span>
-          <span>✓ Meta Graph API (Reels & FB)</span>
-          <span>✓ TikTok Direct Post API v2</span>
-          <span>✓ Zero-Waste Credit Auto-Refund</span>
-        </div>
-
-        {/* Interactive Autonomous Workflow Canvas */}
-        <div className="hero-canvas-container" style={{ maxWidth: '1240px', width: '100%', margin: '0 auto', textAlign: 'left', overflow: 'hidden', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}>
-          <InteractiveWorkflowCanvas
-            mode="simulation"
-            containerHeight="clamp(360px, 60vh, 560px)"
-            title="Tillercast Multi-Platform Video Engine"
-            subtitle="Live pipeline: Competitor Radar ➔ AI Script ➔ Fal Wan 2.1 Video ➔ Azure Voice ➔ 4-Platform Auto-Publish"
-          />
-        </div>
-      </section>
-
-      {/* ─────────────────────────────────────────────────────────────
-          4. 4-IN-1 MULTI-PLATFORM SYNDICATION SHOWCASE
-      ───────────────────────────────────────────────────────────── */}
-      <section id="multi-platform" style={{ padding: 'clamp(50px, 8vw, 90px) clamp(16px, 4vw, 24px)', maxWidth: '1140px', margin: '0 auto', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <span style={{ fontSize: '12px', fontWeight: 800, color: '#00f0ff', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            Multi-Platform Distribution Engine
-          </span>
-          <h2 style={{ fontSize: 'clamp(28px, 5vw, 42px)', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', margin: '10px 0 16px' }}>
-            Publish Once. Dominate 4 Major Algorithms.
-          </h2>
-          <p style={{ color: '#a1a1aa', fontSize: '16px', maxWidth: '640px', margin: '0 auto' }}>
-            Why create 4 different videos when one viral angle can be automatically syndicated across YouTube, TikTok, Instagram, and Facebook?
-          </p>
-        </div>
-
-        {/* Interactive Platform Switcher */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '32px' }}>
-          {platforms.map((p) => (
-            <div
-              key={p.id}
-              onClick={() => setActivePlatform(p.id as any)}
-              className="autora-card-glow"
-              style={{
-                background: activePlatform === p.id ? 'rgba(255, 255, 255, 0.06)' : '#121215',
-                border: `1px solid ${activePlatform === p.id ? p.color : 'rgba(255, 255, 255, 0.08)'}`,
-                borderRadius: '14px',
-                padding: '24px',
-                cursor: 'pointer',
-                position: 'relative'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px', color: p.color }}>{p.icon}</span>
-                <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '10px', background: `${p.color}20`, color: p.color }}>
-                  {p.badge}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-purple-50 px-3 pb-1">
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span className="px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-semibold text-[11px]">
+                  9:16 Vertical
+                </span>
+                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold text-[11px]">
+                  Google Neural2 Voice
+                </span>
+                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold text-[11px]">
+                  Stock + Flash Motion
                 </span>
               </div>
-              <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#fff', marginBottom: '6px' }}>
-                {p.name}
-              </h3>
-              <p style={{ color: '#a1a1aa', fontSize: '13px', lineHeight: 1.5, margin: '0 0 12px' }}>
-                {p.description}
-              </p>
-              <span style={{ fontSize: '11.5px', color: '#71717a', fontWeight: 600 }}>
-                ⚡ {p.stats}
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
 
-      {/* ─────────────────────────────────────────────────────────────
-          5. COMPETITOR OUTLIER RADAR & CHANNEL IQ
-      ───────────────────────────────────────────────────────────── */}
-      <section id="competitor-intelligence" style={{ padding: 'clamp(50px, 8vw, 90px) clamp(16px, 4vw, 24px)', maxWidth: '1140px', margin: '0 auto', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '40px', alignItems: 'center' }}>
-          <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '20px', color: '#f59e0b', fontSize: '12px', fontWeight: 700, marginBottom: '16px' }}>
-              🎯 Unfair Advantage
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-6 py-3 rounded-2xl text-xs font-extrabold bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-md shadow-purple-200 hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>⚡</span> Generate Free Video Preview
+              </button>
             </div>
-            <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', lineHeight: 1.15, marginBottom: '20px' }}>
-              Never Guess Video Ideas Again: Competitor Outlier Spy
-            </h2>
-            <p style={{ color: '#a1a1aa', fontSize: '15.5px', lineHeight: 1.7, marginBottom: '24px' }}>
-              Stop posting into the void. Tillercast continuously monitors top competitor channels in your niche and isolates videos with <strong>over 1.5× to 3× average view velocity</strong>.
-            </p>
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '14.5px', color: '#e4e4e7' }}>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                <strong>Statistical Outlier Detection:</strong> Automatically flags viral breakout topics.
-              </li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                <strong>1-Click Calendar Queue:</strong> Clone the winning topic angle into your queue instantly.
-              </li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                <strong>Own Channel IQ:</strong> Syncs your YouTube Analytics CTR and retention to bias future content toward winning hooks.
-              </li>
-            </ul>
-            <Link href="/signup" style={{
-              background: '#ffffff',
-              color: '#09090b',
-              padding: '12px 26px',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: 800,
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}>
-              Try Competitor Radar Now ➔
-            </Link>
+          </form>
+
+          {/* Quick Start Chips */}
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <span className="text-xs font-semibold text-slate-400">Quick start:</span>
+            {[
+              { label: '📝 Script to Video', text: 'Turn this script into a 45-second high-retention video: ' },
+              { label: '🔥 Mystery Documentary', text: 'Create a 45-second dramatic documentary on black holes' },
+              { label: '🧠 Tech Explainer', text: 'Create a 60-second crisp educational explainer on how AI works' },
+              { label: '🕵️ Viral Outlier Spy', text: 'Adapt a viral competitor hook about ' },
+            ].map((chip) => (
+              <button
+                key={chip.label}
+                type="button"
+                onClick={() => handleQuickChipClick(chip.text)}
+                className="px-3 py-1 rounded-full text-xs font-medium bg-white hover:bg-purple-50 text-slate-700 hover:text-purple-700 border border-purple-100 shadow-sm transition-all cursor-pointer"
+              >
+                {chip.label}
+              </button>
+            ))}
           </div>
 
-          {/* Interactive UI Mockup Card */}
-          <div style={{ background: '#121215', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '16px', padding: '24px', boxShadow: '0 20px 48px rgba(0,0,0,0.5)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '16px', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '20px' }}>🛰️</span>
-                <span style={{ fontWeight: 700, color: '#fff', fontSize: '15px' }}>Competitor Radar (Live Feed)</span>
-              </div>
-              <span style={{ fontSize: '11px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', padding: '3px 8px', borderRadius: '12px', fontWeight: 700 }}>
-                Active Tracking: 5 Channels
-              </span>
+          {/* Trust Guarantees */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500 font-medium">
+            <div className="flex items-center gap-1.5">
+              <span className="text-amber-500 font-bold">★ 4.9/5</span> Rating
             </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ background: '#09090b', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '10px', padding: '14px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: 800 }}>⚡ 3.2× VIRAL OUTLIER DETECTED</span>
-                  <span style={{ fontSize: '11px', color: '#71717a' }}>380K views vs 118K avg</span>
-                </div>
-                <div style={{ fontSize: '13.5px', fontWeight: 600, color: '#fff', marginBottom: '10px' }}>
-                  "The Dark Psychology Trick Ancient Cults Used to Control Minds"
-                </div>
-                <button
-                  type="button"
-                  style={{
-                    background: 'rgba(0, 240, 255, 0.15)',
-                    border: '1px solid #00f0ff',
-                    color: '#00f0ff',
-                    padding: '6px 14px',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                >
-                  + 1-Click Add Variation to Calendar
-                </button>
-              </div>
-
-              <div style={{ background: '#09090b', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '10px', padding: '14px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800 }}>⚡ 2.4× VIRAL OUTLIER DETECTED</span>
-                  <span style={{ fontSize: '11px', color: '#71717a' }}>520K views vs 215K avg</span>
-                </div>
-                <div style={{ fontSize: '13.5px', fontWeight: 600, color: '#fff', marginBottom: '10px' }}>
-                  "Why 99% of People Fail with Autonomous AI Agents"
-                </div>
-                <button
-                  type="button"
-                  style={{
-                    background: 'rgba(0, 240, 255, 0.15)',
-                    border: '1px solid #00f0ff',
-                    color: '#00f0ff',
-                    padding: '6px 14px',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                >
-                  + 1-Click Add Variation to Calendar
-                </button>
-              </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-purple-600 font-bold">💳</span> No Credit Card Required
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-emerald-600 font-bold">🛡️</span> 100% Zero-Waste Auto-Refund
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-pink-600 font-bold">🚀</span> 1 Free Social Publish
             </div>
           </div>
         </div>
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          6. HOW IT WORKS (4 SIMPLE STEPS)
+          4. DUAL-PANE LIVE SHOWCASE: AGENT CHAT vs KINETIC VIDEO
       ───────────────────────────────────────────────────────────── */}
-      <section id="how-it-works" style={{ padding: 'clamp(50px, 8vw, 90px) clamp(16px, 4vw, 24px)', maxWidth: '1100px', margin: '0 auto', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
-        <div style={{ textAlign: 'center', marginBottom: '56px' }}>
-          <span style={{ fontSize: '12px', fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            Zero Editing Experience Needed
+      <section id="showcase" className="py-16 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+        <div className="text-center mb-10">
+          <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200">
+            Interactive Experience
           </span>
-          <h2 style={{ fontSize: 'clamp(26px, 5vw, 38px)', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', margin: '10px 0 16px' }}>
-            From Idea to 30 Days of Videos in 4 Steps
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2">
+            The Conversational Agentic Workflow
           </h2>
-          <p style={{ color: '#a1a1aa', fontSize: '16px', maxWidth: '540px', margin: '0 auto' }}>
-            No camera gear, no recording mic, no Premiere Pro. Let Tillercast do the heavy lifting.
+          <p className="text-sm text-slate-500 mt-1 max-w-lg mx-auto">
+            Say goodbye to clunky, complicated timeline editors. Just chat, review your script, and let our autonomous pipeline publish.
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
-          <div className="autora-card-glow" style={{ background: '#121215', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '28px 24px' }}>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: '#10b981', marginBottom: '12px', fontFamily: 'monospace' }}>01</div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>Pick or Spy Topics</h3>
-            <p style={{ color: '#a1a1aa', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
-              Enter any topic prompt or let Competitor Radar pull viral outlier angles automatically.
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-white rounded-3xl border border-purple-100 shadow-xl p-6 sm:p-8">
+          {/* Left: Chat Simulation */}
+          <div className="lg:col-span-7 space-y-3">
+            <div className="flex items-center gap-2 pb-3 border-b border-purple-50">
+              <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center text-xs font-bold">
+                🤖
+              </div>
+              <div>
+                <div className="text-xs font-bold text-slate-900">Tillercast Agent</div>
+                <div className="text-[10px] text-emerald-600 font-semibold">● Active Session</div>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="bg-purple-50/70 p-3 rounded-2xl rounded-bl-none text-slate-800 border border-purple-100">
+                What topic or story angle are you exploring today?
+              </div>
+              <div className="bg-slate-900 text-white p-3 rounded-2xl rounded-br-none ml-auto max-w-[85%]">
+                A 45-second high-retention documentary about the Mariana Trench in vertical 9:16
+              </div>
+              <div className="bg-purple-50/70 p-3 rounded-2xl rounded-bl-none text-slate-800 border border-purple-100 space-y-2">
+                <div>Got it! What tone and voiceover would you like?</div>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  <span className="px-2.5 py-1 rounded-lg bg-white border border-purple-200 text-purple-800 font-semibold text-[11px]">
+                    🔥 Dramatic & Mysterious
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-white border border-purple-200 text-purple-800 font-semibold text-[11px]">
+                    🇬🇧 British Studio (Ryan Neural)
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-white border border-purple-200 text-purple-800 font-semibold text-[11px]">
+                    ⚡ Decide for me
+                  </span>
+                </div>
+              </div>
+              <div className="bg-gradient-to-r from-purple-600 to-pink-500 text-white p-3 rounded-2xl text-[11px] font-semibold shadow-md">
+                🎉 I've drafted a 7-scene script for "The Abyssal Void" (~42s)! Review scene by scene on the right or type to refine any detail.
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Embedded Vertical Preview Theater */}
+          <div className="lg:col-span-5 flex flex-col items-center justify-center bg-slate-950 p-6 rounded-2xl text-white shadow-2xl relative overflow-hidden aspect-[9/16] max-h-[500px]">
+            <div className="w-full h-full flex flex-col justify-between">
+              <div className="flex items-center justify-between text-[10px] font-bold">
+                <span className="px-2 py-0.5 rounded bg-white/20">Scene 1 · The Hook</span>
+                <span className="text-purple-300">Fast push-in</span>
+              </div>
+
+              <div className="text-center space-y-2">
+                <div className="text-4xl">🌊</div>
+                <div className="text-xs font-bold text-purple-200">[STOCK B-ROLL · 1 CREDIT]</div>
+                <p className="text-[11px] text-slate-300 italic px-4">
+                  "At 36,000 feet below the surface, the water pressure is enough to crush a nuclear submarine like a soda can..."
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="inline-block bg-black/80 px-3 py-1 rounded-lg border border-white/20 text-yellow-300 font-black text-xs">
+                  CRUSH A NUCLEAR SUBMARINE
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          5. BENTO GRID: OUR 3 CORE COMPETITIVE ADVANTAGES
+      ───────────────────────────────────────────────────────────── */}
+      <section id="features" className="py-16 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+        <div className="text-center mb-12">
+          <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200">
+            Why Creators Choose Us
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2">
+            Engineered For True Autopilot Channels
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Card 1: 4-Platform Direct Auto-Publish */}
+          <div className="p-6 rounded-3xl bg-white border border-purple-100 shadow-sm hover:shadow-md transition-all space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center text-xl shadow-md">
+              🚀
+            </div>
+            <h3 className="text-lg font-bold text-slate-900">
+              4-Platform Autopilot
+            </h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Don’t waste 45 minutes downloading MP4s and re-typing tags on 4 apps. Tillercast publishes directly to <strong>YouTube, TikTok, Instagram Reels & Facebook Reels</strong> with safe-zones and automated AI disclosure tags.
             </p>
           </div>
 
-          <div className="autora-card-glow" style={{ background: '#121215', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '28px 24px' }}>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: '#00f0ff', marginBottom: '12px', fontFamily: 'monospace' }}>02</div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>Select Studio Voice</h3>
-            <p style={{ color: '#a1a1aa', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
-              Pick from 40+ licensed neural narrators (Rachel, Adam, Antoni) or use your cloned ElevenLabs voice.
+          {/* Card 2: Viral Outlier Spy */}
+          <div className="p-6 rounded-3xl bg-white border border-purple-100 shadow-sm hover:shadow-md transition-all space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center text-xl shadow-md">
+              🕵️
+            </div>
+            <h3 className="text-lg font-bold text-slate-900">
+              Competitor Outlier Spy
+            </h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Never stare at a blank prompt box. Our radar tracks top competitor channels in your niche, identifies breakout videos gaining 5x–10x their normal views, and adapts their winning hook formula with 1 click.
             </p>
           </div>
 
-          <div className="autora-card-glow" style={{ background: '#121215', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '28px 24px' }}>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: '#c084fc', marginBottom: '12px', fontFamily: 'monospace' }}>03</div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>AI Video Engine Renders</h3>
-            <p style={{ color: '#a1a1aa', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
-              Wan 2.1 / Hailuo generative video clips, dynamic captions, and bold high-CTR thumbnail are composited in 1080p.
-            </p>
-          </div>
-
-          <div className="autora-card-glow" style={{ background: '#121215', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '28px 24px' }}>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: '#f59e0b', marginBottom: '12px', fontFamily: 'monospace' }}>04</div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>Auto-Publish Everywhere</h3>
-            <p style={{ color: '#a1a1aa', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
-              Tillercast automatically schedules and uploads directly to YouTube, TikTok, Instagram Reels, and Facebook.
+          {/* Card 3: Zero-Waste Trust Guarantee */}
+          <div className="p-6 rounded-3xl bg-white border border-purple-100 shadow-sm hover:shadow-md transition-all space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center text-xl shadow-md">
+              🛡️
+            </div>
+            <h3 className="text-lg font-bold text-slate-900">
+              Zero-Waste Auto-Refund
+            </h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Never lose expensive credits to broken renders. If any AI generation or FFmpeg composition fails, 100% of consumed credits are instantly returned to your wallet. You only pay for pristine, working videos.
             </p>
           </div>
         </div>
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          7. COMPARISON TABLE: AGENCY VS MANUAL VS TILLERCAST
+          6. HEAD-TO-HEAD COMPARISON TABLE: TILLERCAST VS OTHERS
       ───────────────────────────────────────────────────────────── */}
-      <section style={{ padding: 'clamp(40px, 8vw, 80px) clamp(16px, 4vw, 24px)', maxWidth: '980px', margin: '0 auto', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <h2 style={{ fontSize: 'clamp(24px, 5vw, 34px)', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', margin: '0 0 12px' }}>
-            The Modern Creator Math
+      <section id="comparison" className="py-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+        <div className="text-center mb-10">
+          <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200">
+            Feature Comparison
+          </span>
+          <h2 className="text-3xl font-extrabold text-slate-900 mt-2">
+            Tillercast vs. Other Video SaaS Tools
           </h2>
-          <p style={{ color: '#a1a1aa', fontSize: '15px' }}>
-            Why top media operators replace expensive editing retainers with Tillercast.
-          </p>
         </div>
 
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
+        <div className="overflow-x-auto bg-white rounded-3xl border border-purple-100 shadow-sm">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.15)' }}>
-                <th style={{ padding: '16px', color: '#71717a', fontSize: '13px', textTransform: 'uppercase' }}>Feature</th>
-                <th style={{ padding: '16px', color: '#f43f5e', fontSize: '13px', textTransform: 'uppercase' }}>Video Agency</th>
-                <th style={{ padding: '16px', color: '#a1a1aa', fontSize: '13px', textTransform: 'uppercase' }}>Manual Tools</th>
-                <th style={{ padding: '16px', color: '#00f0ff', fontSize: '13px', textTransform: 'uppercase' }}>Tillercast Engine</th>
+              <tr className="border-b border-purple-100 bg-purple-50/50">
+                <th className="p-4 font-bold text-slate-700">Capability / Feature</th>
+                <th className="p-4 font-extrabold text-purple-700 bg-purple-100/40">⚡ Tillercast v3.0</th>
+                <th className="p-4 font-bold text-slate-500">Other Platforms</th>
               </tr>
             </thead>
-            <tbody>
-              <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                <td style={{ padding: '16px', color: '#fff', fontWeight: 600 }}>Monthly Cost</td>
-                <td style={{ padding: '16px', color: '#f43f5e' }}>$2,500 – $5,000/mo</td>
-                <td style={{ padding: '16px', color: '#a1a1aa' }}>$150+ in app subscriptions</td>
-                <td style={{ padding: '16px', color: '#00f0ff', fontWeight: 700 }}>$49 / month</td>
+            <tbody className="divide-y divide-purple-50">
+              <tr>
+                <td className="p-4 font-bold text-slate-800">Video Creation Interface</td>
+                <td className="p-4 font-bold text-purple-700 bg-purple-50/20">✅ Conversational Agent Chat</td>
+                <td className="p-4 text-slate-500">❌ Cluttered Timeline / Rigid Wizard</td>
               </tr>
-              <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                <td style={{ padding: '16px', color: '#fff', fontWeight: 600 }}>Time per Video</td>
-                <td style={{ padding: '16px', color: '#f43f5e' }}>3 to 5 business days</td>
-                <td style={{ padding: '16px', color: '#a1a1aa' }}>4 to 6 hours editing</td>
-                <td style={{ padding: '16px', color: '#00f0ff', fontWeight: 700 }}>45 seconds</td>
+              <tr>
+                <td className="p-4 font-bold text-slate-800">Social Publishing</td>
+                <td className="p-4 font-bold text-purple-700 bg-purple-50/20">✅ Direct Autopilot to 4 Platforms</td>
+                <td className="p-4 text-slate-500">❌ Manual MP4 downloads only</td>
               </tr>
-              <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                <td style={{ padding: '16px', color: '#fff', fontWeight: 600 }}>Multi-Platform Upload</td>
-                <td style={{ padding: '16px', color: '#f43f5e' }}>Manual email handoff</td>
-                <td style={{ padding: '16px', color: '#a1a1aa' }}>Manual mobile upload</td>
-                <td style={{ padding: '16px', color: '#00f0ff', fontWeight: 700 }}>Auto-Scheduled (4 Apps)</td>
+              <tr>
+                <td className="p-4 font-bold text-slate-800">Competitor Outlier Radar</td>
+                <td className="p-4 font-bold text-purple-700 bg-purple-50/20">✅ 1-Click Viral Topic Extractor</td>
+                <td className="p-4 text-slate-500">❌ Not available</td>
               </tr>
-              <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                <td style={{ padding: '16px', color: '#fff', fontWeight: 600 }}>Failed Render Policy</td>
-                <td style={{ padding: '16px', color: '#f43f5e' }}>Non-refundable</td>
-                <td style={{ padding: '16px', color: '#a1a1aa' }}>Credits lost on crash</td>
-                <td style={{ padding: '16px', color: '#00f0ff', fontWeight: 700 }}>100% Instant Auto-Refund</td>
+              <tr>
+                <td className="p-4 font-bold text-slate-800">Broken Render Refunds</td>
+                <td className="p-4 font-bold text-purple-700 bg-purple-50/20">✅ 100% Instant Auto-Refund</td>
+                <td className="p-4 text-slate-500">❌ Credits lost / Disputed</td>
+              </tr>
+              <tr>
+                <td className="p-4 font-bold text-slate-800">Free Trial Offering</td>
+                <td className="p-4 font-bold text-purple-700 bg-purple-50/20">✅ 300 Credits + 1 Watermark-Free Post</td>
+                <td className="p-4 text-slate-500">⚠️ Heavy watermarks / restricted</td>
+              </tr>
+              <tr>
+                <td className="p-4 font-bold text-slate-800">Voice Catalog Quality</td>
+                <td className="p-4 font-bold text-purple-700 bg-purple-50/20">✅ Google Neural2 Multi-Accent + ElevenLabs Pro</td>
+                <td className="p-4 text-slate-500">⚠️ Paywalled behind $60+ plans</td>
               </tr>
             </tbody>
           </table>
@@ -681,271 +422,175 @@ export function LandingPage() {
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          8. COMPLETE 2-TIER TRANSPARENT PRICING ($49 & $99)
+          7. TRANSPARENT 3-TIER PRICING WITH ANNUAL TOGGLE
       ───────────────────────────────────────────────────────────── */}
-      <section id="pricing" style={{ padding: 'clamp(50px, 8vw, 90px) clamp(16px, 4vw, 24px)', maxWidth: '1100px', margin: '0 auto', borderTop: '1px solid rgba(255, 255, 255, 0.08)', textAlign: 'center' }}>
-        <span style={{ fontSize: '12px', fontWeight: 700, color: '#00f0ff', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          Zero-Waste SaaS Pricing
-        </span>
-        <h2 style={{ fontSize: 'clamp(28px, 5vw, 42px)', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', margin: '10px 0 16px' }}>
-          Predictable Pricing for Autonomous Channels
-        </h2>
-        <p style={{ color: '#a1a1aa', fontSize: '16px', maxWidth: '580px', margin: '0 auto 36px' }}>
-          Every plan includes our <strong>Zero-Waste Guarantee</strong>: any failed render is automatically refunded back to your credit ledger.
-        </p>
+      <section id="pricing" className="py-16 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+        <div className="text-center mb-10">
+          <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200">
+            Simple Pricing
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2">
+            Predictable Costs. Guaranteed Margins.
+          </h2>
+          <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">
+            All plans include 300 free trial credits for 15 days. Cancel anytime.
+          </p>
 
-        {/* Billing Cycle Toggle */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', background: '#121215', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '4px', borderRadius: '30px', marginBottom: '48px' }}>
-          <button
-            type="button"
-            onClick={() => setBillingCycle('monthly')}
-            style={{
-              background: billingCycle === 'monthly' ? '#00f0ff' : 'transparent',
-              color: billingCycle === 'monthly' ? '#000' : '#a1a1aa',
-              border: 'none',
-              padding: '8px 20px',
-              borderRadius: '24px',
-              fontWeight: 700,
-              fontSize: '13px',
-              cursor: 'pointer'
-            }}
-          >
-            Monthly
-          </button>
-          <button
-            type="button"
-            onClick={() => setBillingCycle('annual')}
-            style={{
-              background: billingCycle === 'annual' ? '#00f0ff' : 'transparent',
-              color: billingCycle === 'annual' ? '#000' : '#a1a1aa',
-              border: 'none',
-              padding: '8px 20px',
-              borderRadius: '24px',
-              fontWeight: 700,
-              fontSize: '13px',
-              cursor: 'pointer'
-            }}
-          >
-            Annual (Save 20%) 🎁
-          </button>
+          {/* Billing Toggle */}
+          <div className="mt-6 inline-flex items-center gap-2 p-1 bg-white rounded-full border border-purple-100 shadow-sm text-xs font-bold">
+            <button
+              type="button"
+              onClick={() => setBillingCycle('monthly')}
+              className={`px-4 py-1.5 rounded-full transition-all cursor-pointer ${
+                billingCycle === 'monthly' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingCycle('annual')}
+              className={`px-4 py-1.5 rounded-full transition-all cursor-pointer flex items-center gap-1.5 ${
+                billingCycle === 'annual' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600'
+              }`}
+            >
+              <span>Annual</span>
+              <span className="px-1.5 py-0.2 rounded text-[10px] font-black bg-emerald-100 text-emerald-800">
+                SAVE 20%
+              </span>
+            </button>
+          </div>
         </div>
 
-        {/* Pricing Cards Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', maxWidth: '1150px', margin: '0 auto' }}>
-          {/* Starter Plan ($29/mo, $24/mo annual) */}
-          <div className="autora-card-glow" style={{ background: '#121215', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px', padding: '32px 24px', textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: '18px', fontWeight: 800, color: '#fff', marginBottom: '8px' }}>Starter Plan</div>
-            <p style={{ color: '#a1a1aa', fontSize: '13px', margin: '0 0 20px', minHeight: '38px' }}>
-              For aspiring creators launching their first automated faceless channel.
-            </p>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '24px' }}>
-              <span style={{ fontSize: '42px', fontWeight: 900, color: '#fff' }}>
-                ${billingCycle === 'annual' ? '24' : '29'}
-              </span>
-              <span style={{ color: '#71717a', fontSize: '14px' }}>/ month</span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Starter Plan */}
+          <div className="p-6 rounded-3xl bg-white border border-purple-100 shadow-sm space-y-5 text-left">
+            <div>
+              <div className="text-sm font-bold text-slate-800">Starter Plan</div>
+              <div className="text-3xl font-black text-slate-950 mt-2">
+                ${billingCycle === 'annual' ? 24 : 29}
+                <span className="text-xs font-medium text-slate-400">/month</span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Perfect for solo creators posting every other day.
+              </p>
             </div>
 
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: '11px', fontSize: '13px', color: '#d4d4d8', flex: 1 }}>
-              <li>✓ <strong>15 Full AI Videos / mo</strong> — Post every other day (~30 Shorts)</li>
-              <li>✓ <strong>1080p Full HD MP4</strong> — Zero watermark & full commercial rights</li>
-              <li>✓ <strong>Deepgram Aura-2 Voices</strong> — Natural, human-like narration</li>
-              <li>✓ <strong>Stock Footage & FLUX.1</strong> — High-definition visual B-roll</li>
-              <li>✓ <strong>Kinetic Subtitles</strong> — Platform safe-zones (zero UI cutoff)</li>
-              <li>✓ <strong>1 Connected Channel</strong> — YouTube Shorts or TikTok autopilot</li>
-              <li>✓ <strong>Zero-Waste Guarantee</strong> — 100% instant auto-refund on failures</li>
-            </ul>
+            <div className="space-y-2 text-xs text-slate-600 border-t border-purple-50 pt-4">
+              <div className="font-bold text-purple-700">⚡ 500 Credits / month (~62 Stock Shorts)</div>
+              <div>✓ 1080p Full HD MP4 Exports</div>
+              <div>✓ Google Neural2 Multi-Accent Voices</div>
+              <div>✓ Stock B-Roll & Flash Motion visuals</div>
+              <div>✓ 1 Connected Social Channel Autopilot</div>
+              <div>✓ Zero-Waste Instant Auto-Refund</div>
+            </div>
 
-            <Link href="/signup?plan=starter" style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              color: '#fff',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              padding: '13px',
-              borderRadius: '8px',
-              textAlign: 'center',
-              fontWeight: 700,
-              fontSize: '14px',
-              textDecoration: 'none'
-            }}>
-              Start Starter Plan ➔
+            <Link
+              href="/signup?plan=starter"
+              className="block w-full py-2.5 rounded-xl text-center text-xs font-bold bg-white text-purple-700 border border-purple-200 hover:bg-purple-50 shadow-sm transition-all"
+            >
+              Get Starter Plan
             </Link>
           </div>
 
-          {/* Creator Plan ($49/mo, $39/mo annual) — HERO */}
-          <div className="autora-card-glow" style={{ background: '#121215', border: '2px solid #00f0ff', borderRadius: '16px', padding: '32px 24px', textAlign: 'left', display: 'flex', flexDirection: 'column', position: 'relative', boxShadow: '0 0 35px rgba(0, 240, 255, 0.2)' }}>
-            <div style={{ position: 'absolute', top: '-12px', right: '20px', background: 'linear-gradient(135deg, #00f0ff 0%, #7000ff 100%)', color: '#fff', fontSize: '10.5px', fontWeight: 800, padding: '3px 10px', borderRadius: '10px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              MOST POPULAR
-            </div>
-
-            <div style={{ fontSize: '18px', fontWeight: 800, color: '#fff', marginBottom: '8px' }}>Creator Studio</div>
-            <p style={{ color: '#a1a1aa', fontSize: '13px', margin: '0 0 20px', minHeight: '38px' }}>
-              For creators posting daily to qualify for TikTok & YouTube monetization.
-            </p>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '24px' }}>
-              <span style={{ fontSize: '42px', fontWeight: 900, color: '#fff' }}>
-                ${billingCycle === 'annual' ? '39' : '49'}
-              </span>
-              <span style={{ color: '#71717a', fontSize: '14px' }}>/ month</span>
-            </div>
-
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: '11px', fontSize: '13px', color: '#d4d4d8', flex: 1 }}>
-              <li>✓ <strong>30 Full AI Videos / mo</strong> — Post 1 video every day (~60 Shorts)</li>
-              <li>✓ <strong>100% ElevenLabs Voices</strong> — Studio narration (Adam, Brian, Rachel)</li>
-              <li>✓ <strong>Cinema AI Video Access</strong> — Veo 3.1 & Seedance generative clips</li>
-              <li>✓ <strong>Stock + 8K FLUX.1 Stills</strong> — Dynamic Ken Burns motion & zooms</li>
-              <li>✓ <strong>Glassmorphic Stat Cards</strong> — Viral sound effects & background music</li>
-              <li>✓ <strong>2 Connected Channels</strong> — Dual autopilot (YouTube Shorts + TikTok)</li>
-              <li>✓ <strong>Scene Editor-Lite</strong> — 1-click re-voicing & undo history</li>
-              <li>✓ <strong>Zero-Waste Guarantee</strong> — 100% instant auto-refund on failures</li>
-            </ul>
-
-            <Link href="/signup?plan=creator" style={{
-              background: '#00f0ff',
-              color: '#000',
-              padding: '13px',
-              borderRadius: '8px',
-              textAlign: 'center',
-              fontWeight: 800,
-              fontSize: '14px',
-              textDecoration: 'none',
-              boxShadow: '0 4px 15px rgba(0, 240, 255, 0.3)'
-            }}>
-              Start Creator Plan ➔
-            </Link>
-          </div>
-
-          {/* Pro Automation Plan ($99/mo, $79/mo annual) */}
-          <div className="autora-card-glow" style={{ background: '#121215', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '16px', padding: '32px 24px', textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: '18px', fontWeight: 800, color: '#fff', marginBottom: '8px' }}>Pro Automation</div>
-            <p style={{ color: '#a1a1aa', fontSize: '13px', margin: '0 0 20px', minHeight: '38px' }}>
-              For serious media operators and agencies scaling multiple channels.
-            </p>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '24px' }}>
-              <span style={{ fontSize: '42px', fontWeight: 900, color: '#fff' }}>
-                ${billingCycle === 'annual' ? '79' : '99'}
-              </span>
-              <span style={{ color: '#71717a', fontSize: '14px' }}>/ month</span>
-            </div>
-
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: '11px', fontSize: '13px', color: '#d4d4d8', flex: 1 }}>
-              <li>✓ <strong>60 Full AI Videos / mo</strong> — Post 2 videos every day (~120 Shorts)</li>
-              <li>✓ <strong>All 4 Social Platforms</strong> — YouTube, TikTok, Instagram & FB Reels</li>
-              <li>✓ <strong>Full Generative AI Video</strong> — Google Veo 3.1, Seedance & Kling Pro</li>
-              <li>✓ <strong>Voice Cloning Studio</strong> — Clone your voice + 50+ ElevenLabs</li>
-              <li>✓ <strong>Competitor Outlier Spy</strong> — Steal winning hooks & viral trends</li>
-              <li>✓ <strong>VIP Turbo Render Queue</strong> — &lt;90s Cloudflare GPU priority</li>
-              <li>✓ <strong>4K Ultra HD Exports</strong> — High-bitrate studio quality MP4s</li>
-              <li>✓ <strong>VIP 24/7 Priority Support</strong> — Dedicated onboarding & channel growth</li>
-            </ul>
-
-            <Link href="/signup?plan=pro" style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              color: '#fff',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              padding: '13px',
-              borderRadius: '8px',
-              textAlign: 'center',
-              fontWeight: 700,
-              fontSize: '14px',
-              textDecoration: 'none'
-            }}>
-              Launch Pro Studio ➔
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ─────────────────────────────────────────────────────────────
-          9. FREE TOOLS CALLOUT (LEAD MAGNET BANNER)
-      ───────────────────────────────────────────────────────────── */}
-      <section style={{ padding: '0 clamp(16px, 4vw, 24px) 80px', maxWidth: '1100px', margin: '0 auto' }}>
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.08) 0%, rgba(112, 0, 255, 0.08) 100%)',
-          border: '1px solid rgba(0, 240, 255, 0.25)',
-          borderRadius: '16px',
-          padding: '40px 32px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '24px'
-        }}>
-          <div>
-            <span style={{ fontSize: '11px', fontWeight: 800, color: '#00f0ff', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Free Creator Hub
+          {/* Creator Plan (Featured) */}
+          <div className="p-6 rounded-3xl bg-white border-2 border-purple-500 shadow-xl space-y-5 text-left relative ring-4 ring-purple-100/50">
+            <span className="absolute -top-3 right-6 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-md">
+              MOST POPULAR · 1 DAILY VIDEO
             </span>
-            <h3 style={{ fontSize: '24px', fontWeight: 800, color: '#fff', margin: '6px 0 8px' }}>
-              Want to Test Your Video Hook Before Rendering?
-            </h3>
-            <p style={{ color: '#a1a1aa', fontSize: '14.5px', margin: 0, maxWidth: '580px' }}>
-              Use our 100% Free Viral Hook Generator to get 3 psychological narrative hooks for any topic in 2 seconds.
-            </p>
+
+            <div>
+              <div className="text-sm font-bold text-purple-700">Creator Plan</div>
+              <div className="text-3xl font-black text-slate-950 mt-2">
+                ${billingCycle === 'annual' ? 39 : 49}
+                <span className="text-xs font-medium text-slate-400">/month</span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Post 1 high-retention video every day across YouTube & TikTok.
+              </p>
+            </div>
+
+            <div className="space-y-2 text-xs text-slate-600 border-t border-purple-50 pt-4">
+              <div className="font-bold text-purple-700">⚡ 1,200 Credits / month (~150 Stock Shorts)</div>
+              <div>✓ 100% ElevenLabs Hyper-Realistic Narrators</div>
+              <div>✓ Google Veo 3.1 Lite AI Video Clips 👑</div>
+              <div>✓ 2 Connected Social Channels (YT + TikTok)</div>
+              <div>✓ Competitor Outlier Spy & Winner-Bias</div>
+              <div>✓ Conversational Scene Refinement Studio</div>
+              <div>✓ Zero-Waste Instant Auto-Refund</div>
+            </div>
+
+            <Link
+              href="/signup?plan=creator"
+              className="block w-full py-3 rounded-xl text-center text-xs font-extrabold bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-md shadow-purple-200 hover:shadow-lg transition-all"
+            >
+              Get Creator Plan ($49/mo)
+            </Link>
           </div>
 
-          <Link href="/tools/youtube-hook-generator" style={{
-            background: '#ffffff',
-            color: '#09090b',
-            padding: '12px 24px',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: 800,
-            textDecoration: 'none',
-            whiteSpace: 'nowrap'
-          }}>
-            Open Free Hook Generator ➔
-          </Link>
+          {/* Pro Plan */}
+          <div className="p-6 rounded-3xl bg-white border border-purple-100 shadow-sm space-y-5 text-left">
+            <div>
+              <div className="text-sm font-bold text-slate-800">Pro Automation</div>
+              <div className="text-3xl font-black text-slate-950 mt-2">
+                ${billingCycle === 'annual' ? 79 : 99}
+                <span className="text-xs font-medium text-slate-400">/month</span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Full 4-platform syndication with personal voice cloning.
+              </p>
+            </div>
+
+            <div className="space-y-2 text-xs text-slate-600 border-t border-purple-50 pt-4">
+              <div className="font-bold text-purple-700">⚡ 3,000 Credits / month (~375 Stock Shorts)</div>
+              <div>✓ All 4 Social Platforms Autopilot (YT, TikTok, IG, FB)</div>
+              <div>✓ Google Veo 3.1 Fast & Kling Pro Video</div>
+              <div>✓ Custom Voice Cloning Studio</div>
+              <div>✓ 4K Master Exports & VIP Turbo Queue</div>
+              <div>✓ 5 Connected Social Channels</div>
+              <div>✓ Zero-Waste Instant Auto-Refund</div>
+            </div>
+
+            <Link
+              href="/signup?plan=pro"
+              className="block w-full py-2.5 rounded-xl text-center text-xs font-bold bg-white text-purple-700 border border-purple-200 hover:bg-purple-50 shadow-sm transition-all"
+            >
+              Get Pro Plan ($99/mo)
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          10. FAQ SECTION
+          8. FREQUENTLY ASKED QUESTIONS
       ───────────────────────────────────────────────────────────── */}
-      <section style={{ padding: 'clamp(40px, 8vw, 80px) clamp(16px, 4vw, 24px)', maxWidth: '900px', margin: '0 auto', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <h2 style={{ fontSize: 'clamp(24px, 5vw, 36px)', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', margin: '0 0 12px' }}>
+      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto text-left">
+        <div className="text-center mb-10">
+          <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200">
+            FAQ
+          </span>
+          <h2 className="text-3xl font-extrabold text-slate-900 mt-2">
             Frequently Asked Questions
           </h2>
-          <p style={{ color: '#a1a1aa', fontSize: '15px' }}>
-            Everything you need to know about Tillercast multi-platform video automation.
-          </p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {faqs.map((f, i) => (
+        <div className="space-y-3">
+          {faqs.map((faq, idx) => (
             <div
-              key={i}
-              style={{
-                background: '#121215',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '12px',
-                overflow: 'hidden'
-              }}
+              key={faq.q}
+              className="p-5 rounded-2xl bg-white border border-purple-100 shadow-sm cursor-pointer"
+              onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
             >
-              <button
-                type="button"
-                onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                style={{
-                  width: '100%',
-                  padding: '20px 24px',
-                  background: 'none',
-                  border: 'none',
-                  color: '#fff',
-                  fontSize: '16px',
-                  fontWeight: 700,
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: '16px'
-                }}
-              >
-                <span>{f.q}</span>
-                <span style={{ color: '#00f0ff', fontSize: '20px' }}>{openFaq === i ? '−' : '+'}</span>
-              </button>
-              {openFaq === i && (
-                <div style={{ padding: '0 24px 20px', color: '#a1a1aa', fontSize: '14.5px', lineHeight: 1.6, borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '16px' }}>
-                  {f.a}
-                </div>
+              <div className="flex items-center justify-between font-bold text-xs sm:text-sm text-slate-900">
+                <span>{faq.q}</span>
+                <span className="text-purple-600 text-sm font-bold">
+                  {openFaq === idx ? '−' : '+'}
+                </span>
+              </div>
+              {openFaq === idx && (
+                <p className="mt-3 text-xs text-slate-600 leading-relaxed border-t border-purple-50 pt-3">
+                  {faq.a}
+                </p>
               )}
             </div>
           ))}
@@ -953,51 +598,22 @@ export function LandingPage() {
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          11. FINAL HIGH-CONVERTING CTA BANNER
+          9. STICKY BOTTOM CONVERSION BANNER
       ───────────────────────────────────────────────────────────── */}
-      <section style={{ padding: '80px 24px', textAlign: 'center', background: 'radial-gradient(circle at center, rgba(0, 240, 255, 0.1) 0%, transparent 70%)', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
-        <h2 style={{ fontSize: 'clamp(32px, 5vw, 48px)', fontWeight: 900, color: '#fff', letterSpacing: '-0.03em', margin: '0 0 16px' }}>
-          Ready to Put Your Content on Complete Autopilot?
-        </h2>
-        <p style={{ color: '#a1a1aa', fontSize: '17px', maxWidth: '600px', margin: '0 auto 32px' }}>
-          Join top creators who schedule an entire month of multi-platform videos in under 15 minutes.
-        </p>
-        <Link href="/signup" style={{
-          background: '#00f0ff',
-          color: '#000',
-          padding: '16px 36px',
-          borderRadius: '10px',
-          fontSize: '16px',
-          fontWeight: 800,
-          textDecoration: 'none',
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          boxShadow: '0 0 32px rgba(0, 240, 255, 0.4)'
-        }}>
-          Create Your First Video Free ➔
+      <div className="sticky bottom-0 z-30 p-3 bg-white/90 backdrop-blur-md border-t border-purple-100 shadow-lg text-center flex flex-wrap items-center justify-center gap-3">
+        <span className="text-xs font-bold text-slate-800">
+          ✨ Ready to launch your automated video channel?
+        </span>
+        <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+          300 free trial credits included • 1 free watermark-free direct social post
+        </span>
+        <Link
+          href="/content/new"
+          className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 text-white font-extrabold text-xs shadow-md hover:shadow-lg transition-all cursor-pointer"
+        >
+          Create First Video in 60s ➔
         </Link>
-      </section>
-
-      {/* ─────────────────────────────────────────────────────────────
-          12. FOOTER
-      ───────────────────────────────────────────────────────────── */}
-      <footer style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', padding: '40px 24px', background: '#09090b', color: '#71717a', fontSize: '13px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontWeight: 800, color: '#fff' }}>Tillercast.live</span>
-            <span>© 2026. All rights reserved.</span>
-          </div>
-
-          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-            <Link href="/tools" style={{ color: '#a1a1aa', textDecoration: 'none' }}>Free Tools</Link>
-            <Link href="/tools/youtube-hook-generator" style={{ color: '#a1a1aa', textDecoration: 'none' }}>Hook Generator</Link>
-            <Link href="/blog" style={{ color: '#a1a1aa', textDecoration: 'none' }}>SEO Blog</Link>
-            <Link href="/login" style={{ color: '#a1a1aa', textDecoration: 'none' }}>Login</Link>
-            <Link href="/signup" style={{ color: '#a1a1aa', textDecoration: 'none' }}>Sign Up</Link>
-          </div>
-        </div>
-      </footer>
+      </div>
     </div>
   );
 }

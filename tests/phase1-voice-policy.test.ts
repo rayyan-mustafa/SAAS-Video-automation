@@ -17,7 +17,7 @@ async function runVoicePolicyTests() {
   assert.ok(paidVoices.length >= 4, 'Must have at least 4 Pro voices (100% ElevenLabs)');
 
   for (const v of freeVoices) {
-    assert.strictEqual(v.provider, 'cloudflare-aura', `Free voice ${v.id} must use cloudflare-aura`);
+    assert.ok(['cloudflare-aura', 'google-neural2'].includes(v.provider), `Free voice ${v.id} must use cloudflare-aura or google-neural2`);
     assert.ok(v.previewAudioUrl, `Free voice ${v.id} must have a preview audio URL`);
   }
 

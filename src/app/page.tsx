@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LandingPage } from '@/components/LandingPage';
 import { useToast } from '@/components/Toast';
+import CreateVideoWizard from '@/components/CreateVideoWizard';
+import { QuickStartChips } from '@/components/agent/QuickStartChips';
 
 // ─────────────────────────────────────────────────────────────
 // 1. DATA DEFINITIONS & STATIC SUGGESTIONS (Clearly Labeled)
@@ -699,11 +701,86 @@ export default function HomePage() {
     <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '28px', padding: '4px 0 48px' }}>
 
       {/* ─────────────────────────────────────────────────────────────
+          HERO PROMPT HUB (PICTORY LIGHT-MODERN AESTHETIC)
+      ───────────────────────────────────────────────────────────── */}
+      <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl shadow-purple-900/5 border border-purple-100 flex flex-col gap-6">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 mb-3">
+            <span>⚡</span>
+            <span>Autonomous Video Agent v3.0</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            What video will you create today, {currentUser?.name?.split(' ')[0] || 'Rayyan'}?
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Describe any video topic or select a prompt below. The agent will handle scriptwriting, multi-accent voiceover, visuals, and direct publishing across 4 platforms.
+          </p>
+        </div>
+
+        {/* Interactive Chat Prompt Box */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const p = quickTopic.trim() || 'A 45-second high-retention documentary about the Mariana Trench in 9:16';
+            router.push(`/content/new?prompt=${encodeURIComponent(p)}`);
+          }}
+          className="relative bg-slate-50 border border-purple-100 rounded-2xl p-4 focus-within:border-purple-400 focus-within:ring-2 focus-within:ring-purple-200 transition-all shadow-sm"
+        >
+          <textarea
+            value={quickTopic}
+            onChange={(e) => setQuickTopic(e.target.value)}
+            placeholder="e.g. A 45-second high-retention documentary exploring the deep mystery of the Mariana Trench..."
+            rows={3}
+            className="w-full bg-transparent border-none outline-none text-slate-900 placeholder-slate-400 text-sm resize-none"
+          />
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-purple-50">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setQuickTopic('Turn this script into a 45s video: ')}
+                className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-white border border-purple-100 text-slate-600 hover:text-purple-600 hover:border-purple-300 transition-all cursor-pointer"
+              >
+                + Script
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickTopic('Turn this URL into a 60s explainer: https://')}
+                className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-white border border-purple-100 text-slate-600 hover:text-purple-600 hover:border-purple-300 transition-all cursor-pointer"
+              >
+                + Link
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickTopic('Create a 60s summary of this presentation deck: ')}
+                className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-white border border-purple-100 text-slate-600 hover:text-purple-600 hover:border-purple-300 transition-all cursor-pointer"
+              >
+                + Deck
+              </button>
+            </div>
+
+            <button
+              type="submit"
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold text-xs shadow-md shadow-purple-200 hover:opacity-95 transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>⚡</span>
+              <span>Generate Video</span>
+            </button>
+          </div>
+        </form>
+
+        {/* Quick-Start Pill Chips */}
+        <QuickStartChips onSelectChip={(starter) => {
+          setQuickTopic(starter);
+          router.push(`/content/new?prompt=${encodeURIComponent(starter)}`);
+        }} />
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────
           1. TOP STAT CARDS (TILLERCAST DASHBOARD)
       ───────────────────────────────────────────────────────────── */}
       <div className="dashboard-stats-row">
         {/* Card 1: Total Views (Only Connected Platforms) */}
-        <div className="autora-stat-card">
+        <div className="autora-stat-card bg-white border border-purple-100 rounded-2xl p-5 shadow-sm shadow-purple-900/5" style={{ background: "#FFFFFF", border: "1px solid #EDE9FE" }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{
               width: '36px',
@@ -732,7 +809,7 @@ export default function HomePage() {
               {platformsData && platformsData.connectedCount > 0 ? '+12%' : 'Unlinked'}
             </span>
           </div>
-          <div className="stat-value" style={{ fontSize: '26px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', lineHeight: 1 }}>
+          <div className="stat-value" style={{ fontSize: '26px', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1 }}>
             {platformsData && platformsData.connectedCount > 0 ? (
               platformsData.totalViews >= 1000000
                 ? `${(platformsData.totalViews / 1000000).toFixed(1)}M`
@@ -741,13 +818,13 @@ export default function HomePage() {
                 : `${platformsData.totalViews}`
             ) : '0'}
           </div>
-          <div className="stat-label" style={{ fontSize: '12px', color: '#71717a', marginTop: '6px' }}>
+          <div className="stat-label" style={{ fontSize: '12px', color: '#64748B', marginTop: '6px' }}>
             Total Views {platformsData && platformsData.connectedCount > 0 ? `(${platformsData.connectedCount} connected)` : ''}
           </div>
         </div>
 
         {/* Card 2: Subscribers / Audience (Only Connected Platforms) */}
-        <div className="autora-stat-card">
+        <div className="autora-stat-card bg-white border border-purple-100 rounded-2xl p-5 shadow-sm shadow-purple-900/5" style={{ background: "#FFFFFF", border: "1px solid #EDE9FE" }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{
               width: '36px',
@@ -778,7 +855,7 @@ export default function HomePage() {
               {platformsData && platformsData.connectedCount > 0 ? '+4%' : 'Unlinked'}
             </span>
           </div>
-          <div className="stat-value" style={{ fontSize: '26px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', lineHeight: 1 }}>
+          <div className="stat-value" style={{ fontSize: '26px', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1 }}>
             {platformsData && platformsData.connectedCount > 0 ? (
               platformsData.totalFollowers >= 1000000
                 ? `${(platformsData.totalFollowers / 1000000).toFixed(1)}M`
@@ -787,13 +864,13 @@ export default function HomePage() {
                 : `${platformsData.totalFollowers}`
             ) : '0'}
           </div>
-          <div className="stat-label" style={{ fontSize: '12px', color: '#71717a', marginTop: '6px' }}>
+          <div className="stat-label" style={{ fontSize: '12px', color: '#64748B', marginTop: '6px' }}>
             Subscribers {platformsData && platformsData.connectedCount > 0 ? `(${platformsData.connectedCount} connected)` : ''}
           </div>
         </div>
 
         {/* Card 3: Saved Time (Calculated from Actual Generated Content) */}
-        <div className="autora-stat-card">
+        <div className="autora-stat-card bg-white border border-purple-100 rounded-2xl p-5 shadow-sm shadow-purple-900/5" style={{ background: "#FFFFFF", border: "1px solid #EDE9FE" }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{
               width: '36px',
@@ -823,7 +900,7 @@ export default function HomePage() {
               </span>
             )}
           </div>
-          <div className="stat-value" style={{ fontSize: '26px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', lineHeight: 1 }}>
+          <div className="stat-value" style={{ fontSize: '26px', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1 }}>
             {(() => {
               if (completedProjects.length === 0) return '0m';
               const mins = completedProjects.length * 15;
@@ -832,13 +909,13 @@ export default function HomePage() {
               return h > 0 ? `${h}h ${m}m` : `${m}m`;
             })()}
           </div>
-          <div className="stat-label" style={{ fontSize: '12px', color: '#71717a', marginTop: '6px' }}>
+          <div className="stat-label" style={{ fontSize: '12px', color: '#64748B', marginTop: '6px' }}>
             Saved Time
           </div>
         </div>
 
         {/* Card 4: Credits Left */}
-        <div className="autora-stat-card">
+        <div className="autora-stat-card bg-white border border-purple-100 rounded-2xl p-5 shadow-sm shadow-purple-900/5" style={{ background: "#FFFFFF", border: "1px solid #EDE9FE" }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{
               width: '36px',
@@ -856,10 +933,10 @@ export default function HomePage() {
               </svg>
             </div>
           </div>
-          <div className="stat-value" style={{ fontSize: '26px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', lineHeight: 1 }}>
+          <div className="stat-value" style={{ fontSize: '26px', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1 }}>
             {credits?.balance ?? currentUser?.credits ?? 100}
           </div>
-          <div className="stat-label" style={{ fontSize: '12px', color: '#71717a', marginTop: '6px' }}>
+          <div className="stat-label" style={{ fontSize: '12px', color: '#64748B', marginTop: '6px' }}>
             Credits Left
           </div>
         </div>
@@ -868,638 +945,17 @@ export default function HomePage() {
       {/* ─────────────────────────────────────────────────────────────
           5. TWO-COLUMN MAIN WORKSPACE GRID
       ───────────────────────────────────────────────────────────── */}
-      <div className="dashboard-main-grid">
+            {/* ─────────────────────────────────────────────────────────────
+          UNIFIED CREATION STUDIO (EXACT LAYOUT FROM CONTENT/NEW)
+      ───────────────────────────────────────────────────────────── */}
+      <div style={{ width: '100%', marginBottom: '40px' }}>
+        <CreateVideoWizard hideBackLink={true} />
+      </div>
 
-        {/* ── LEFT COLUMN: CREATION SETTINGS, SMART SUMMARY & IDEAS ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-
-          {/* Prompt-to-Video Engine Panel (InVideo AI / Runway class workflow) */}
-          <div className="autora-panel" style={{ position: 'relative', overflow: 'hidden' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <div>
-                <h2 style={{ fontSize: '17px', fontWeight: 800, color: '#ffffff', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>⚡ Prompt-to-Video Engine</span>
-                  <span style={{
-                    fontSize: '10px',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    background: 'rgba(168, 85, 247, 0.15)',
-                    border: '1px solid rgba(168, 85, 247, 0.3)',
-                    color: '#c084fc',
-                    padding: '2px 8px',
-                    borderRadius: '9999px'
-                  }}>
-                    Agentic Studio (WP8 / WP5)
-                  </span>
-                </h2>
-                <p style={{ fontSize: '12px', color: '#71717a', margin: '4px 0 0' }}>
-                  One prompt → Multi-scene storyboard cut → Interactive Timeline Editor
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleResetConfig}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#71717a',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  padding: '4px 8px'
-                }}
-              >
-                Reset Config
-              </button>
-            </div>
-
-            <form onSubmit={handleGenerateShort} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              {/* Comprehensive Video Prompt Textarea */}
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <label htmlFor="creator-topic-input" style={{ fontSize: '12px', fontWeight: 700, color: '#e4e4e7' }}>
-                    AI Video Prompt (Describe topic, visuals, pacing & tone)
-                  </label>
-                  <button
-                    type="button"
-                    onClick={handleSurpriseMe}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.04)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                      borderRadius: '6px',
-                      color: '#c084fc',
-                      cursor: 'pointer',
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      padding: '3px 8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}
-                    aria-label="Randomize viral concept prompt"
-                  >
-                    <span>🎲 Surprise Me</span>
-                  </button>
-                </div>
-                <div style={{ position: 'relative' }}>
-                  <textarea
-                    id="creator-topic-input"
-                    ref={topicInputRef as any}
-                    rows={4}
-                    value={quickTopic}
-                    onChange={(e) => setQuickTopic(e.target.value)}
-                    placeholder="Describe your video in detail... (e.g. A 45-second high-retention documentary exploring how quantum computers will break RSA encryption. Fast pacing, dark cyberpunk aesthetic, high-contrast visuals, dramatic narrator voice, and clear subtitle captions)..."
-                    className="autora-input"
-                    style={{
-                      width: '100%',
-                      background: '#111216',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
-                      borderRadius: '10px',
-                      padding: '14px',
-                      color: '#ffffff',
-                      fontSize: '13px',
-                      lineHeight: '1.5',
-                      resize: 'vertical',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                    aria-label="AI Video Prompt"
-                  />
-                </div>
-
-                {/* Prompt Enhancer Quick-Chips */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
-                  <span style={{ fontSize: '11px', color: '#71717a', alignSelf: 'center', marginRight: '4px' }}>
-                    Add Enhancers:
-                  </span>
-                  {[
-                    { label: '⚡ High-Impact Hook', append: ', starts with a shocking 3-second hook question' },
-                    { label: '💎 4K Generative AI', append: ', photorealistic cinematic visuals with slow dramatic camera motion' },
-                    { label: '📊 Data & Stats', append: ', backed by verified data, research numbers and crisp motion graphics' },
-                    { label: '🎙️ Deep Docu-Tone', append: ', serious investigative documentary narration style' },
-                    { label: '📱 Viral Retention', append: ', ultra high-tempo scene transitions every 3 to 4 seconds' },
-                  ].map((chip, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => {
-                        setQuickTopic((prev) => (prev ? prev.trim() + chip.append : chip.label.replace(/^.*? /, '')));
-                        toast.info(`Added enhancer: ${chip.label}`);
-                      }}
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.03)',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
-                        borderRadius: '6px',
-                        color: '#a1a1aa',
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        padding: '4px 8px',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(168, 85, 247, 0.4)';
-                        e.currentTarget.style.color = '#ffffff';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                        e.currentTarget.style.color = '#a1a1aa';
-                      }}
-                    >
-                      {chip.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Row with Voice & Modern Visual Engine Presets */}
-              <div className="autora-form-row">
-                <div>
-                  <label htmlFor="voice-select" style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#a1a1aa', marginBottom: '6px' }}>
-                    AI Narrator Voice
-                  </label>
-                  <select
-                    id="voice-select"
-                    className="autora-select"
-                    value={voiceModel}
-                    onChange={(e) => setVoiceModel(e.target.value)}
-                    aria-label="AI Voice Model"
-                  >
-                    <option value="Adam (Deep, Narrator)">Adam (Deep, Storyteller)</option>
-                    <option value="Rachel (Energetic, Viral)">Rachel (Energetic, High-Paced)</option>
-                    <option value="Antony (Documentary)">Antony (Investigative Documentary)</option>
-                    <option value="Bella (Warm, Friendly)">Bella (Warm, Conversational)</option>
-                    <option value="Josh (Dramatic Storyteller)">Josh (Dramatic Cinematic)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="style-select" style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#a1a1aa', marginBottom: '6px' }}>
-                    Visual Synthesis Engine & Preset
-                  </label>
-                  <select
-                    id="style-select"
-                    className="autora-select"
-                    value={backgroundFootage}
-                    onChange={(e) => setBackgroundFootage(e.target.value)}
-                    aria-label="Visual Style Engine"
-                  >
-                    <option value="Cinematic AI (Veo 3.1 / Kling / Wan)">Cinematic AI (Veo 3.1 / Kling / Wan)</option>
-                    <option value="Photorealistic Studio Documentary">Photorealistic Studio Documentary</option>
-                    <option value="Cyberpunk & Dark High-Tech">Cyberpunk & Dark High-Tech</option>
-                    <option value="Minimalist Motion Graphics & Typography">Minimalist Motion Graphics & Typography</option>
-                    <option value="Hyper-Real Nature & Aerial Drone 4K">Hyper-Real Nature & Drone 4K</option>
-                    <option value="Satisfying Kinetic / Slime">Satisfying Kinetic & Motion Flow</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Duration & Aspect Ratio Selector (Shorts vs Long-Form) */}
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#a1a1aa' }}>
-                    Target Format & Duration
-                  </label>
-                  <span
-                    id="duration-badge"
-                    style={{
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      color: duration >= 120 ? '#60a5fa' : '#c084fc',
-                      background: duration >= 120 ? 'rgba(59, 130, 246, 0.15)' : 'rgba(168, 85, 247, 0.15)',
-                      border: duration >= 120 ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(168, 85, 247, 0.3)',
-                      padding: '3px 10px',
-                      borderRadius: '6px'
-                    }}
-                  >
-                    {duration < 60 ? `${duration}s` : duration === 60 ? '60s (1 min)' : `${Math.round(duration / 60)} min`}
-                  </span>
-                </div>
-
-                {/* Mode Selector Tabs */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '6px',
-                  background: '#09090b',
-                  padding: '4px',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  marginBottom: '10px'
-                }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDurationMode('shorts');
-                      if (duration > 60) setDuration(45);
-                    }}
-                    style={{
-                      padding: '8px 10px',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      border: 'none',
-                      cursor: 'pointer',
-                      background: durationMode === 'shorts' ? 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)' : 'transparent',
-                      color: durationMode === 'shorts' ? '#ffffff' : '#a1a1aa',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <span>📱</span>
-                    <span>Shorts (15–60s)</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDurationMode('longform');
-                      if (duration <= 60) setDuration(600);
-                    }}
-                    style={{
-                      padding: '8px 10px',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      border: 'none',
-                      cursor: 'pointer',
-                      background: durationMode === 'longform' ? 'linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)' : 'transparent',
-                      color: durationMode === 'longform' ? '#ffffff' : '#a1a1aa',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <span>🎬</span>
-                    <span>Long-Form (2–20m)</span>
-                  </button>
-                </div>
-
-                {/* Preset Chips */}
-                {durationMode === 'shorts' ? (
-                  <div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', marginBottom: '8px' }}>
-                      {[
-                        { label: '15s', value: 15 },
-                        { label: '30s', value: 30 },
-                        { label: '45s', value: 45 },
-                        { label: '60s', value: 60 },
-                      ].map((item) => {
-                        const isSelected = duration === item.value;
-                        return (
-                          <button
-                            key={item.value}
-                            type="button"
-                            onClick={() => setDuration(item.value)}
-                            style={{
-                              padding: '8px 4px',
-                              borderRadius: '6px',
-                              fontSize: '12px',
-                              fontWeight: 700,
-                              cursor: 'pointer',
-                              border: isSelected ? '1px solid #c084fc' : '1px solid rgba(255, 255, 255, 0.08)',
-                              background: isSelected ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255, 255, 255, 0.02)',
-                              color: isSelected ? '#ffffff' : '#a1a1aa',
-                              textAlign: 'center',
-                              transition: 'all 0.15s ease'
-                            }}
-                          >
-                            {item.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      fontSize: '11px',
-                      color: '#a1a1aa',
-                      padding: '6px 10px',
-                      background: 'rgba(168, 85, 247, 0.06)',
-                      border: '1px solid rgba(168, 85, 247, 0.15)',
-                      borderRadius: '6px'
-                    }}>
-                      <span>📱</span>
-                      <span><strong>9:16 Vertical HD</strong> (1080×1920) • Optimized for YouTube Shorts & Reels</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(64px, 1fr))', gap: '6px', marginBottom: '8px' }}>
-                      {[
-                        { label: '2 min', value: 120 },
-                        { label: '3 min', value: 180 },
-                        { label: '5 min', value: 300 },
-                        { label: '8 min', value: 480 },
-                        { label: '10 min', value: 600 },
-                        { label: '15 min', value: 900 },
-                        { label: '20 min', value: 1200 },
-                      ].map((item) => {
-                        const isSelected = duration === item.value;
-                        return (
-                          <button
-                            key={item.value}
-                            type="button"
-                            onClick={() => setDuration(item.value)}
-                            style={{
-                              padding: '8px 2px',
-                              borderRadius: '6px',
-                              fontSize: '12px',
-                              fontWeight: 700,
-                              cursor: 'pointer',
-                              border: isSelected ? '1px solid #60a5fa' : '1px solid rgba(255, 255, 255, 0.08)',
-                              background: isSelected ? 'rgba(59, 130, 246, 0.25)' : 'rgba(255, 255, 255, 0.02)',
-                              color: isSelected ? '#ffffff' : '#a1a1aa',
-                              textAlign: 'center',
-                              transition: 'all 0.15s ease'
-                            }}
-                          >
-                            {item.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      fontSize: '11px',
-                      color: '#93c5fd',
-                      padding: '6px 10px',
-                      background: 'rgba(59, 130, 246, 0.08)',
-                      border: '1px solid rgba(59, 130, 246, 0.2)',
-                      borderRadius: '6px'
-                    }}>
-                      <span>🎬</span>
-                      <span><strong>16:9 Widescreen 1080p</strong> (1920×1080) • Full Masterclass (~{Math.round((duration / 60) * 138)} words)</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Toggles Row */}
-              <div className="autora-toggles-row">
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '10px 14px',
-                  background: 'rgba(255, 255, 255, 0.02)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)',
-                  borderRadius: '10px'
-                }}>
-                  <div>
-                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#ffffff' }}>Auto Captions</div>
-                    <div style={{ fontSize: '10px', color: '#71717a' }}>Karaoke style animation</div>
-                  </div>
-                  <label className="autora-switch">
-                    <input
-                      id="captions-toggle"
-                      type="checkbox"
-                      checked={autoCaptions}
-                      onChange={(e) => setAutoCaptions(e.target.checked)}
-                      aria-label="Toggle Auto Captions"
-                    />
-                    <span className="autora-switch-slider"></span>
-                  </label>
-                </div>
-
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '10px 14px',
-                  background: 'rgba(255, 255, 255, 0.02)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)',
-                  borderRadius: '10px'
-                }}>
-                  <div>
-                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#ffffff' }}>Auto Upload</div>
-                    <div style={{ fontSize: '10px', color: '#71717a' }}>Post to linked channel</div>
-                  </div>
-                  <label className="autora-switch">
-                    <input
-                      id="upload-toggle"
-                      type="checkbox"
-                      checked={autoUpload}
-                      onChange={(e) => setAutoUpload(e.target.checked)}
-                      aria-label="Toggle Auto Upload"
-                    />
-                    <span className="autora-switch-slider"></span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Big Generate Short & Open Timeline Button */}
-              <button
-                id="generate-video-btn"
-                type="submit"
-                disabled={creating || !quickTopic.trim()}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '10px',
-                  fontWeight: 800,
-                  fontSize: '14px',
-                  cursor: creating || !quickTopic.trim() ? 'not-allowed' : 'pointer',
-                  opacity: creating || !quickTopic.trim() ? 0.7 : 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  boxShadow: '0 4px 16px rgba(168, 85, 247, 0.35)',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                {creating ? (
-                  <>
-                    <div className="autora-spinner" style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff', width: '16px', height: '16px' }} />
-                    <span>Synthesizing Video Draft & Loading Timeline...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <polygon points="5 3 19 12 5 21 5 3" />
-                    </svg>
-                    <span>✨ Generate Video Draft & Open Timeline Studio →</span>
-                  </>
-                )}
-              </button>
-
-              {/* Configuration Summary line */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: '#71717a', padding: '0 4px' }}>
-                <span>Estimated: <strong style={{ color: '#fff' }}>{duration}s</strong> • <strong style={{ color: '#fff' }}>{estimatedScenes} scenes</strong></span>
-                <span>Cost: <strong id="summary-credit-cost" style={{ color: '#c084fc' }}>{estimatedCredits} credits</strong></span>
-              </div>
-            </form>
-          </div>
-
-          {/* ─────────────────────────────────────────────────────────────
-              Trending Hashtags Section (Exact match for reference design)
-          ───────────────────────────────────────────────────────────── */}
-          <div>
-            <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#ffffff', marginBottom: '12px' }}>
-              Trending Hashtags
-            </h3>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-              gap: '10px'
-            }}>
-              {[
-                { tag: '#AIrevolution', velocity: '2.1M views/hr', topic: 'The Secret AI Revolution No One Is Talking About' },
-                { tag: '#CodingLife', velocity: '850K views/hr', topic: '5 Coding Habits That Made Me a Senior Engineer' },
-                { tag: '#FactsDaily', velocity: '1.4M views/hr', topic: 'Top 5 Mind-Blowing Facts About Deep Ocean Creatures' },
-                { tag: '#Motivation', velocity: '3.2M views/hr', topic: '10 Stoic Lessons for Unstoppable Mental Discipline' },
-              ].map((h, i) => (
-                <div
-                  key={i}
-                  className="autora-tag-card"
-                  onClick={() => {
-                    setQuickTopic(h.topic);
-                    toast.info(`Selected ${h.tag}: "${h.topic}"`);
-                  }}
-                  style={{
-                    background: '#111215',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: '8px',
-                    padding: '12px 14px',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
-                  }}
-                  title={`Use topic for ${h.tag}`}
-                >
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: '#818cf8', marginBottom: '4px' }}>
-                    {h.tag}
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#71717a' }}>
-                    {h.velocity}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ─────────────────────────────────────────────────────────────
-              6. AI IDEA ASSISTANT
-          ───────────────────────────────────────────────────────────── */}
-          <div className="autora-panel">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-              <div>
-                <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#ffffff', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  💡 Need an idea?
-                </h3>
-                <p style={{ fontSize: '12px', color: '#71717a', margin: '2px 0 0' }}>
-                  I found some topics that could work for your channel.
-                </p>
-              </div>
-
-              <button
-                id="shuffle-ideas-btn"
-                type="button"
-                onClick={handleRefreshIdeas}
-                disabled={isGeneratingIdea}
-                className="autora-action-btn"
-                style={{ fontSize: '11px', padding: '4px 10px' }}
-                title="Generate fresh suggestions"
-              >
-                {isGeneratingIdea ? 'Thinking...' : '🔄 Shuffle'}
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {aiSuggestions.map((idea, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '10px 14px',
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    border: '1px solid rgba(255, 255, 255, 0.06)',
-                    borderRadius: '8px',
-                    gap: '12px'
-                  }}
-                >
-                  <span className="autora-idea-text" style={{ fontSize: '13px', color: '#e4e4e7', fontWeight: 500, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {idea}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setQuickTopic(idea);
-                      toast.info('Topic loaded into creator! Click Generate Video to build.');
-                      topicInputRef.current?.focus();
-                    }}
-                    className="autora-action-btn autora-use-idea-btn"
-                    style={{ flexShrink: 0, fontSize: '11px', padding: '4px 10px', color: '#c084fc', borderColor: 'rgba(168, 85, 247, 0.25)' }}
-                  >
-                    Use Idea
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ─────────────────────────────────────────────────────────────
-              7. TRENDING NOW SECTION
-          ───────────────────────────────────────────────────────────── */}
-          <div className="autora-panel">
-            <div style={{ marginBottom: '14px' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#ffffff', margin: 0 }}>
-                Trending Now
-              </h3>
-              <p style={{ fontSize: '12px', color: '#71717a', margin: '2px 0 0' }}>
-                Popular topics you can turn into videos.
-              </p>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '10px'
-            }}>
-              {TRENDING_NOW_SUGGESTIONS.map((t, idx) => (
-                <div
-                  key={idx}
-                  className="autora-trending-card autora-tag-card"
-                  onClick={() => {
-                    setQuickTopic(t.topic);
-                    toast.info(`Loaded trending topic: ${t.topic}`);
-                    topicInputRef.current?.focus();
-                  }}
-                  title="Click to generate video about this topic"
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#71717a', textTransform: 'uppercase' }}>
-                      {t.category}
-                    </span>
-                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#ef4444', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                      🔥 {t.trend}
-                    </span>
-                  </div>
-                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.01em', marginTop: '2px' }}>
-                    {t.topic}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
-
-        {/* ── RIGHT COLUMN: ACTIVE QUEUE, RECENT VIDEOS, GROWTH & SCHEDULE ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* ─────────────────────────────────────────────────────────────
+          LOWER DASHBOARD PANELS: ACTIVE QUEUE, RECENT VIDEOS & INTEGRATIONS
+      ───────────────────────────────────────────────────────────── */}
+      <div style={{ maxWidth: '840px', margin: '0 auto 60px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
           {/* ─────────────────────────────────────────────────────────────
               10 & 11. LIVE GENERATION CARD / ACTIVE QUEUE
@@ -2058,8 +1514,6 @@ export default function HomePage() {
               </div>
             )}
           </div>
-
-        </div>
 
       </div>
 

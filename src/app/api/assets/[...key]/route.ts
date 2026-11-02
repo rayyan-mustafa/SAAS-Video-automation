@@ -530,11 +530,7 @@ export async function GET(request: NextRequest, { params }: { params: any }) {
 
     const ext = path.extname(key).toLowerCase();
 
-    // 1. Direct R2 CDN redirect if public domain is configured
-    if (process.env.R2_PUBLIC_URL && process.env.R2_PUBLIC_URL.startsWith('http')) {
-      const edgeUrl = `${process.env.R2_PUBLIC_URL.replace(/\/+$/, '')}/${key.replace(/^\/+/, '')}`;
-      return NextResponse.redirect(edgeUrl, 302);
-    }
+// Direct R2 redirect moved after local disk check
 
     let filePath = storage.getFilePath(key);
 

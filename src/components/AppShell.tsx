@@ -203,8 +203,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* ─────────────────────────────────────────────────────────────
           SIDEBAR NAVIGATION (TILLERCAST)
       ───────────────────────────────────────────────────────────── */}
-      <aside className={`sidebar ${collapsed ? 'collapsed sidebar-collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`} style={{ backgroundColor: '#090a0d', borderRight: '1px solid rgba(255, 255, 255, 0.07)' }}>
-        <div className="sidebar-header" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
+      <aside className={`sidebar ${collapsed ? 'collapsed sidebar-collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`} style={{ backgroundColor: '#FAF7FF', borderRight: '1px solid #EDE9FE' }}>
+        <div className="sidebar-header" style={{ borderBottom: '1px solid #EDE9FE' }}>
           <Link href="/" className="sidebar-brand brand-logo" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
             <div className="logo-icon" style={{
               display: 'flex',
@@ -212,20 +212,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               justifyContent: 'center',
               width: '32px',
               height: '32px',
-              background: 'linear-gradient(135deg, #7928CA, #00F0FF)',
+              background: 'linear-gradient(135deg, #7C3AED, #EC4899)',
               color: '#ffffff',
               borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0, 240, 255, 0.2)',
+              boxShadow: '0 4px 12px rgba(124, 58, 237, 0.25)',
               flexShrink: 0
             }}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"></polygon>
-              </svg>
+              <span style={{ fontSize: '15px' }}>⚡</span>
             </div>
             {!collapsed && (
-              <span className="logo-text" style={{ fontSize: '1.25rem', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.5px' }}>
-                Tiller<span className="highlight" style={{ color: '#00F0FF' }}>cast</span>
+              <span className="logo-text" style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.5px' }}>
+                Tiller<span className="highlight" style={{ color: '#7C3AED' }}>cast</span>
               </span>
             )}
           </Link>
@@ -273,16 +270,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     padding: '8px 12px',
                     borderRadius: '8px',
                     fontSize: '13px',
-                    fontWeight: isActive ? 600 : 500,
-                    color: isActive ? '#ffffff' : '#9ca3af',
-                    background: isActive ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                    border: isActive ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid transparent',
+                    fontWeight: isActive ? 700 : 500,
+                    color: isActive ? '#6D28D9' : '#64748B',
+                    background: isActive ? 'rgba(237, 233, 254, 0.85)' : 'transparent',
+                    border: isActive ? '1px solid #DDD6FE' : '1px solid transparent',
                     transition: 'all 0.15s ease',
                     textDecoration: 'none'
                   }}
                   title={collapsed && !mobileOpen ? item.label : undefined}
                 >
-                  <span style={{ color: isActive ? '#ffffff' : '#71717a' }}>{item.icon}</span>
+                  <span style={{ color: isActive ? '#7C3AED' : '#94A3B8' }}>{item.icon}</span>
                   {(!collapsed || mobileOpen) && <span>{item.label}</span>}
                 </Link>
               );
@@ -295,7 +292,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <div style={{
                 fontSize: '10px',
                 fontWeight: 800,
-                color: '#52525b',
+                color: '#94A3B8',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 padding: '4px 12px 6px',
@@ -304,7 +301,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 justifyContent: 'space-between',
               }}>
                 <span>WORKFLOWS</span>
-                <Link href="/workflow" style={{ color: '#60a5fa', textDecoration: 'none', fontSize: '11px', fontWeight: 600 }}>
+                <Link href="/workflow" style={{ color: '#7C3AED', textDecoration: 'none', fontSize: '11px', fontWeight: 600 }}>
                   + New
                 </Link>
               </div>
@@ -322,7 +319,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     padding: '8px 12px',
                     borderRadius: '8px',
                     fontSize: '13px',
-                    color: '#9ca3af',
+                    color: '#64748B',
                     textDecoration: 'none',
                     transition: 'background 0.15s ease'
                   }}
@@ -338,7 +335,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       flexShrink: 0,
                     }} />
                     {(!collapsed || mobileOpen) && (
-                      <span style={{ color: '#d1d5db', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <span style={{ color: '#334155', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {chan.name}
                       </span>
                     )}
@@ -347,7 +344,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <span style={{
                       fontSize: '10px',
                       fontWeight: 600,
-                      color: '#22c55e',
+                      color: '#16A34A',
                       background: 'rgba(34, 197, 94, 0.1)',
                       border: '1px solid rgba(34, 197, 94, 0.2)',
                       padding: '2px 8px',
@@ -360,7 +357,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </Link>
               ))
             ) : (!collapsed || mobileOpen) ? (
-              <div style={{ padding: '6px 12px', fontSize: '12px', color: '#71717a' }}>
+              <div style={{ padding: '6px 12px', fontSize: '12px', color: '#94A3B8' }}>
                 No active workflows yet.
               </div>
             ) : null}
@@ -376,7 +373,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 padding: '8px 12px',
                 borderRadius: '8px',
                 fontSize: '13px',
-                color: '#9ca3af',
+                color: '#64748B',
                 textDecoration: 'none',
                 transition: 'background 0.15s ease'
               }}
@@ -387,19 +384,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   width: '6px',
                   height: '6px',
                   borderRadius: '50%',
-                  backgroundColor: '#a855f7',
-                  boxShadow: '0 0 6px rgba(168, 85, 247, 0.6)',
+                  backgroundColor: '#7C3AED',
+                  boxShadow: '0 0 6px rgba(124, 58, 237, 0.4)',
                   flexShrink: 0,
                 }} />
-                {(!collapsed || mobileOpen) && <span style={{ color: '#c084fc' }}>Starter Templates</span>}
+                {(!collapsed || mobileOpen) && <span style={{ color: '#7C3AED', fontWeight: 600 }}>Starter Templates</span>}
               </div>
               {(!collapsed || mobileOpen) && (
                 <span style={{
                   fontSize: '10px',
                   fontWeight: 600,
-                  color: '#c084fc',
-                  background: 'rgba(168, 85, 247, 0.1)',
-                  border: '1px solid rgba(168, 85, 247, 0.2)',
+                  color: '#7C3AED',
+                  background: 'rgba(124, 58, 237, 0.08)',
+                  border: '1px solid rgba(124, 58, 237, 0.2)',
                   padding: '2px 8px',
                   borderRadius: '4px'
                 }}>
@@ -415,7 +412,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <div style={{
                 fontSize: '10px',
                 fontWeight: 800,
-                color: '#52525b',
+                color: '#94A3B8',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 padding: '4px 12px 6px',
@@ -437,16 +434,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     padding: '8px 12px',
                     borderRadius: '8px',
                     fontSize: '13px',
-                    fontWeight: isActive ? 600 : 500,
-                    color: isActive ? '#ffffff' : '#9ca3af',
-                    background: isActive ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                    border: isActive ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid transparent',
+                    fontWeight: isActive ? 700 : 500,
+                    color: isActive ? '#6D28D9' : '#64748B',
+                    background: isActive ? 'rgba(237, 233, 254, 0.85)' : 'transparent',
+                    border: isActive ? '1px solid #DDD6FE' : '1px solid transparent',
                     transition: 'all 0.15s ease',
                     textDecoration: 'none'
                   }}
                   title={collapsed && !mobileOpen ? item.label : undefined}
                 >
-                  <span style={{ color: isActive ? '#ffffff' : '#71717a' }}>{item.icon}</span>
+                  <span style={{ color: isActive ? '#7C3AED' : '#94A3B8' }}>{item.icon}</span>
                   {(!collapsed || mobileOpen) && <span>{item.label}</span>}
                 </Link>
               );
@@ -454,7 +451,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <div className="sidebar-footer" style={{ position: 'relative', borderTop: '1px solid rgba(255, 255, 255, 0.06)', padding: '12px' }}>
+        <div className="sidebar-footer" style={{ position: 'relative', borderTop: '1px solid #EDE9FE', padding: '12px' }}>
           {/* User popup menu when clicked */}
           {showUserMenu && (
             <div
@@ -463,20 +460,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 bottom: 'calc(100% + 8px)',
                 left: '10px',
                 right: '10px',
-                background: '#111215',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '10px',
+                background: '#FFFFFF',
+                border: '1px solid #EDE9FE',
+                borderRadius: '12px',
                 padding: '10px',
-                boxShadow: '0 -8px 24px rgba(0,0,0,0.6)',
+                boxShadow: '0 10px 30px -4px rgba(124, 58, 237, 0.12)',
                 zIndex: 60,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '6px',
               }}
             >
-              <div style={{ padding: '6px 8px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>{currentUser?.name || 'Creator'}</div>
-                <div style={{ fontSize: '11px', color: '#71717a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ padding: '6px 8px', borderBottom: '1px solid #EDE9FE' }}>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>{currentUser?.name || 'Rayyan Mustafa'}</div>
+                <div style={{ fontSize: '11px', color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {currentUser?.email || ''}
                 </div>
               </div>
@@ -490,7 +487,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   padding: '7px 8px',
                   borderRadius: '6px',
                   fontSize: '12px',
-                  color: '#d1d5db',
+                  color: '#475569',
                   textDecoration: 'none',
                   transition: 'background 0.15s ease',
                 }}
@@ -550,26 +547,43 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                background: '#27272a',
-                color: '#e4e4e7',
+                background: 'linear-gradient(135deg, #7C3AED, #EC4899)',
+                color: '#ffffff',
                 fontSize: '12px',
                 fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                border: '1px solid #EDE9FE',
+                boxShadow: '0 2px 8px rgba(124, 58, 237, 0.25)',
                 flexShrink: 0,
               }}>
-                {currentUser?.name ? currentUser.name.split(' ').filter(Boolean).map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : 'CR'}
+                {currentUser?.name ? currentUser.name.split(' ').filter(Boolean).map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : 'RM'}
               </div>
               {(!collapsed || mobileOpen) && (
                 <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {currentUser?.name || 'Creator'}
                   </span>
-                  <span style={{ fontSize: '11px', color: '#71717a' }}>
-                    {credits?.tier ? `${credits.tier.charAt(0).toUpperCase() + credits.tier.slice(1).toLowerCase()} Plan` : 'Creator Plan'}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                    <span style={{ fontSize: '11px', color: '#64748B' }}>
+                      {credits?.tier ? `${credits.tier.charAt(0).toUpperCase() + credits.tier.slice(1).toLowerCase()} Plan` : 'Creator Plan'}
+                    </span>
+                    <span style={{
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      color: '#92400E',
+                      background: '#FEF3C7',
+                      border: '1px solid #FDE68A',
+                      padding: '1px 6px',
+                      borderRadius: '9999px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '2px'
+                    }}>
+                      ⚡ {credits?.balance ?? currentUser?.credits ?? 300}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
@@ -657,7 +671,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           MAIN WRAPPER & TOPBAR (TILLERCAST)
       ───────────────────────────────────────────────────────────── */}
       <div className="main-wrapper">
-        <header className="topbar" style={{ backgroundColor: 'rgba(9, 10, 13, 0.85)', borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
+        <header className="topbar" style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderBottom: '1px solid #EDE9FE', backdropFilter: 'blur(8px)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <button
               type="button"
@@ -674,9 +688,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             {/* Breadcrumbs matching TILLERCAST */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
-              <span style={{ color: '#71717a' }}>Dashboard</span>
-              <span style={{ color: '#3f3f46' }}>›</span>
-              <span style={{ color: '#ffffff', fontWeight: 600 }}>
+              <span style={{ color: '#64748B' }}>Dashboard</span>
+              <span style={{ color: '#CBD5E1' }}>›</span>
+              <span style={{ color: '#0F172A', fontWeight: 700 }}>
                 {pathname === '/' ? 'Overview'
                   : pathname === '/workflow' ? 'Workflow'
                   : pathname === '/content' ? 'Content Library'
@@ -691,6 +705,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <Link
+              href="/billing"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 12px',
+                borderRadius: '9999px',
+                background: '#FEF3C7',
+                border: '1px solid #FDE68A',
+                color: '#92400E',
+                fontSize: '12px',
+                fontWeight: 700,
+                textDecoration: 'none',
+                boxShadow: '0 1px 3px rgba(245, 158, 11, 0.15)',
+              }}
+              title="View credit balance & top up"
+            >
+              <span>⚡</span>
+              <span>{credits?.balance ?? currentUser?.credits ?? 300} Credits</span>
+            </Link>
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -755,8 +790,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                background: '#ffffff',
-                color: '#09090b',
+                background: 'linear-gradient(135deg, #7C3AED 0%, #EC4899 100%)',
+                color: '#ffffff',
                 padding: '7px 16px',
                 borderRadius: '9999px',
                 fontSize: '13px',
@@ -764,15 +799,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 border: 'none',
                 cursor: 'pointer',
                 transition: 'all 0.15s ease',
-                boxShadow: '0 1px 4px rgba(0,0,0,0.4)'
+                boxShadow: '0 4px 12px rgba(124, 58, 237, 0.25)'
               }}
-              aria-label="Create a new video"
+              aria-label="Create a new video with AI Agent"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              <span>Create Short</span>
+              <span>⚡</span>
+              <span>Create Video</span>
             </button>
 
             {/* Topbar User Profile Button & Dropdown */}

@@ -30,6 +30,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    if (project.status === 'COMPLETED') {
+      return NextResponse.json({ success: true, message: 'Project already completed', status: 'COMPLETED' });
+    }
+    if (project.approved_at && project.status === 'PROCESSING') {
+      return NextResponse.json({ success: true, message: 'Project already approved and processing', status: 'PROCESSING' });
+    }
+
     // Parse any storyboard edits submitted with approval
     const body = await req.json().catch(() => ({}));
     const editedScenes = body?.editedScenes as Array<{

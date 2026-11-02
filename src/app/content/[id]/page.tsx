@@ -101,7 +101,7 @@ export default function VideoStudioPage({ params }: { params?: any }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeSceneIdx, setActiveSceneIdx] = useState(0);
-  const [activeInspectorTab, setActiveInspectorTab] = useState<'scenes' | 'scene' | 'copilot' | 'metadata' | 'publish'>('scene');
+  const [activeInspectorTab, setActiveInspectorTab] = useState<'scenes' | 'scene' | 'copilot' | 'metadata' | 'publish'>('scenes');
   const [mobileStudioTab, setMobileStudioTab] = useState<'scenes' | 'inspector' | 'copilot' | 'publish'>('scenes');
   const [studioViewMode, setStudioViewMode] = useState<'timeline' | 'workflow'>('timeline');
 
@@ -180,10 +180,10 @@ export default function VideoStudioPage({ params }: { params?: any }) {
     fetchProject();
 
     const interval = setInterval(() => {
-      if (data?.project?.status === 'PROCESSING' || data?.project?.status === 'PENDING' || data?.project?.publishing_status === 'UPLOADING') {
+      if (data?.project?.status === 'PROCESSING' || data?.project?.status === 'PENDING' || data?.project?.status === 'PLAN' || data?.project?.publishing_status === 'UPLOADING') {
         fetchProject();
       }
-    }, 3000);
+    }, 2500);
 
     return () => clearInterval(interval);
   }, [fetchProject, data?.project?.status, data?.project?.publishing_status]);
@@ -250,6 +250,13 @@ export default function VideoStudioPage({ params }: { params?: any }) {
       setIsApproving(false);
     }
   };
+
+  // Seamless 1-Click Video Generation: If project is awaiting approval, auto-approve immediately
+  useEffect(() => {
+    if (data?.project?.status === 'PENDING_APPROVAL' && !isApproving) {
+      handleApproveProject();
+    }
+  }, [data?.project?.status, isApproving]);
 
   const handleGenerateVideo = async (startStage: string = 'SCRIPT') => {
     if (data?.project?.status === 'PENDING_APPROVAL' || !data?.project?.approved_at) {
@@ -1024,6 +1031,7 @@ export default function VideoStudioPage({ params }: { params?: any }) {
         {/* Action Controls */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <button
+            id="render-pipeline-btn"
             onClick={() => handleGenerateVideo('SCRIPT')}
             disabled={isGeneratingVideo}
             className="btn btn-primary btn-sm"
@@ -1193,71 +1201,7 @@ export default function VideoStudioPage({ params }: { params?: any }) {
         </div>
       ) : (
         <div className="studio-workspace">
-        {/* LEFT PANE: Scene Cuts List (Hidden on mobile if other tab active) */}
-        <div className={`studio-pane studio-pane-left ${mobileStudioTab !== 'scenes' ? 'studio-pane-mobile-hidden' : ''}`}>
-          <div className="pane-header">
-            <span style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>
-              Scene Cuts ({scenes.length})
-            </span>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-              ~{Math.round(scenes.reduce((acc, s) => acc + s.estimated_duration_sec, 0))}s Total
-            </span>
-          </div>
-
-          <div className="scene-list-container">
-            {scenes.length === 0 ? (
-              <div style={{ padding: '24px 12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
-                No scene cuts generated yet. Click "Generate Video with AI" to create script & scenes.
-              </div>
-            ) : (
-              scenes.map((s, idx) => (
-                <div
-                  key={s.id || idx}
-                  onClick={() => handleSelectScene(idx)}
-                  className={`scene-cut-item ${(displayedSceneNum === s.scene_index) ? 'active' : ''}`}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span className="scene-cut-index">Scene {s.scene_index}</span>
-                      {rerollMap[s.scene_index] ? (
-                        <span style={{ fontSize: '9px', background: '#4f46e5', color: '#fff', padding: '1px 5px', borderRadius: '4px' }}>
-                          v{rerollMap[s.scene_index] + 1}
-                        </span>
-                      ) : null}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span className="scene-cut-duration">{s.estimated_duration_sec}s</span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRegenerateScene(s);
-                        }}
-                        disabled={isRegeneratingScene}
-                        style={{
-                          background: 'rgba(99,102,241,0.15)',
-                          border: '1px solid rgba(99,102,241,0.3)',
-                          color: '#818cf8',
-                          cursor: 'pointer',
-                          padding: '2px 5px',
-                          borderRadius: '4px',
-                          fontSize: '10px',
-                          fontWeight: 600,
-                        }}
-                        title="Regenerate this scene with AI"
-                      >
-                        ⚡
-                      </button>
-                    </div>
-                  </div>
-                  <div className="scene-cut-text">{s.narration}</div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* CENTER PANE: 1080p Theater Player & Timeline (Pinned to top on mobile) */}
+        {/* CENTER PANE: InVideo-Style 1080p Theater Player (Pinned to top on mobile) */}
         <div className="studio-theater-column">
           {/* Multi-Scene Engine Mode Switcher Bar */}
           <div
@@ -1361,8 +1305,8 @@ export default function VideoStudioPage({ params }: { params?: any }) {
             {/* Background continuous narration audio (only if not playing master final video directly) */}
             {audioUrl && activeVideoUrl !== finalVideoUrl && <audio ref={audioRef} src={audioUrl} preload="auto" />}
 
-            {/* Scene info banner overlay */}
-            {displayedScene && (
+            {/* Scene info banner overlay (Only in Solo Scene Preview mode) */}
+            {displayedScene && playbackMode === 'SOLO_SCENE' && (
               <div
                 style={{
                   position: 'absolute',
@@ -1394,29 +1338,22 @@ export default function VideoStudioPage({ params }: { params?: any }) {
             {activeVideoUrl ? (
               <>
                 <video
-                  key={`${displayedSceneNum}-${currentReroll}`}
                   ref={videoRef}
-                  src={activeVideoUrl}
+                  src={finalVideoUrl || activeVideoUrl || undefined}
+                  controls
+                  playsInline
+                  preload="auto"
                   onTimeUpdate={handleTimeUpdate}
                   onLoadedMetadata={handleLoadedMetadata}
-                  onEnded={() => {
-                    if (playbackMode === 'SOLO_SCENE') {
-                      if (videoRef.current) {
-                        videoRef.current.currentTime = 0;
-                        videoRef.current.play().catch(() => {});
-                      }
-                    }
-                  }}
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
                   className="theater-video"
-                  autoPlay={isPlaying}
-                  loop={playbackMode === 'SOLO_SCENE'}
-                  playsInline
-                  muted={activeVideoUrl !== finalVideoUrl}
                   style={{
                     width: '100%',
                     height: '100%',
                     objectFit: videoFitMode,
                     borderRadius: 'inherit',
+                    background: '#000',
                   }}
                 />
 
@@ -1431,8 +1368,8 @@ export default function VideoStudioPage({ params }: { params?: any }) {
                   />
                 )}
 
-                {/* Subtitle Caption Overlay */}
-                {showCc && displayedScene && (
+                {/* Subtitle Caption Overlay (Shown only for solo raw preview when final video with burned-in ASS subtitles is not ready) */}
+                {showCc && !finalVideoUrl && displayedScene && (
                   <div
                     style={{
                       position: 'absolute',
@@ -1471,7 +1408,7 @@ export default function VideoStudioPage({ params }: { params?: any }) {
                   </div>
                 )}
               </>
-            ) : isGeneratingVideo ? (
+            ) : (isGeneratingVideo || project.status === 'PROCESSING' || project.status === 'PENDING' || project.status === 'PLAN' || !isMasterReady) ? (
               <div
                 style={{
                   width: '100%',
@@ -1481,52 +1418,82 @@ export default function VideoStudioPage({ params }: { params?: any }) {
                   alignItems: 'center',
                   justifyContent: 'center',
                   background: 'linear-gradient(180deg, #090b10 0%, #0f121a 100%)',
-                  padding: '30px',
+                  padding: '30px 24px',
                   textAlign: 'center',
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
               >
+                {/* Ambient glow */}
+                <div style={{
+                  position: 'absolute',
+                  width: '200px',
+                  height: '200px',
+                  background: 'radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, transparent 70%)',
+                  borderRadius: '50%',
+                  filter: 'blur(30px)',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  pointerEvents: 'none',
+                }} />
+
                 <div
                   style={{
-                    width: '52px',
-                    height: '52px',
+                    width: '56px',
+                    height: '56px',
                     borderRadius: '50%',
                     border: '3px solid rgba(99, 102, 241, 0.2)',
                     borderTopColor: '#818cf8',
                     animation: 'spin 0.9s linear infinite',
-                    marginBottom: '20px',
+                    marginBottom: '18px',
+                    position: 'relative',
+                    zIndex: 1,
                   }}
                 />
-                <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', marginBottom: '6px' }}>
-                  Generating Autonomous AI Video
+                <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#fff', marginBottom: '8px', letterSpacing: '-0.01em', position: 'relative', zIndex: 1 }}>
+                  Creating Your Master 1080p Video
                 </h3>
-                <p style={{ fontSize: '13px', color: '#818cf8', maxWidth: '380px', lineHeight: 1.5 }}>
-                  {generationStep || 'Processing multi-scene screenplay, neural voiceover, and 1080p composition...'}
+                <p style={{ fontSize: '13px', color: '#a5b4fc', maxWidth: '340px', lineHeight: 1.5, marginBottom: '20px', position: 'relative', zIndex: 1 }}>
+                  {generationStep || (project.current_stage ? `Active Stage: ${project.current_stage} — synthesizing screenplay, studio audio, and 1080p clips...` : 'Assembling high-retention video pipeline...')}
                 </p>
-              </div>
-            ) : thumbnail?.url ? (
-              <div
-                style={{
+
+                {/* Pipeline Checklist */}
+                <div style={{
+                  background: 'rgba(2, 6, 23, 0.75)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '10px',
+                  padding: '12px 16px',
                   width: '100%',
-                  height: '100%',
-                  backgroundImage: `url(${thumbnail.url})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
+                  maxWidth: '320px',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <button
-                  onClick={() => handleGenerateVideo('SCRIPT')}
-                  className="btn btn-primary"
-                  style={{
-                    padding: '12px 24px',
-                    boxShadow: '0 0 25px rgba(0,0,0,0.8)',
-                    fontSize: '14px',
-                  }}
-                >
-                  ▶ Render Full 1080p Video
-                </button>
+                  flexDirection: 'column',
+                  gap: '8px',
+                  fontSize: '12px',
+                  textAlign: 'left',
+                  position: 'relative',
+                  zIndex: 1,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#34d399' }}>
+                    <span>✓</span> <span>Narrative Screenplay & Hook</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: ['VOICE', 'SCENES', 'VIDEO', 'SUBTITLES', 'FINAL_VIDEO', 'THUMBNAIL'].includes(project.current_stage || '') ? '#34d399' : '#a5b4fc' }}>
+                    <span>{['VOICE', 'SCENES', 'VIDEO', 'SUBTITLES', 'FINAL_VIDEO', 'THUMBNAIL'].includes(project.current_stage || '') ? '✓' : '⚡'}</span>
+                    <span>Studio Voiceover Synthesis</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: ['SCENES', 'VIDEO', 'SUBTITLES', 'FINAL_VIDEO', 'THUMBNAIL'].includes(project.current_stage || '') ? '#34d399' : '#a5b4fc' }}>
+                    <span>{['SCENES', 'VIDEO', 'SUBTITLES', 'FINAL_VIDEO', 'THUMBNAIL'].includes(project.current_stage || '') ? '✓' : '⚡'}</span>
+                    <span>1080p Visual Scene Composition</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: ['SUBTITLES', 'FINAL_VIDEO', 'THUMBNAIL'].includes(project.current_stage || '') ? '#34d399' : '#a5b4fc' }}>
+                    <span>{['SUBTITLES', 'FINAL_VIDEO', 'THUMBNAIL'].includes(project.current_stage || '') ? '✓' : '⚡'}</span>
+                    <span>Synchronized Subtitle Captions</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: ['FINAL_VIDEO', 'THUMBNAIL'].includes(project.current_stage || '') ? '#34d399' : '#a5b4fc' }}>
+                    <span>{['FINAL_VIDEO', 'THUMBNAIL'].includes(project.current_stage || '') ? '✓' : '⚡'}</span>
+                    <span>Final MP4 Master Stitch</span>
+                  </div>
+                </div>
               </div>
             ) : (
               <div
@@ -1560,10 +1527,10 @@ export default function VideoStudioPage({ params }: { params?: any }) {
                   </svg>
                 </div>
                 <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#f4f4f5', marginBottom: '6px' }}>
-                  Ready to Generate Video
+                  Video Composition Ready
                 </h3>
                 <p style={{ fontSize: '12px', color: '#94a3b8', maxWidth: '360px', lineHeight: 1.5, marginBottom: '18px' }}>
-                  Generate a full retention-focused screenplay, neural voiceover, cinematic B-roll clips, and 1080p MP4.
+                  Click to start the autonomous pipeline or re-render.
                 </p>
                 <button
                   onClick={() => handleGenerateVideo('SCRIPT')}
@@ -1577,7 +1544,7 @@ export default function VideoStudioPage({ params }: { params?: any }) {
                     border: 'none',
                   }}
                 >
-                  <span>⚡ Generate AI Video (1-Click)</span>
+                  <span>⚡ Render Full Video (1-Click)</span>
                 </button>
               </div>
             )}
@@ -1653,39 +1620,6 @@ export default function VideoStudioPage({ params }: { params?: any }) {
             </div>
           </div>
 
-          {/* Timeline Scrubber */}
-          <div className="studio-timeline-container">
-            <div className="timeline-header">
-              <span>Multi-Scene Timeline Scrubber ({formatTime(currentTime)} / {formatTime(totalCompositionDuration)})</span>
-              <span>{scenes.length} Scene Blocks • Auto Scene Cuts</span>
-            </div>
-
-            <input
-              type="range"
-              min="0"
-              max={totalCompositionDuration || 100}
-              step="0.1"
-              value={currentTime}
-              onChange={handleSeek}
-              disabled={!activeVideoUrl && !finalVideoUrl}
-              className="timeline-scrubber-track"
-            />
-
-            <div className="timeline-scenes-track">
-              {sceneTimeline.map((s) => (
-                <div
-                  key={s.id || s.index}
-                  onClick={() => handleSelectScene(s.index)}
-                  className={`timeline-scene-block ${(displayedSceneNum === s.scene_index) ? 'active' : ''}`}
-                  style={{ flex: Math.max(1, s.duration) }}
-                  title={`Scene ${s.scene_index} (${s.duration}s): ${s.narration.substring(0, 45)}...`}
-                >
-                  S{s.scene_index} ({s.duration}s)
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Mobile Tab Navigator (Hidden on Desktop, Visible on Mobile <= 1024px) */}
           <div className="studio-mobile-tabs">
             <button
@@ -1732,48 +1666,31 @@ export default function VideoStudioPage({ params }: { params?: any }) {
         <div className={`studio-pane studio-pane-right ${mobileStudioTab === 'scenes' ? 'studio-pane-mobile-hidden' : ''}`}>
           {/* Tab Switcher */}
           <div className="pane-header" style={{ padding: '8px 12px' }}>
-            <div style={{ display: 'flex', gap: '4px', width: '100%', overflowX: 'auto' }}>
+            <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
               <button
+                type="button"
                 onClick={() => {
                   setActiveInspectorTab('scenes');
                   setMobileStudioTab('scenes');
                 }}
-                className={`btn btn-sm studio-tabs-scenes-btn ${activeInspectorTab === 'scenes' ? 'btn-secondary' : 'btn-ghost'}`}
+                className={`btn btn-sm ${activeInspectorTab === 'scenes' ? 'btn-primary' : 'btn-ghost'}`}
                 style={{ flex: 1, fontSize: '11px', whiteSpace: 'nowrap' }}
               >
-                🎬 Scenes
+                📝 Script & Scenes
               </button>
               <button
-                onClick={() => {
-                  setActiveInspectorTab('scene');
-                  setMobileStudioTab('inspector');
-                }}
-                className={`btn btn-sm ${activeInspectorTab === 'scene' ? 'btn-secondary' : 'btn-ghost'}`}
-                style={{ flex: 1, fontSize: '11px', whiteSpace: 'nowrap' }}
-              >
-                AI Scene
-              </button>
-              <button
+                type="button"
                 onClick={() => {
                   setActiveInspectorTab('copilot');
                   setMobileStudioTab('copilot');
                 }}
                 className={`btn btn-sm ${activeInspectorTab === 'copilot' ? 'btn-primary' : 'btn-ghost'}`}
-                style={{ flex: 1, fontSize: '11px', background: activeInspectorTab === 'copilot' ? 'var(--gradient-brand)' : 'transparent', color: '#fff', whiteSpace: 'nowrap' }}
-              >
-                ⚡ Copilot
-              </button>
-              <button
-                onClick={() => {
-                  setActiveInspectorTab('metadata');
-                  setMobileStudioTab('inspector');
-                }}
-                className={`btn btn-sm ${activeInspectorTab === 'metadata' ? 'btn-secondary' : 'btn-ghost'}`}
                 style={{ flex: 1, fontSize: '11px', whiteSpace: 'nowrap' }}
               >
-                Metadata
+                ⚡ AI Copilot
               </button>
               <button
+                type="button"
                 onClick={() => {
                   setActiveInspectorTab('publish');
                   setMobileStudioTab('publish');
@@ -1781,7 +1698,7 @@ export default function VideoStudioPage({ params }: { params?: any }) {
                 className={`btn btn-sm ${activeInspectorTab === 'publish' ? 'btn-primary' : 'btn-ghost'}`}
                 style={{ flex: 1, fontSize: '11px', whiteSpace: 'nowrap' }}
               >
-                Publish
+                🚀 Publish
               </button>
             </div>
           </div>
@@ -1849,321 +1766,6 @@ export default function VideoStudioPage({ params }: { params?: any }) {
                   })
                 )}
               </div>
-            ) : activeInspectorTab === 'scene' && activeScene ? (
-              <>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#fff' }}>
-                    Scene {displayedSceneNum} Inspector
-                  </span>
-                  <span style={{ fontSize: '10px', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', padding: '2px 6px', borderRadius: '4px' }}>
-                    Veo 3 Pro
-                  </span>
-                </div>
-
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Visual Synthesis Prompt</label>
-                  <textarea
-                    className="form-textarea"
-                    value={activeScene.visual_prompt}
-                    readOnly
-                    rows={4}
-                    style={{ fontSize: '12px', lineHeight: 1.4 }}
-                  />
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Camera Movement</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={activeScene.camera_movement || 'Linear glide'}
-                      readOnly
-                      style={{ fontSize: '12px' }}
-                    />
-                  </div>
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Lighting Style</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={activeScene.lighting || 'Cinematic Studio'}
-                      readOnly
-                      style={{ fontSize: '12px' }}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Subtitle Caption Text</label>
-                  <textarea
-                    className="form-textarea"
-                    value={activeScene.subtitle_text || activeScene.narration}
-                    readOnly
-                    rows={3}
-                    style={{ fontSize: '12px' }}
-                  />
-                </div>
-
-                {/* AI Quality Control Audit Section */}
-                {(() => {
-                  let qcData: any = null;
-                  try {
-                    if (activeScene.quality_report_json) {
-                      qcData = JSON.parse(activeScene.quality_report_json);
-                    }
-                  } catch {}
-
-                  if (!qcData) {
-                    return (
-                      <div style={{ padding: '10px 12px', background: 'rgba(99,102,241,0.08)', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.2)' }}>
-                        <div style={{ fontSize: '11px', fontWeight: 600, color: '#818cf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span>🛡️ AI Quality Control Active</span>
-                        </div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                          Automated 8-point check evaluates narration match, 9:16 framing, visual style cohesion, and motion realism.
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  const checks = qcData.checks || {};
-                  return (
-                    <div style={{ padding: '12px', background: 'rgba(15, 23, 42, 0.65)', borderRadius: '8px', border: `1px solid ${qcData.passed ? 'rgba(34, 197, 94, 0.3)' : 'rgba(234, 179, 8, 0.3)'}` }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span>🛡️ Quality Control Audit</span>
-                        </span>
-                        <span style={{
-                          fontSize: '10px',
-                          background: qcData.passed ? 'rgba(34, 197, 94, 0.2)' : 'rgba(234, 179, 8, 0.2)',
-                          color: qcData.passed ? '#4ade80' : '#facc15',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          fontWeight: 700,
-                        }}>
-                          {qcData.passed ? `PASSED (${qcData.overallScore}%)` : `REFINED (${qcData.overallScore}%)`}
-                        </span>
-                      </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '10px' }}>
-                        <div style={{ color: checks.visualMatchesNarration?.passed ? '#4ade80' : '#f87171' }}>
-                          {checks.visualMatchesNarration?.passed ? '✓' : '✗'} Narration Sync
-                        </div>
-                        <div style={{ color: checks.correctSubjectAndObjects?.passed ? '#4ade80' : '#f87171' }}>
-                          {checks.correctSubjectAndObjects?.passed ? '✓' : '✗'} Subject / Objects
-                        </div>
-                        <div style={{ color: checks.noAiArtifactsOrDistortions?.passed ? '#4ade80' : '#f87171' }}>
-                          {checks.noAiArtifactsOrDistortions?.passed ? '✓' : '✗'} No Distortions
-                        </div>
-                        <div style={{ color: checks.naturalLookingMotion?.passed ? '#4ade80' : '#f87171' }}>
-                          {checks.naturalLookingMotion?.passed ? '✓' : '✗'} Natural Motion
-                        </div>
-                        <div style={{ color: checks.correct916Framing?.passed ? '#4ade80' : '#f87171' }}>
-                          {checks.correct916Framing?.passed ? '✓' : '✗'} 9:16 Framing
-                        </div>
-                        <div style={{ color: checks.consistentVisualStyle?.passed ? '#4ade80' : '#f87171' }}>
-                          {checks.consistentVisualStyle?.passed ? '✓' : '✗'} Visual Style DNA
-                        </div>
-                        <div style={{ color: checks.sceneDifferentiation?.passed ? '#4ade80' : '#f87171' }}>
-                          {checks.sceneDifferentiation?.passed ? '✓' : '✗'} Shot Variety
-                        </div>
-                        <div style={{ color: checks.strongVisualHook?.passed ? '#4ade80' : '#f87171' }}>
-                          {checks.strongVisualHook?.passed ? '✓' : '✗'} Visual Hook
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Voice Narration Section in Inspector */}
-                <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#e4e4e7', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <span>🎙️</span>
-                      <span>Scene Voiceover</span>
-                    </span>
-                    {customAudioOverride ? (
-                      <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 700, background: 'rgba(16,185,129,0.15)', padding: '2px 6px', borderRadius: '4px' }}>
-                        Custom Voice Active ✓
-                      </span>
-                    ) : (
-                      <span style={{ fontSize: '10px', color: '#a1a1aa', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
-                        AI Voice Active
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsVoiceRecordModalOpen(true)}
-                    className="btn btn-secondary btn-xs"
-                    style={{ width: '100%', fontSize: '11px', gap: '5px', justifyContent: 'center' }}
-                  >
-                    <span>🎙️</span>
-                    <span>{customAudioOverride ? 'Re-record / Replace Voice' : 'Record My Voice for this Scene'}</span>
-                  </button>
-                </div>
-
-                {/* WP5 Visual Tier Controls */}
-                <div style={{ padding: '12px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#e4e4e7' }}>Visual Tier:</span>
-                    <span style={{
-                      fontSize: '10px',
-                      fontWeight: 700,
-                      padding: '2px 8px',
-                      borderRadius: '4px',
-                      background: (activeScene as any).visual_tier === 'ai_clip' ? 'rgba(99, 102, 241, 0.2)' : (activeScene as any).visual_tier === 'graphic' ? 'rgba(56, 189, 248, 0.2)' : 'rgba(16, 185, 129, 0.2)',
-                      color: (activeScene as any).visual_tier === 'ai_clip' ? '#818cf8' : (activeScene as any).visual_tier === 'graphic' ? '#38bdf8' : '#34d399',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                    }}>
-                      {((activeScene as any).visual_tier || 'motion_still').toUpperCase()}
-                    </span>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
-                    <button
-                      type="button"
-                      onClick={() => handleSwapSceneTier(activeScene, 'ai_clip')}
-                      disabled={isSwappingTier || (activeScene as any).visual_tier === 'ai_clip'}
-                      className="btn btn-secondary btn-xs"
-                      style={{ fontSize: '10px', padding: '5px 2px', justifyContent: 'center' }}
-                    >
-                      AI Video
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleSwapSceneTier(activeScene, 'graphic')}
-                      disabled={isSwappingTier || (activeScene as any).visual_tier === 'graphic'}
-                      className="btn btn-secondary btn-xs"
-                      style={{ fontSize: '10px', padding: '5px 2px', justifyContent: 'center' }}
-                    >
-                      Graphic Card
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleSwapSceneTier(activeScene, 'motion_still')}
-                      disabled={isSwappingTier || (activeScene as any).visual_tier === 'motion_still'}
-                      className="btn btn-secondary btn-xs"
-                      style={{ fontSize: '10px', padding: '5px 2px', justifyContent: 'center' }}
-                    >
-                      Motion Still
-                    </button>
-                  </div>
-                  {(activeScene as any).visual_tier !== 'ai_clip' && (
-                    <button
-                      type="button"
-                      onClick={() => handleSwapSceneTier(activeScene, 'ai_clip')}
-                      disabled={isSwappingTier}
-                      className="btn btn-sm"
-                      style={{
-                        marginTop: '8px',
-                        width: '100%',
-                        background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                        color: '#fff',
-                        fontWeight: 700,
-                        fontSize: '11px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        border: 'none',
-                        borderRadius: '6px',
-                        padding: '8px 10px',
-                        boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <span>🎬 Animate Scene with AI Video (3x Pro)</span>
-                    </button>
-                  )}
-                </div>
-
-                {/* WP5 Narration Edit & 1-Click Undo */}
-                <div style={{ padding: '12px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#e4e4e7' }}>Narration (Edit & Re-Voice)</span>
-                    <button
-                      type="button"
-                      onClick={() => handleUndoScene(activeScene)}
-                      disabled={isUndoing}
-                      className="btn btn-ghost btn-xs"
-                      style={{ fontSize: '10px', color: '#f59e0b', padding: '2px 6px' }}
-                    >
-                      ↩️ 1-Click Undo
-                    </button>
-                  </div>
-                  <textarea
-                    className="form-textarea"
-                    value={editedNarrationText || activeScene.narration}
-                    onChange={(e) => setEditedNarrationText(e.target.value)}
-                    rows={3}
-                    style={{ fontSize: '11px', lineHeight: 1.4 }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRevoiceScene(activeScene, editedNarrationText || activeScene.narration)}
-                    disabled={isRevoicing}
-                    className="btn btn-secondary btn-xs"
-                    style={{ width: '100%', marginTop: '6px', fontSize: '11px', justifyContent: 'center' }}
-                  >
-                    {isRevoicing ? 'Synthesizing Audio...' : '🎙️ Re-Voice Segment'}
-                  </button>
-                </div>
-
-                <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <button
-                    onClick={() => handleRegenerateScene(activeScene)}
-                    disabled={isRegeneratingScene}
-                    className="btn btn-primary btn-sm"
-                    style={{
-                      width: '100%',
-                      background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                      color: '#fff',
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                      boxShadow: '0 0 14px rgba(99,102,241,0.3)',
-                    }}
-                  >
-                    {isRegeneratingScene ? (
-                      <>
-                        <span style={{ display: 'inline-block', width: '12px', height: '12px', border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                        <span>Regenerating Scene {displayedSceneNum}...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>⚡ Regenerate This Scene (AI)</span>
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={handleRecomposeVideo}
-                    disabled={isRecomposing}
-                    className="btn btn-secondary btn-sm"
-                    style={{ width: '100%', background: 'rgba(34, 197, 94, 0.15)', color: '#4ade80', borderColor: 'rgba(34, 197, 94, 0.3)' }}
-                  >
-                    {isRecomposing ? '🎬 Re-composing...' : '🎬 Recompose Full Video'}
-                  </button>
-                  <button
-                    onClick={handleRerollActiveScene}
-                    className="btn btn-secondary btn-sm"
-                    style={{ width: '100%' }}
-                  >
-                    🔄 Re-roll B-Roll Footage
-                  </button>
-                  <button
-                    onClick={() => {
-                      setPlaybackMode(playbackMode === 'SOLO_SCENE' ? 'MULTI_SCENE_AUTO' : 'SOLO_SCENE');
-                    }}
-                    className="btn btn-ghost btn-sm"
-                    style={{ width: '100%' }}
-                  >
-                    {playbackMode === 'SOLO_SCENE' ? '🎬 Back to Full Composition' : `🔍 Solo Preview Scene ${displayedSceneNum}`}
-                  </button>
-                </div>
-              </>
             ) : activeInspectorTab === 'copilot' ? (
               /* Tillercast Copilot Tab */
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>

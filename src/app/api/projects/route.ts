@@ -221,20 +221,23 @@ export async function POST(request: Request) {
     let approvedAt: string | null = null;
     let quotedCredits = 0;
 
-    if (shouldAutoRender && currentCredits && currentCredits.balance >= 25) {
-      try {
-        deductUserCredits(
-          userId,
-          25,
-          'VIDEO_GENERATION',
-          `Video Generation: ${cleanTopic.substring(0, 30)}`,
-          projectId
-        );
-        approvedAt = now;
-        quotedCredits = 25;
-      } catch (deductErr) {
-        console.warn('[Projects API] Credit deduction deferred to manual approval:', deductErr);
+    if (shouldAutoRender) {
+      if (currentCredits && currentCredits.balance >= 25) {
+        try {
+          deductUserCredits(
+            userId,
+            25,
+            'VIDEO_GENERATION',
+            `Video Generation: ${cleanTopic.substring(0, 30)}`,
+            projectId
+          );
+          quotedCredits = 25;
+        } catch (deductErr) {
+          console.warn('[Projects API] Credit deduction note:', deductErr);
+        }
       }
+      // Always pre-approve so pipeline runs end-to-end to final 1080p MP4 without requiring a 2nd manual click
+      approvedAt = now;
     }
 
     db.prepare(

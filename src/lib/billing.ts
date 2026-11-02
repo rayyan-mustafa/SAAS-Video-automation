@@ -221,10 +221,20 @@ export type BillingConfigStatus =
   | { configured: true; provider: PaymentProvider }
   | { configured: false; reason: string };
 
-import { isPolarConfigured } from './polar';
-
 export function getPaymentProviderStatus(): BillingConfigStatus {
-  if (isPolarConfigured()) {
+  if (typeof window === 'undefined') {
+    try {
+      // Dynamic require ensures client components importing types from billing.ts do not pull sqlite/fs into webpack bundles
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { isPolarConfigured } = require('./polar');
+      if (isPolarConfigured && isPolarConfigured()) {
+        return { configured: true, provider: 'polar' };
+      }
+    } catch {
+      // Fallback to env checks below if server module cannot be loaded
+    }
+  }
+  if (process.env.POLAR_ACCESS_TOKEN || process.env.POLAR_CHECKOUT_URL) {
     return { configured: true, provider: 'polar' };
   }
   if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith('sk_')) {

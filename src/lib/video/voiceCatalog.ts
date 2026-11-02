@@ -3,13 +3,60 @@ export interface VoicePreset {
   name: string;
   category: 'documentary' | 'storyteller' | 'energetic' | 'autoritative' | 'cloned';
   tier: 'free' | 'paid';
-  provider: 'cloudflare-aura' | 'elevenlabs';
+  provider: 'cloudflare-aura' | 'elevenlabs' | 'google-neural2';
   providerVoiceId: string;
   previewAudioUrl: string;
   description: string;
+  accent?: 'en-US' | 'en-GB' | 'en-AU' | 'en-IN';
 }
 
 export const TILLERCAST_VOICE_CATALOG: VoicePreset[] = [
+  // === FREE DEMO & STARTER MULTI-ACCENT VOICES (Google Cloud Neural2 / Journey) ===
+  {
+    id: 'google-neural2-us',
+    name: '🇺🇸 Journey (US American)',
+    category: 'documentary',
+    tier: 'free',
+    provider: 'google-neural2',
+    providerVoiceId: 'en-US-Journey-F',
+    previewAudioUrl: '/voices/orion.mp3',
+    accent: 'en-US',
+    description: 'Natural, human-tone American English narration for explainers and shorts',
+  },
+  {
+    id: 'google-neural2-gb',
+    name: '🇬🇧 Oliver (British UK)',
+    category: 'documentary',
+    tier: 'free',
+    provider: 'google-neural2',
+    providerVoiceId: 'en-GB-Neural2-B',
+    previewAudioUrl: '/voices/asteria.mp3',
+    accent: 'en-GB',
+    description: 'Crisp British studio accent for history, crime, and educational documentaries',
+  },
+  {
+    id: 'google-neural2-au',
+    name: '🇦🇺 Liam (Australian)',
+    category: 'energetic',
+    tier: 'free',
+    provider: 'google-neural2',
+    providerVoiceId: 'en-AU-Neural2-A',
+    previewAudioUrl: '/voices/arcas.mp3',
+    accent: 'en-AU',
+    description: 'Warm, upbeat Australian English tone for lifestyle, travel, and shorts',
+  },
+  {
+    id: 'google-neural2-in',
+    name: '🇮🇳 Aarav (Indian English)',
+    category: 'autoritative',
+    tier: 'free',
+    provider: 'google-neural2',
+    providerVoiceId: 'en-IN-Neural2-A',
+    previewAudioUrl: '/voices/orion.mp3',
+    accent: 'en-IN',
+    description: 'Articulate, high-clarity Indian English narration for tech and finance tutorials',
+  },
+
   // === FREE DEMO TIER VOICES (Cloudflare Deepgram Aura-2) ===
   {
     id: 'cf-aura-orion',
@@ -18,7 +65,8 @@ export const TILLERCAST_VOICE_CATALOG: VoicePreset[] = [
     tier: 'free',
     provider: 'cloudflare-aura',
     providerVoiceId: 'orion',
-    previewAudioUrl: '/sample.mp3',
+    previewAudioUrl: '/voices/orion.mp3',
+    accent: 'en-US',
     description: 'Clear, steady narration for free preview renders',
   },
   {
@@ -28,7 +76,8 @@ export const TILLERCAST_VOICE_CATALOG: VoicePreset[] = [
     tier: 'free',
     provider: 'cloudflare-aura',
     providerVoiceId: 'asteria',
-    previewAudioUrl: '/sample.mp3',
+    previewAudioUrl: '/voices/asteria.mp3',
+    accent: 'en-US',
     description: 'Warm, engaging pacing for short-form stories',
   },
   {
@@ -38,11 +87,12 @@ export const TILLERCAST_VOICE_CATALOG: VoicePreset[] = [
     tier: 'free',
     provider: 'cloudflare-aura',
     providerVoiceId: 'arcas',
-    previewAudioUrl: '/sample.mp3',
+    previewAudioUrl: '/voices/arcas.mp3',
+    accent: 'en-US',
     description: 'Crisp, fast-paced delivery for explainers',
   },
 
-  // === PAID PRO TIER VOICES (100% ElevenLabs) ===
+  // === PAID PRO TIER VOICES (100% ElevenLabs Hyper-Realistic Narrators) ===
   {
     id: 'el-adam-viral',
     name: 'Adam — Viral Documentary Pro',
@@ -50,17 +100,19 @@ export const TILLERCAST_VOICE_CATALOG: VoicePreset[] = [
     tier: 'paid',
     provider: 'elevenlabs',
     providerVoiceId: 'pNInz6obpgDQGcFmaJgB',
-    previewAudioUrl: '/sample.mp3',
+    previewAudioUrl: '/voices/adam.mp3',
+    accent: 'en-US',
     description: 'The #1 viral TikTok & YouTube Shorts deep narrator voice',
   },
   {
     id: 'el-brian-cinema',
-    name: 'Brian — Dark Mystery & Crime',
+    name: 'Brian — Dark Mystery & Cinema',
     category: 'documentary',
     tier: 'paid',
     provider: 'elevenlabs',
     providerVoiceId: 'nPczCjzI2devNBz1zQrb',
-    previewAudioUrl: '/sample.mp3',
+    previewAudioUrl: '/voices/brian.mp3',
+    accent: 'en-US',
     description: 'Deep, cinematic movie-trailer resonance with natural breath pauses',
   },
   {
@@ -70,7 +122,8 @@ export const TILLERCAST_VOICE_CATALOG: VoicePreset[] = [
     tier: 'paid',
     provider: 'elevenlabs',
     providerVoiceId: 'iP95p4xoKVk53GoZ742B',
-    previewAudioUrl: '/sample.mp3',
+    previewAudioUrl: '/voices/chris.mp3',
+    accent: 'en-US',
     description: 'Punchy, high-conviction founder & finance storytelling',
   },
   {
@@ -80,10 +133,54 @@ export const TILLERCAST_VOICE_CATALOG: VoicePreset[] = [
     tier: 'paid',
     provider: 'elevenlabs',
     providerVoiceId: '21m00Tcm4TlvDq8ikWAM',
-    previewAudioUrl: '/sample.mp3',
+    previewAudioUrl: '/voices/rachel.mp3',
+    accent: 'en-US',
     description: 'Hyper-realistic emotional inflection for Reddit & true stories',
+  },
+  {
+    id: 'el-antoni-tech',
+    name: 'Antoni — Studio Explainer',
+    category: 'autoritative',
+    tier: 'paid',
+    provider: 'elevenlabs',
+    providerVoiceId: 'ErXwobaYiN019PkySvjV',
+    previewAudioUrl: '/voices/adam.mp3',
+    accent: 'en-US',
+    description: 'Authoritative, calm tone ideal for technology and educational shorts',
+  },
+  {
+    id: 'el-bella-vlog',
+    name: 'Bella — Lifestyle & Creator',
+    category: 'storyteller',
+    tier: 'paid',
+    provider: 'elevenlabs',
+    providerVoiceId: 'EXAVITQu4vr4xnSDxMaL',
+    previewAudioUrl: '/voices/rachel.mp3',
+    accent: 'en-US',
+    description: 'Vibrant, relatable storytelling voice for Instagram Reels & TikTok',
+  },
+  {
+    id: 'el-josh-deep',
+    name: 'Josh — Deep Cinematic Narration',
+    category: 'documentary',
+    tier: 'paid',
+    provider: 'elevenlabs',
+    providerVoiceId: 'TxGEqnHWrfWFTfGW9XjX',
+    previewAudioUrl: '/voices/brian.mp3',
+    accent: 'en-US',
+    description: 'Ultra-deep bass narrator voice for cosmic mysteries and history',
+  },
+  {
+    id: 'el-sam-finance',
+    name: 'Sam — Finance & Business Anchor',
+    category: 'autoritative',
+    tier: 'paid',
+    provider: 'elevenlabs',
+    providerVoiceId: 'yoZ06aMxZJJ28mfd3POQ',
+    previewAudioUrl: '/voices/chris.mp3',
+    accent: 'en-US',
+    description: 'Crisp news-anchor cadence for financial breakdowns and market analysis',
   },
 ];
 
 export const AUTORA_VOICE_CATALOG = TILLERCAST_VOICE_CATALOG;
-

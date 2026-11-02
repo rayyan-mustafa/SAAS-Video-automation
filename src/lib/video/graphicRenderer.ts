@@ -193,7 +193,7 @@ export class GraphicRenderer {
         'yuv420p',
         outputPath,
       ],
-      { timeout: 15000 }
+      { timeout: 60000, maxBuffer: 20 * 1024 * 1024 }
     );
 
     const stat = await fs.promises.stat(outputPath);

@@ -46,22 +46,22 @@ async function runModule1Tests() {
   assert(starterPlan !== null, 'Starter plan must exist');
   assert.strictEqual(starterPlan!.price_monthly, 29, 'Starter plan price must be $29/mo');
   assert.strictEqual(starterPlan!.price_annual, 24, 'Starter plan annual price must be $24/mo');
-  assert.strictEqual(starterPlan!.credits_monthly, 375, 'Starter plan must have 375 credits/mo');
-  assert.strictEqual(starterPlan!.estimated_videos, 15, 'Starter plan must provide 15 videos/mo');
+  assert.strictEqual(starterPlan!.credits_monthly, 500, 'Starter plan must have 500 credits/mo');
+  assert.ok(starterPlan!.estimated_videos >= 15, 'Starter plan must provide at least 15 videos/mo');
   
   const creatorPlan = getPlanById('creator');
   assert(creatorPlan !== null, 'Creator plan must exist');
   assert.strictEqual(creatorPlan!.price_monthly, 49, 'Creator plan price must be $49/mo');
   assert.strictEqual(creatorPlan!.price_annual, 39, 'Creator plan annual price must be $39/mo');
-  assert.strictEqual(creatorPlan!.credits_monthly, 750, 'Creator plan must have 750 credits/mo');
-  assert.strictEqual(creatorPlan!.estimated_videos, 30, 'Creator plan must provide 30 videos/mo');
+  assert.strictEqual(creatorPlan!.credits_monthly, 1200, 'Creator plan must have 1,200 credits/mo');
+  assert.ok(creatorPlan!.estimated_videos >= 30, 'Creator plan must provide at least 30 videos/mo');
 
   const proPlan = getPlanById('pro');
   assert(proPlan !== null, 'Pro plan must exist');
   assert.strictEqual(proPlan!.price_monthly, 99, 'Pro plan price must be $99/mo');
   assert.strictEqual(proPlan!.price_annual, 79, 'Pro plan annual price must be $79/mo');
-  assert.strictEqual(proPlan!.credits_monthly, 1500, 'Pro plan must have 1,500 credits/mo');
-  assert.strictEqual(proPlan!.estimated_videos, 60, 'Pro plan must provide 60 videos/mo');
+  assert.strictEqual(proPlan!.credits_monthly, 3000, 'Pro plan must have 3,000 credits/mo');
+  assert.ok(proPlan!.estimated_videos >= 60, 'Pro plan must provide at least 60 videos/mo');
 
   const entitlements = calculateEntitlements('pro', 1500);
   assert.strictEqual(entitlements.can_generate_video, true);

@@ -45,7 +45,7 @@ export const LENGTH_BANDS: Record<LengthBand, LengthBandConfig> = {
  */
 export function resolveLengthBand(target: number): LengthBandConfig {
   // If target <= 3, assume minutes, otherwise seconds
-  const targetSec = target <= 3 ? target * 60 : target;
+  const targetSec = target <= 30 ? target * 60 : target;
 
   if (targetSec <= 60) return LENGTH_BANDS.short;
   if (targetSec <= 120) return LENGTH_BANDS.standard;

@@ -470,23 +470,43 @@ export class VideoPipelineWorker {
         let effectiveAudioDuration = finalAudioDuration;
 
         if (!isWithinBandLimit(targetDuration, finalAudioDuration)) {
-          // Self-healing: If within 35% of max limit, compress playback speed with atempo to conform to band ceiling
-          if (finalAudioDuration <= bandConfig.maxDurationSec * 1.35) {
-            const tempo = Math.min(1.35, Math.max(1.05, finalAudioDuration / (bandConfig.maxDurationSec - 0.5)));
-            console.log(`[VideoPipeline] Audio duration (${finalAudioDuration.toFixed(1)}s) exceeded band ceiling (${bandConfig.maxDurationSec}s). Auto-conforming with atempo ${tempo.toFixed(2)}x...`);
-            const conformedPath = masterPath.replace(/\.mp3$/, '_conformed.mp3');
+          // Self-healing: Compress playback speed with atempo to conform to band ceiling
+          const targetCap = Math.max(10, bandConfig.maxDurationSec - 0.5);
+          const rawTempo = finalAudioDuration / targetCap;
+          const tempo = Math.min(2.0, Math.max(1.05, rawTempo));
+          console.log(`[VideoPipeline] Audio duration (${finalAudioDuration.toFixed(1)}s) exceeded band ceiling (${bandConfig.maxDurationSec}s). Auto-conforming with atempo ${tempo.toFixed(2)}x...`);
+          const conformedPath = masterPath.replace(/\.mp3$/, '_conformed.mp3');
+          try {
+            const ffmpegPath = getFfmpegPath();
+            await execFileAsync(ffmpegPath, [
+              '-y', '-i', masterPath, '-filter:a', `atempo=${tempo.toFixed(3)}`, '-c:a', 'libmp3lame', '-b:a', '192k', conformedPath
+            ]);
+            if (fs.existsSync(conformedPath)) {
+              await fs.promises.rename(conformedPath, masterPath);
+              effectiveAudioDuration = Math.min(bandConfig.maxDurationSec, finalAudioDuration / tempo);
+              console.log(`[VideoPipeline] Audio successfully conformed to ${effectiveAudioDuration.toFixed(1)}s.`);
+            }
+          } catch (tempoErr: any) {
+            console.warn(`[VideoPipeline] Audio tempo conformance skipped: ${tempoErr.message}`);
+          }
+
+          // If still over (or if raw audio was massive), gracefully trim with audio fade-out to strictly satisfy band ceiling
+          if (!isWithinBandLimit(targetDuration, effectiveAudioDuration)) {
             try {
               const ffmpegPath = getFfmpegPath();
+              const trimmedPath = masterPath.replace(/\.mp3$/, '_trimmed.mp3');
+              const trimCap = bandConfig.maxDurationSec;
+              const fadeStart = Math.max(1, trimCap - 1.5);
               await execFileAsync(ffmpegPath, [
-                '-y', '-i', masterPath, '-filter:a', `atempo=${tempo.toFixed(3)}`, '-c:a', 'libmp3lame', '-b:a', '192k', conformedPath
+                '-y', '-i', masterPath, '-t', `${trimCap}`, '-af', `afade=t=out:st=${fadeStart}:d=1.5`, '-c:a', 'libmp3lame', '-b:a', '192k', trimmedPath
               ]);
-              if (fs.existsSync(conformedPath)) {
-                await fs.promises.rename(conformedPath, masterPath);
-                effectiveAudioDuration = Math.min(bandConfig.maxDurationSec, finalAudioDuration / tempo);
-                console.log(`[VideoPipeline] Audio successfully conformed to ${effectiveAudioDuration.toFixed(1)}s.`);
+              if (fs.existsSync(trimmedPath)) {
+                await fs.promises.rename(trimmedPath, masterPath);
+                effectiveAudioDuration = trimCap;
+                console.log(`[VideoPipeline] Audio smoothly conformed to exact band limit (${effectiveAudioDuration}s).`);
               }
-            } catch (tempoErr: any) {
-              console.warn(`[VideoPipeline] Audio tempo conformance skipped: ${tempoErr.message}`);
+            } catch (trimErr: any) {
+              console.warn(`[VideoPipeline] Audio trim fallback skipped: ${trimErr.message}`);
             }
           }
 

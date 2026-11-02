@@ -4,6 +4,7 @@ import { execFile } from 'child_process';
 import util from 'util';
 import { getFfmpegPath, inspectMedia } from '../providers/videoProvider';
 import { storage } from '../storage';
+import { isCloudflareConfigured, runCloudflareBinary } from '../providers/cloudflareAiClient';
 
 const execFileAsync = util.promisify(execFile);
 
@@ -77,10 +78,65 @@ export class MotionStillRenderer {
         break;
     }
 
+    let activeImagePath = sourceImagePath;
+    let tempImageCreated = false;
+
+    // 0. If no source image provided, generate an authentic cinematic photorealistic image
+    if (!activeImagePath || !fs.existsSync(activeImagePath)) {
+      const cleanPrompt = (promptDescription || 'Cinematic documentary photograph, photorealistic 8k, detailed, dramatic atmospheric lighting')
+        .replace(/[\r\n\t]+/g, ' ')
+        .trim();
+
+      // Attempt A: Cloudflare Workers AI FLUX.1 Schnell
+      if (isCloudflareConfigured()) {
+        try {
+          console.log(`[MotionStillRenderer] Generating Scene ${sceneIndex} still via Cloudflare FLUX.1 Schnell...`);
+          const imgBuf = await runCloudflareBinary('@cf/black-forest-labs/flux-1-schnell', {
+            prompt: `${cleanPrompt}, cinematic 8k, photorealistic, atmospheric lighting, masterpiece`,
+            steps: 4,
+          }, { timeoutMs: 30000 });
+
+          if (imgBuf && imgBuf.length > 5000) {
+            const rand = Math.random().toString(36).substring(2, 7);
+            const tempImgPath = path.join(outDir, `cf_flux_${sceneIndex}_${rand}.jpg`);
+            await fs.promises.writeFile(tempImgPath, imgBuf);
+            activeImagePath = tempImgPath;
+            tempImageCreated = true;
+            console.log(`[MotionStillRenderer] Scene ${sceneIndex} Cloudflare FLUX image created (${imgBuf.length} bytes).`);
+          }
+        } catch (cfErr: any) {
+          console.warn(`[MotionStillRenderer] Cloudflare FLUX generation failed (${cfErr.message}). Trying Pollinations Flux fallback...`);
+        }
+      }
+
+      // Attempt B: High-res Pollinations Flux AI Generation (0 credit, reliable global fallback)
+      if (!activeImagePath || !fs.existsSync(activeImagePath)) {
+        try {
+          console.log(`[MotionStillRenderer] Generating Scene ${sceneIndex} still via Pollinations Flux AI...`);
+          const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt + ', cinematic 8k photography, realistic, dramatic lighting')}?width=${width}&height=${height}&model=flux&nologo=true`;
+          const res = await fetch(pollUrl, { signal: AbortSignal.timeout(20000) });
+          if (res.ok) {
+            const arr = await res.arrayBuffer();
+            const buf = Buffer.from(arr);
+            if (buf.length > 5000) {
+              const rand = Math.random().toString(36).substring(2, 7);
+              const tempImgPath = path.join(outDir, `poll_flux_${sceneIndex}_${rand}.jpg`);
+              await fs.promises.writeFile(tempImgPath, buf);
+              activeImagePath = tempImgPath;
+              tempImageCreated = true;
+              console.log(`[MotionStillRenderer] Scene ${sceneIndex} Pollinations Flux image created (${buf.length} bytes).`);
+            }
+          }
+        } catch (pollErr: any) {
+          console.warn(`[MotionStillRenderer] Pollinations image fetch failed: ${pollErr.message}`);
+        }
+      }
+    }
+
     let rendered = false;
 
     // 1. If an actual source image exists, apply zoompan filter directly to it
-    if (sourceImagePath && fs.existsSync(sourceImagePath)) {
+    if (activeImagePath && fs.existsSync(activeImagePath)) {
       try {
         await execFileAsync(
           ffmpegPath,
@@ -89,7 +145,7 @@ export class MotionStillRenderer {
             '-loop',
             '1',
             '-i',
-            sourceImagePath,
+            activeImagePath,
             '-vf',
             `${zoompanFilter},format=yuv420p`,
             '-c:v',
@@ -106,11 +162,15 @@ export class MotionStillRenderer {
             String(fps),
             outputPath,
           ],
-          { timeout: 60000 }
+          { timeout: 120000, maxBuffer: 50 * 1024 * 1024 }
         );
         rendered = true;
       } catch (err: any) {
         console.warn('[MotionStillRenderer] Source image zoompan failed, falling back:', err.message);
+      } finally {
+        if (tempImageCreated && activeImagePath && fs.existsSync(activeImagePath)) {
+          await fs.promises.unlink(activeImagePath).catch(() => {});
+        }
       }
     }
 
@@ -123,9 +183,9 @@ export class MotionStillRenderer {
           '-f',
           'lavfi',
           '-i',
-          `color=c=0x0b0e1b:s=${resolution}:d=${durationSec}:r=${fps}`,
+          `color=c=0x111827:s=${resolution}:d=${durationSec}:r=${fps}`,
           '-vf',
-          `boxblur=10:1,format=yuv420p`,
+          `format=yuv420p,drawbox=x=0:y=0:w=iw:h=ih:color=0x1e1b4b@0.5:t=fill`,
           '-c:v',
           'libx264',
           '-preset',
@@ -138,7 +198,7 @@ export class MotionStillRenderer {
           String(durationSec),
           outputPath,
         ];
-        await execFileAsync(ffmpegPath, colorArgs, { timeout: 60000 });
+        await execFileAsync(ffmpegPath, colorArgs, { timeout: 120000, maxBuffer: 50 * 1024 * 1024 });
         rendered = true;
       } catch (fallbackErr: any) {
         throw new Error(`Motion still rendering failed for project ${projectId}: ${fallbackErr.message}`);
@@ -153,7 +213,7 @@ export class MotionStillRenderer {
       url: storage.getUrl(outputKey),
       filePath: outputPath,
       durationSec: meta.durationSec && meta.durationSec > 0 ? meta.durationSec : durationSec,
-      resolution: meta.resolution || resolution,
+      resolution,
       filesizeBytes: stat.size,
     };
   }
