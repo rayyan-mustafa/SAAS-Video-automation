@@ -14,7 +14,7 @@ export function LandingPage() {
 
   const handleHeroGenerate = (e: React.FormEvent) => {
     e.preventDefault();
-    const prompt = heroPrompt.trim() || 'A 45-second high-retention documentary about the Mariana Trench in 9:16';
+    const prompt = heroPrompt.trim() || 'A high-retention documentary about the deepest mysteries of the ocean';
     router.push(`/content/new?prompt=${encodeURIComponent(prompt)}`);
   };
 
@@ -154,34 +154,26 @@ export function LandingPage() {
           >
             <div className="p-3">
               <label htmlFor="hero-prompt-input" className="text-[11px] font-bold uppercase tracking-wider text-purple-700 flex items-center gap-1 mb-1">
-                <span>✨</span> Try it live: Describe any video topic...
+                <span>✨</span> Try it live: Describe any video topic or paste a script...
               </label>
               <textarea
                 id="hero-prompt-input"
                 value={heroPrompt}
                 onChange={(e) => setHeroPrompt(e.target.value)}
-                placeholder='e.g. "A 45-second high-retention documentary about the Mariana Trench in 9:16 with suspenseful pacing and dramatic visuals..."'
+                placeholder='e.g. "A suspenseful documentary about the deepest mysteries of the ocean with dramatic pacing..."'
                 rows={2}
                 className="w-full text-sm text-slate-900 placeholder:text-slate-400 bg-transparent border-0 outline-none resize-none font-medium leading-relaxed"
               />
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-purple-50 px-3 pb-1">
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span className="px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-semibold text-[11px]">
-                  9:16 Vertical
-                </span>
-                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold text-[11px]">
-                  Google Neural2 Voice
-                </span>
-                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold text-[11px]">
-                  Stock + Flash Motion
-                </span>
+              <div className="text-xs text-slate-400 font-medium hidden sm:flex items-center gap-1.5">
+                <span>💡</span> Tell Tillercast what you want in plain words · AI handles script, voiceover & visuals
               </div>
 
               <button
                 type="submit"
-                className="w-full sm:w-auto px-6 py-3 rounded-2xl text-xs font-extrabold bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-md shadow-purple-200 hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 py-3 rounded-2xl text-xs font-extrabold bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-md shadow-purple-200 hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer flex items-center justify-center gap-2 ml-auto"
               >
                 <span>⚡</span> Generate Free Video Preview
               </button>
@@ -224,6 +216,60 @@ export function LandingPage() {
             </div>
           </div>
         </div>
+      
+        {/* ─────────────────────────────────────────────────────────────
+            PICTORY-INSPIRED 4 CREATION PATHWAYS (Zero Confusion)
+        ───────────────────────────────────────────────────────────── */}
+        <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
+          <div
+            onClick={() => handleQuickChipClick('Turn this script into a high-retention video: ')}
+            className="p-5 rounded-2xl bg-white border border-purple-100/80 shadow-sm hover:shadow-md hover:border-purple-300 transition-all cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg font-bold mb-3 group-hover:scale-110 transition-transform">
+              📝
+            </div>
+            <h3 className="text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors">Script to Video</h3>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">Paste your script or outline. AI syncs studio voiceover, kinetic subtitles, and matching visuals.</p>
+            <span className="text-[11px] font-bold text-purple-600 mt-3 inline-block group-hover:underline">Start with Script →</span>
+          </div>
+
+          <div
+            onClick={() => handleQuickChipClick('Summarize this article or URL into an engaging video: ')}
+            className="p-5 rounded-2xl bg-white border border-purple-100/80 shadow-sm hover:shadow-md hover:border-purple-300 transition-all cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg font-bold mb-3 group-hover:scale-110 transition-transform">
+              🌐
+            </div>
+            <h3 className="text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors">Article to Video</h3>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">Turn any blog post, news story, or web link into an engaging summary video ready to post.</p>
+            <span className="text-[11px] font-bold text-purple-600 mt-3 inline-block group-hover:underline">Convert Article →</span>
+          </div>
+
+          <div
+            onClick={() => handleQuickChipClick('Create a rapid-fire data video with glassmorphic stat cards about ')}
+            className="p-5 rounded-2xl bg-white border border-purple-100/80 shadow-sm hover:shadow-md hover:border-purple-300 transition-all cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center text-lg font-bold mb-3 group-hover:scale-110 transition-transform">
+              📊
+            </div>
+            <h3 className="text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors">Stats & Infographics</h3>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">Generate glassmorphic data cards with animated graphs and highlight text rendered at $0.00 COGS.</p>
+            <span className="text-[11px] font-bold text-purple-600 mt-3 inline-block group-hover:underline">Create Stat Video →</span>
+          </div>
+
+          <div
+            onClick={() => handleQuickChipClick('Adapt a viral competitor hook about ')}
+            className="p-5 rounded-2xl bg-white border border-purple-100/80 shadow-sm hover:shadow-md hover:border-purple-300 transition-all cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold mb-3 group-hover:scale-110 transition-transform">
+              🕵️
+            </div>
+            <h3 className="text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors">Viral Outlier Spy</h3>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">Extract winning hook structures from breakout videos in your niche and generate original variations.</p>
+            <span className="text-[11px] font-bold text-purple-600 mt-3 inline-block group-hover:underline">Spy on Outliers →</span>
+          </div>
+        </div>
+
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
@@ -260,7 +306,7 @@ export function LandingPage() {
                 What topic or story angle are you exploring today?
               </div>
               <div className="bg-slate-900 text-white p-3 rounded-2xl rounded-br-none ml-auto max-w-[85%]">
-                A 45-second high-retention documentary about the Mariana Trench in vertical 9:16
+                A suspenseful documentary about the deepest mysteries of the Mariana Trench
               </div>
               <div className="bg-purple-50/70 p-3 rounded-2xl rounded-bl-none text-slate-800 border border-purple-100 space-y-2">
                 <div>Got it! What tone and voiceover would you like?</div>
