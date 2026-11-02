@@ -16,7 +16,7 @@
     "test:youtube": "npx -y tsx test-youtube-integration.ts",
     "test:audit": "npx -y tsx test-final-production-audit.ts",
     "upstream:check": "npx -y tsx scripts/check-upstream.ts",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "keywords": [
     "tillercast",
@@ -46,6 +46,7 @@
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
+    "@netlify/plugin-nextjs": "^5.16.5",
     "@ngrok/ngrok": "^1.7.0",
     "@trigger.dev/build": "4.8.3",
     "@types/better-sqlite3": "^9.6.0",
