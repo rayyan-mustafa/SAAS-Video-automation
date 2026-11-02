@@ -144,3 +144,4 @@ function detectTargetSceneIndex(text: string, maxScenes: number): number | null 
   }
   return null;
 }
+

@@ -295,3 +295,4 @@ export function finalizeConfigDefaults(config: Partial<AgentConfig>): AgentConfi
     visualTier: config.visualTier || 'stock',
   };
 }
+

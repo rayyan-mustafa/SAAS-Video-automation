@@ -275,3 +275,4 @@ function buildAlgorithmicScript(config: AgentConfig, sceneCount: number): AgentS
     sceneCount: scenes.length,
   };
 }
+

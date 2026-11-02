@@ -24,6 +24,9 @@
 # Vercel
 .vercel
 
+# Netlify
+.netlify
+
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts

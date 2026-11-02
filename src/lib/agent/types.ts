@@ -87,3 +87,4 @@ export interface InterviewQuestion {
   field: keyof AgentConfig;
   options: InterviewQuestionOption[];
 }
+

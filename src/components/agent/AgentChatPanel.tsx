@@ -229,3 +229,4 @@ export const AgentChatPanel: React.FC<AgentChatPanelProps> = ({
     </div>
   );
 };
+

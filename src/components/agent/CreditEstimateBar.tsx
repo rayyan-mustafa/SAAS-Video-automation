@@ -72,3 +72,4 @@ export const CreditEstimateBar: React.FC<CreditEstimateBarProps> = ({
     </div>
   );
 };
+
