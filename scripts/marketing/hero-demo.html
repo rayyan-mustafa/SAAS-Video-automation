@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Tillercast walkthrough</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1280px;height:720px;overflow:hidden;font-family:"Plus Jakarta Sans",Inter,system-ui,sans-serif;background:#0b0717;color:#fff}
+.bg{position:absolute;inset:0;background:radial-gradient(900px 500px at 15% 10%,#5b21b6 0%,transparent 60%),radial-gradient(800px 500px at 90% 95%,#be185d 0%,transparent 55%),#0b0717}
+.tag{position:absolute;top:26px;left:36px;font-weight:800;font-size:22px;letter-spacing:-.02em;z-index:5}
+.tag b{background:linear-gradient(90deg,#c084fc,#f472b6);-webkit-background-clip:text;color:transparent}
+.badge{position:absolute;top:30px;right:36px;font-size:13px;font-weight:700;opacity:.7;letter-spacing:.06em;text-transform:uppercase;z-index:5}
+.scene{position:absolute;inset:0;opacity:0;animation-fill-mode:forwards}
+@keyframes show{0%{opacity:0;transform:translateY(14px)}6%{opacity:1;transform:none}94%{opacity:1;transform:none}100%{opacity:0}}
+.s1{animation:show 5s 0s both}.s2{animation:show 6s 4.6s both}.s3{animation:show 6.6s 10.4s both}.s4{animation:show 5.2s 16.6s both}.s5{animation:show 3.4s 21.4s both}
+.label{position:absolute;left:36px;bottom:34px;font-size:15px;font-weight:700;color:#d8b4fe;letter-spacing:.04em;text-transform:uppercase}
+.card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:22px;backdrop-filter:blur(8px)}
+/* scene 1 */
+.chat{position:absolute;left:200px;top:150px;width:880px}
+.msg{padding:18px 22px;border-radius:20px;font-size:21px;line-height:1.4;margin-bottom:16px}
+.agent{background:rgba(255,255,255,.1);width:560px}
+.user{background:linear-gradient(90deg,#7c3aed,#db2777);margin-left:auto;width:max-content;max-width:700px}
+.type{display:inline-block;overflow:hidden;white-space:nowrap;vertical-align:bottom;width:0;animation:typing 2.4s .9s steps(46) forwards}
+@keyframes typing{to{width:640px}}
+.cursor{border-right:3px solid #fff;animation:blink .7s infinite}@keyframes blink{50%{border-color:transparent}}
+/* scene 2 */
+.grid{position:absolute;left:90px;top:120px;width:1100px;display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.sc{padding:16px;height:150px;opacity:0;animation:pop .5s forwards}
+@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+.sc small{color:#c4b5fd;font-weight:700;font-size:12px;letter-spacing:.08em}
+.sc p{font-size:15px;line-height:1.35;margin-top:8px;color:#f5f3ff}
+.hd{position:absolute;left:90px;top:80px;font-size:26px;font-weight:800}
+/* scene 3 */
+.phone{position:absolute;left:520px;top:50px;width:240px;height:560px;border-radius:30px;border:3px solid rgba(255,255,255,.35);overflow:hidden;background:linear-gradient(160deg,#1e3a8a,#312e81 45%,#831843);box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.phone .zoom{position:absolute;inset:-10%;background:radial-gradient(circle at 50% 40%,#38bdf8 0,transparent 45%),radial-gradient(circle at 30% 75%,#a855f7 0,transparent 40%);animation:push 6s ease-out forwards}
+@keyframes push{from{transform:scale(1)}to{transform:scale(1.25)}}
+.cap{position:absolute;left:0;right:0;bottom:90px;text-align:center;font-weight:900;font-size:26px;color:#fde047;text-shadow:0 2px 10px #000;padding:0 14px}
+.cap span{opacity:0;position:absolute;left:0;right:0;animation:w 1.6s forwards}
+@keyframes w{0%{opacity:0;transform:scale(.8)}15%{opacity:1;transform:scale(1)}85%{opacity:1}100%{opacity:0}}
+.wave{position:absolute;left:300px;top:470px;display:flex;gap:5px;align-items:flex-end;height:60px}
+.wave i{width:6px;background:#c084fc;border-radius:3px;animation:bar 1s infinite ease-in-out}
+@keyframes bar{0%,100%{height:10px}50%{height:56px}}
+.side{position:absolute;top:230px;width:230px;font-size:18px;font-weight:700;line-height:1.6;color:#e9d5ff}
+.side.l{left:210px;text-align:right}.side.r{left:810px}
+/* scene 4 */
+.pubs{position:absolute;left:150px;top:210px;width:980px;display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.pub{padding:28px 20px;text-align:center;font-weight:800;font-size:20px;opacity:0;animation:pop .5s forwards}
+.pub .ck{display:block;margin:14px auto 0;width:38px;height:38px;border-radius:50%;background:#22c55e;position:relative;transform:scale(0);animation:pop2 .4s forwards}
+.pub .ck:after{content:"";position:absolute;left:12px;top:6px;width:9px;height:18px;border:solid #fff;border-width:0 4px 4px 0;transform:rotate(45deg)}
+@keyframes pop2{to{transform:scale(1)}}
+.note{position:absolute;left:0;right:0;top:470px;text-align:center;font-size:19px;color:#e9d5ff;font-weight:600}
+/* scene 5 */
+.end{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.end h1{font-size:60px;letter-spacing:-.03em;font-weight:800;line-height:1.1}
+.end p{margin-top:18px;font-size:22px;color:#e9d5ff}
+</style></head>
+<body>
+<div class="bg"></div>
+<div class="tag">Tiller<b>cast</b></div>
+<div class="badge">Product walkthrough</div>
+
+<div class="scene s1">
+  <div class="chat">
+    <div class="msg agent card">What do you want to make a video about today?</div>
+    <div class="msg user"><span class="type">A mystery documentary about the Mariana Trench</span><span class="cursor"></span></div>
+  </div>
+  <div class="label">1 · Describe your idea</div>
+</div>
+
+<div class="scene s2">
+  <div class="hd">Script drafted, scene by scene</div>
+  <div class="grid">
+    <div class="card sc" style="animation-delay:.3s"><small>SCENE 1 · HOOK</small><p>At 36,000 feet down, the pressure could crush a submarine.</p></div>
+    <div class="card sc" style="animation-delay:.6s"><small>SCENE 2</small><p>Sunlight never reaches this place. Not once in a billion years.</p></div>
+    <div class="card sc" style="animation-delay:.9s"><small>SCENE 3</small><p>Yet life thrives here, glowing in the dark.</p></div>
+    <div class="card sc" style="animation-delay:1.2s"><small>SCENE 4</small><p>Then, in 2012, a camera caught something unexplained.</p></div>
+    <div class="card sc" style="animation-delay:1.5s"><small>SCENE 5</small><p>Scientists argued for years about what it was.</p></div>
+    <div class="card sc" style="animation-delay:1.8s"><small>SCENE 6</small><p>Here is what we know, and what we don't.</p></div>
+    <div class="card sc" style="animation-delay:2.1s"><small>SCENE 7 · CTA</small><p>Follow for the next deep-sea mystery.</p></div>
+    <div class="card sc" style="animation-delay:2.4s;background:linear-gradient(135deg,rgba(124,58,237,.6),rgba(219,39,119,.6))"><small>YOU</small><p>Edit any line, swap visuals, change the voice.</p></div>
+  </div>
+  <div class="label">2 · Review and refine the script</div>
+</div>
+
+<div class="scene s3">
+  <div class="side l">Narration voice<br>Captions<br>Motion visuals</div>
+  <div class="phone"><div class="zoom"></div>
+    <div class="cap"><span style="animation-delay:.8s">AT 36,000 FEET</span><span style="animation-delay:2.4s">PRESSURE CRUSHES</span><span style="animation-delay:4s">A SUBMARINE</span></div>
+  </div>
+  <div class="wave" style="left:575px;top:600px"><i></i><i style="animation-delay:.1s"></i><i style="animation-delay:.2s"></i><i style="animation-delay:.3s"></i><i style="animation-delay:.15s"></i><i style="animation-delay:.25s"></i><i style="animation-delay:.05s"></i></div>
+  <div class="side r">Vertical 9:16<br>Word-by-word subtitles<br>Auto-refund if a render fails</div>
+  <div class="label">3 · Voice, visuals and captions are rendered</div>
+</div>
+
+<div class="scene s4">
+  <div class="hd" style="left:150px">Approve, then publish to your channels</div>
+  <div class="pubs">
+    <div class="card pub" style="animation-delay:.3s">YouTube<i class="ck" style="animation-delay:1.2s"></i></div>
+    <div class="card pub" style="animation-delay:.6s">TikTok<i class="ck" style="animation-delay:1.6s"></i></div>
+    <div class="card pub" style="animation-delay:.9s">Instagram<i class="ck" style="animation-delay:2s"></i></div>
+    <div class="card pub" style="animation-delay:1.2s">Facebook<i class="ck" style="animation-delay:2.4s"></i></div>
+  </div>
+  <div class="note">You connect your own accounts and approve every post. Platform availability depends on each platform's app approval.</div>
+  <div class="label">4 · Publish or schedule</div>
+</div>
+
+<div class="scene s5"><div class="end"><h1>From idea to published video.</h1><p>Start free at tillercast.live</p></div></div>
+</body></html>

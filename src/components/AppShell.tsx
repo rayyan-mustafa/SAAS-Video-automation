@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { isPublicMarketingPath } from '@/lib/site-config';
+import { MarketingShell } from '@/components/site/MarketingShell';
+import { SiteFooter } from '@/components/site/SiteFooter';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -53,6 +56,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     fetchUserData();
   }, [pathname]);
 
+  const isBlog = pathname === '/blog' || pathname?.startsWith('/blog/');
+  const isTemplates = pathname === '/templates';
+  const isLandingRoute = pathname === '/landing' || (pathname === '/' && !currentUser);
+
+  // Fully public marketing + legal pages bring their own header/footer.
+  if (isPublicMarketingPath(pathname)) {
+    return <>{children}</>;
+  }
+  // Blog keeps its own header; add the shared footer. Never show the dashboard sidebar.
+  if (isBlog) {
+    return (
+      <>
+        {children}
+        <SiteFooter />
+      </>
+    );
+  }
+  // Templates: public marketing chrome for logged-out visitors, dashboard shell for members.
+  if (isTemplates && !currentUser) {
+    return <MarketingShell>{children}</MarketingShell>;
+  }
+  if (isLandingRoute) {
+    return (
+      <>
+        {children}
+        <SiteFooter />
+      </>
+    );
+  }
   if (isStandalonePage) {
     return <>{children}</>;
   }
@@ -579,7 +611,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       alignItems: 'center',
                       gap: '2px'
                     }}>
-                      ⚡ {credits?.balance ?? currentUser?.credits ?? 300}
+                      ⚡ {credits?.balance ?? currentUser?.credits ?? 0}
                     </span>
                   </div>
                 </div>
@@ -722,7 +754,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               title="View credit balance & top up"
             >
               <span>⚡</span>
-              <span>{credits?.balance ?? currentUser?.credits ?? 300} Credits</span>
+              <span>{credits?.balance ?? currentUser?.credits ?? 0} Credits</span>
             </Link>
             <div style={{ position: 'relative' }}>
               <button

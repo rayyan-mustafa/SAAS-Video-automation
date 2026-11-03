@@ -189,3 +189,33 @@ node -e "const db = require('better-sqlite3')('data/app.db'); console.log(db.pre
 # Check system health via API
 curl http://localhost:3000/api/health
 ```
+
+---
+
+## 8. Launch Status (resume here — updated 2026-11-04)
+
+**Goal:** finish Tillercast as a Pictory-style SaaS and pass YouTube/TikTok/Meta app review. Work on branch `feat/launch-readiness`; never push secrets.
+
+### Done
+- Engine integrity: no more fake `sample.mp4`/placeholder fallbacks (compositor, renderer, assets route) → honest `EngineError` + auto-refund. `tests/offline-compose-smoke.ts` added. Billing mojibake fixed.
+- Shared site chrome: `src/lib/site-config.ts` (SITE, nav, `PUBLIC_MARKETING_PATHS`), `src/lib/site-plans.ts`, `src/components/site/{SiteHeader,SiteFooter,MarketingShell,PricingTable,LegalLayout}.tsx`.
+- New public pages: /privacy /terms /refund /cookies /data-deletion /about /contact /pricing /use-cases/[slug] ; /templates public for logged-out.
+- Middleware + AppShell: public routes no longer redirect to login; blog/pricing no longer show the dashboard sidebar.
+- `.env.example` secrets blanked (keys in git history must be ROTATED by owner).
+- Hero demo source: `scripts/marketing/hero-demo.html` + `record-hero.js` (outputs to `public/media/`).
+
+### TODO (in order)
+1. Run `node scripts/marketing/record-hero.js`; add `<video autoPlay muted loop playsInline poster>` to hero in `src/components/LandingPage.tsx`.
+2. LandingPage copy fixes: remove "★ 4.9/5", "$0.00 COGS", "Guaranteed Margins", "v3.0 Agentic"; dynamic CTA price (button showed $49/$99 on annual); free trial copy = 1 watermarked trial video (matches `DEMO_PLAN`); Outlier Spy under Pro (matches billing.ts); soften "Other Platforms" comparison; emoji icons → SVG.
+3. Login/signup/forgot/reset/verify: one light `AuthShell`, honor `?from=`, terms+privacy checkbox, per-route metadata layouts.
+4. Blog: fix false Pictory claims in `src/lib/blog/posts.ts`; local OG images instead of Unsplash.
+5. Root layout: remove global canonical (every page canonicalized to home); add `opengraph-image`; update `public/sitemap.xml` + `robots.txt` (drop auth-gated URLs).
+6. `DELETE /api/customer/me`: also delete projects/channels/oauth_connections rows (privacy page promises it).
+7. `next.config.js` `ignoreDuringBuilds` test expects false — try false, keep only if `npm run build` passes.
+8. `npm run build`, Playwright screenshots (mobile 375 + desktop), write `docs/PICTORY_GAP_ANALYSIS.md`, commit, push branch, open PR.
+
+### Owner-only actions
+Rotate leaked keys; create real mailboxes (support@/privacy@tillercast.live); set `NEXT_PUBLIC_COMPANY_NAME/ADDRESS`, `ENCRYPTION_KEY`; confirm refund/deletion wording (`{/* OWNER */}` comments); submit platform reviews (needs demo screencast of OAuth flow).
+
+### Token-saving rules for this repo
+Don't re-read AppShell.tsx / LandingPage.tsx / page.tsx whole — use `grep -n` + `sed -n`. Edit with python/sed scripts. Check `git diff --stat` instead of re-reading files.

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { PUBLIC_MARKETING_PATHS } from '@/lib/site-config';
 
 const PUBLIC_EXACT = ['/', '/landing'];
 const PUBLIC_PREFIXES = [
@@ -10,6 +11,13 @@ const PUBLIC_PREFIXES = [
   '/forgot-password',
   '/reset-password',
   '/blog',
+  '/templates',
+  ...PUBLIC_MARKETING_PATHS,
+  '/tools',
+  '/sitemap.xml',
+  '/robots.txt',
+  '/opengraph-image',
+  '/icon.svg',
   '/api/auth',
   '/api/customer',
   '/api/health',
