@@ -9,6 +9,7 @@ const testFiles = [
   'tests/module-6-multi-platform-publishing.test.ts',
   'tests/module-7-analytics-dashboard.test.ts',
   'tests/module-8-voice-originality.test.ts',
+  'tests/offline-compose-smoke.ts',
 ];
 
 console.log('================================================================');

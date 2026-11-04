@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { getFfmpegPath, inspectMedia } from './videoProvider';
 import { storage, getTempDir } from '../storage';
+import { EngineError } from '../video/engineErrors';
 
 const execFileAsync = util.promisify(execFile);
 
@@ -43,7 +44,13 @@ export class FfmpegCompositor {
     const ffmpegPath = getFfmpegPath();
 
     if (!clipFilePaths || clipFilePaths.length === 0) {
-      throw new Error('No video clips provided for FFmpeg composition.');
+      throw new EngineError('NO_VALID_CLIPS', 'No video clips provided for FFmpeg composition.', 500);
+    }
+    if (!clipFilePaths.some((p) => fs.existsSync(p))) {
+      throw new EngineError('NO_VALID_CLIPS', 'None of the scene clips exist on disk for FFmpeg composition.', 500);
+    }
+    if (!audioFilePath || !fs.existsSync(audioFilePath)) {
+      throw new EngineError('NO_VALID_AUDIO', 'Narration audio is missing; refusing to deliver a silent video.', 500);
     }
 
     const isVertical = aspectRatio === '9:16';
@@ -75,23 +82,12 @@ export class FfmpegCompositor {
 
     let composed = false;
 
-    const isServerless = process.env.NETLIFY === 'true' || process.env.VERCEL === '1' || !!process.env.AWS_LAMBDA_FUNCTION_NAME || !!process.env.LAMBDA_TASK_ROOT;
-
-    // Instant copy on serverless environments to guarantee sub-second execution
-    if (isServerless) {
-      const firstValidClip = clipFilePaths.find((p) => fs.existsSync(p));
-      if (firstValidClip) {
-        await fs.promises.copyFile(firstValidClip, finalFilePath);
-        composed = true;
-      }
-    }
-
     const { subtitleFilePath, watermark, userPlan } = params;
     let videoFilter = `scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height},setsar=1`;
 
     const isFreeTier = Boolean(watermark || (userPlan && (userPlan.toLowerCase() === 'free' || userPlan.toLowerCase() === 'demo')));
     if (isFreeTier) {
-      videoFilter += `,drawtext=text='Created with Tillercast.ai':fontcolor=white@0.7:fontsize=28:x=w-tw-30:y=30:box=1:boxcolor=black@0.4:boxborderw=8`;
+      videoFilter += `,drawtext=text='Created with Tillercast':fontcolor=white@0.7:fontsize=28:x=w-tw-30:y=30:box=1:boxcolor=black@0.4:boxborderw=8`;
     }
 
     if (subtitleFilePath && fs.existsSync(subtitleFilePath)) {
@@ -106,7 +102,7 @@ export class FfmpegCompositor {
     const encodingTimeout = Math.max(300000, Math.round(totalDurationSec * 2000));
 
     // Audio & Video Composition
-    if (!composed && fs.existsSync(audioFilePath)) {
+    if (!composed) {
       const hasBgm = backgroundMusicPath && fs.existsSync(backgroundMusicPath);
       let args: string[];
 
@@ -172,40 +168,25 @@ export class FfmpegCompositor {
 
     if (!composed) {
       try {
-        const hasAudio = fs.existsSync(audioFilePath);
-        const fallbackArgs: string[] = hasAudio
-          ? [
-              '-y',
-              '-stream_loop', '-1',
-              '-f', 'concat',
-              '-safe', '0',
-              '-i', concatListPath,
-              '-i', audioFilePath,
-              '-vf', videoFilter,
-              '-map', '0:v:0',
-              '-map', '1:a:0',
-              '-c:v', 'libx264',
-              '-c:a', 'aac',
-              '-b:a', '192k',
-              '-pix_fmt', 'yuv420p',
-              '-preset', 'ultrafast',
-              '-movflags', '+faststart',
-              '-shortest',
-              finalFilePath,
-            ]
-          : [
-              '-y',
-              '-f', 'concat',
-              '-safe', '0',
-              '-i', concatListPath,
-              '-vf', videoFilter,
-              '-c:v', 'libx264',
-              '-pix_fmt', 'yuv420p',
-              '-preset', 'ultrafast',
-              '-movflags', '+faststart',
-              '-t', String(totalDurationSec || 60),
-              finalFilePath,
-            ];
+        const fallbackArgs: string[] = [
+          '-y',
+          '-stream_loop', '-1',
+          '-f', 'concat',
+          '-safe', '0',
+          '-i', concatListPath,
+          '-i', audioFilePath,
+          '-vf', videoFilter,
+          '-map', '0:v:0',
+          '-map', '1:a:0',
+          '-c:v', 'libx264',
+          '-c:a', 'aac',
+          '-b:a', '192k',
+          '-pix_fmt', 'yuv420p',
+          '-preset', 'ultrafast',
+          '-movflags', '+faststart',
+          '-shortest',
+          finalFilePath,
+        ];
         await execFileAsync(ffmpegPath, fallbackArgs, { timeout: encodingTimeout, maxBuffer: 50 * 1024 * 1024 });
         composed = true;
       } catch (fbErr: any) {
@@ -218,13 +199,8 @@ export class FfmpegCompositor {
 
     // Validate that the output file exists and has content
     if (!fs.existsSync(finalFilePath)) {
-      // If serverless binary restriction, try valid clip copy
-      const firstValidClip = clipFilePaths.find((p) => fs.existsSync(p));
-      if (firstValidClip && (await fs.promises.stat(firstValidClip)).size > 5000) {
-        await fs.promises.copyFile(firstValidClip, finalFilePath);
-      } else {
-        throw new Error(`FFmpeg composition failed to produce final MP4 for project ${projectId}.`);
-      }
+      // Never substitute a single raw clip for the final video: fail so credits are refunded.
+      throw new EngineError('STAGE_EXECUTION_FAILED', `FFmpeg composition failed to produce final MP4 for project ${projectId}.`, 500);
     }
 
     const stat = await fs.promises.stat(finalFilePath);

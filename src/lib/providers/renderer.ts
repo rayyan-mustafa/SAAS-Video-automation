@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { storage, getTempDir } from '../storage';
 import { getFfmpegPath } from './videoProvider';
+import { EngineError } from '../video/engineErrors';
 
 const execFileAsync = util.promisify(execFile);
 
@@ -48,11 +49,19 @@ export class LocalFfmpegRenderer implements VideoRenderer {
     const { projectId, clipFilePaths, audioFilePath, subtitleFilePath, totalDurationSec } = params;
     const ffmpegPath = getFfmpegPath();
 
+    const validClips = (clipFilePaths || []).filter((p) => p && fs.existsSync(p));
+    if (validClips.length === 0) {
+      throw new EngineError('NO_VALID_CLIPS', 'No rendered scene clips available to compose the final video.', 500);
+    }
+    if (!audioFilePath || !fs.existsSync(audioFilePath)) {
+      throw new EngineError('NO_VALID_AUDIO', 'No narration audio available to compose the final video.', 500);
+    }
+
     const tempDir = getTempDir(projectId);
 
     // 1. Create concat list
     const concatListPath = path.join(tempDir, 'concat_list.txt');
-    const concatContent = clipFilePaths
+    const concatContent = validClips
       .map((filePath) => {
         const normalized = filePath.replace(/\\/g, '/');
         return `file '${normalized}'`;
@@ -118,26 +127,24 @@ export class LocalFfmpegRenderer implements VideoRenderer {
         ];
         await execFileAsync(ffmpegPath, fallbackArgs, { maxBuffer: 10 * 1024 * 1024 });
       } catch (fbErr: any) {
-        console.warn('FFmpeg fallback concat failed too, using direct clip/sample fallback:', fbErr?.message);
-        const existingClip = clipFilePaths.find((p) => fs.existsSync(p));
-        if (existingClip) {
-          await fs.promises.copyFile(existingClip, finalFilePath);
-        } else {
-          const samplePath = path.join(process.cwd(), 'public', 'sample.mp4');
-          if (fs.existsSync(samplePath)) {
-            await fs.promises.copyFile(samplePath, finalFilePath);
-          }
-        }
+        // Never substitute a lone clip or a bundled sample for the final video.
+        // Fail honestly so the worker marks the stage FAILED and credits are refunded.
+        try { await fs.promises.rm(finalFilePath, { force: true }); } catch {}
+        throw new EngineError(
+          'STAGE_EXECUTION_FAILED',
+          `FFmpeg composition failed: ${fbErr?.message || err?.message || 'unknown error'}`,
+          500,
+        );
       }
     }
 
     if (!fs.existsSync(finalFilePath)) {
-      throw new Error(`Rendered video not found at expected path: ${finalFilePath}`);
+      throw new EngineError('STAGE_EXECUTION_FAILED', `Rendered video not found at expected path: ${finalFilePath}`, 500);
     }
 
     const stat = await fs.promises.stat(finalFilePath);
     if (stat.size === 0) {
-      throw new Error('Rendered video file size is 0 bytes');
+      throw new EngineError('STAGE_EXECUTION_FAILED', 'Rendered video file size is 0 bytes', 500);
     }
 
     return {

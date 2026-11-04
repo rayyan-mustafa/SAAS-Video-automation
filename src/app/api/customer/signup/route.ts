@@ -14,7 +14,11 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { email, password, name = 'Creator' } = body;
+    const { email, password, name = 'Creator', acceptTerms } = body;
+
+    if (acceptTerms !== true) {
+      return NextResponse.json({ error: 'You must accept the Terms of Service and Privacy Policy to create an account.' }, { status: 400 });
+    }
 
     if (!email || !email.includes('@') || !email.includes('.')) {
       return NextResponse.json({ error: 'Please provide a valid email address.' }, { status: 400 });

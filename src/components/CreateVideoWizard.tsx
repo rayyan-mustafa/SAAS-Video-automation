@@ -2668,7 +2668,7 @@ export function CreateVideoWizardContent({ hideBackLink = false }: { hideBackLin
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', color: '#e4e4e7', lineHeight: 1.4 }}>
                 <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>
                 <div>
-                  <strong>No Watermarks:</strong> Remove the &ldquo;Created with Tillercast.ai&rdquo; watermark on all exported videos.
+                  <strong>No Watermarks:</strong> Remove the &ldquo;Created with Tillercast&rdquo; watermark on all exported videos.
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', color: '#e4e4e7', lineHeight: 1.4 }}>

@@ -10,7 +10,7 @@ import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { getDb, DEFAULT_USER_ID, ContentProject, VideoScene } from '../src/lib/db';
 import { aiProvider } from '../src/lib/providers/aiProvider';
-import { videoProvider, inspectMedia } from '../src/lib/providers/videoProvider';
+import { videoProvider, inspectMedia, getFfmpegPath } from '../src/lib/providers/videoProvider';
 import { openaiVideoProvider } from '../src/lib/providers/openaiVideoProvider';
 import { ffmpegCompositor } from '../src/lib/providers/ffmpegCompositor';
 import { subtitleProvider } from '../src/lib/providers/subtitleProvider';
@@ -185,11 +185,15 @@ async function runScenePipelineTests() {
       const audioDir = path.dirname(audioPath);
       if (!fs.existsSync(audioDir)) fs.mkdirSync(audioDir, { recursive: true });
 
-      const minimalMp3 = Buffer.from([
-        0xFF, 0xFB, 0x90, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-      ]);
-      await fs.promises.writeFile(audioPath, minimalMp3);
+      // Real 4s tone (a 24-byte fake MP3 used to pass only because the compositor
+      // silently substituted a raw clip for the final video; that fallback is removed).
+      await new Promise<void>((resolve, reject) => {
+        require('child_process').execFile(
+          getFfmpegPath(),
+          ['-y', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=4', '-c:a', 'libmp3lame', audioPath],
+          (err: any) => (err ? reject(err) : resolve()),
+        );
+      });
 
       const composition = await ffmpegCompositor.composeVideo({
         projectId: testProjectId,

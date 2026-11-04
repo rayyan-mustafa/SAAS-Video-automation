@@ -25,15 +25,12 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Tillercast Team' }],
   metadataBase: new URL('https://tillercast.live'),
-  alternates: {
-    canonical: 'https://tillercast.live',
-  },
+  alternates: { canonical: './' },
   openGraph: {
     title: 'Tillercast — AI Video Automation',
     description:
       'Turn your ideas into ready-to-publish videos with AI-powered scripting, voiceovers, visuals, captions, and rendering.',
     type: 'website',
-    url: 'https://tillercast.live',
     siteName: 'Tillercast',
   },
   twitter: {

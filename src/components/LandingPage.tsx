@@ -24,20 +24,20 @@ export function LandingPage() {
 
   const faqs = [
     {
-      q: 'How does the 300 Free Trial Credits & 1 Free Social Publish work?',
-      a: 'When you create an account, you instantly receive 300 credits valid for 15 days. You can test our full conversational agent, generate scripts, and preview videos. In addition, you get 1 free, 100% watermark-free direct social publish to your YouTube Shorts or TikTok account so you can see live views on your own channel before paying a dime.',
+      q: 'How does the free trial work?',
+      a: 'Create an account and generate one free trial video, no credit card required. Trial exports carry a Tillercast watermark; upgrade to export without it and to publish to your channels.',
     },
     {
       q: 'How does Multi-Platform Auto-Publishing work across 4 platforms?',
-      a: 'Tillercast connects directly to official APIs: YouTube Data API v3, TikTok Direct Post API v2, Instagram Reels Graph API, and Facebook Pages API. Once you approve a video, Tillercast publishes directly with platform-compliant safe-zones (no UI button cutoff), AI synthetic media disclosure tags, and viral hashtags.',
+      a: 'Tillercast connects to the official platform APIs (YouTube Data API v3, TikTok Content Posting API, Instagram and Facebook Graph APIs) for the accounts you connect. You review and approve each video before it is published, and AI-content disclosure is applied where the platform supports it. Availability of each platform depends on that platform\'s app approval.',
     },
     {
-      q: 'What is the Zero-Waste Instant Auto-Refund guarantee?',
-      a: 'Unlike other video platforms that charge credits for failed or glitched videos, Tillercast has a fail-closed refund engine. If a render ever encounters a network timeout or provider glitch, 100% of consumed credits are refunded to your wallet instantly and automatically.',
+      q: 'What happens if a render fails?',
+      a: 'If a render fails because of a network timeout or provider error, the credits used for that video are automatically returned to your balance, and the failed result is never delivered as a finished video.',
     },
     {
       q: 'What voices are included across the plans?',
-      a: 'All plans (including Free Trial and Starter) include Google Cloud Neural2 multi-accent studio narrators in American (US), British (UK), Australian (AU), and Indian (IN) English. The Creator and Pro plans unlock hyper-realistic ElevenLabs narrators (Adam, Brian, Chris, Rachel) and custom voice cloning.',
+      a: 'All plans (including Free Trial and Starter) include Google Cloud Neural2 multi-accent studio narrators in American (US), British (UK), Australian (AU), and Indian (IN) English. The Creator and Pro plans unlock ElevenLabs narrators, and Pro adds voice cloning (only with the voice owner\'s consent).',
     },
     {
       q: 'Can I purchase extra credit packs if I run out?',
@@ -53,13 +53,13 @@ export function LandingPage() {
       <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-pink-600 text-white text-xs font-semibold py-2 px-4 text-center shadow-inner flex items-center justify-center gap-2">
         <span>⚡</span>
         <span>
-          <strong>AUTONOMOUS AI VIDEO AGENT v3.0:</strong> Try the conversational studio with 300 free trial credits + 1 watermark-free social publish!
+          <strong>NEW:</strong> Chat with the Tillercast agent, review the script, and publish to your own channels. Free trial, no card needed.
         </span>
         <Link
-          href="/content/new"
+          href="/signup"
           className="underline font-bold hover:text-purple-200 ml-1"
         >
-          Try Live Demo →
+          Start free →
         </Link>
       </div>
 
@@ -76,9 +76,6 @@ export function LandingPage() {
             <span className="text-xl font-extrabold tracking-tight text-slate-900">
               Tiller<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500">cast</span>
             </span>
-            <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200">
-              v3.0 Agentic
-            </span>
           </Link>
 
           {/* Desktop Nav Links */}
@@ -86,15 +83,15 @@ export function LandingPage() {
             <a href="#features" className="px-4 py-1.5 rounded-full hover:text-purple-700 hover:bg-white transition-all">
               Features
             </a>
-            <a href="#showcase" className="px-4 py-1.5 rounded-full hover:text-purple-700 hover:bg-white transition-all">
-              Showcase
+            <a href="#how-it-works" className="px-4 py-1.5 rounded-full hover:text-purple-700 hover:bg-white transition-all">
+              How it works
             </a>
             <a href="#comparison" className="px-4 py-1.5 rounded-full hover:text-purple-700 hover:bg-white transition-all">
               Compare
             </a>
-            <a href="#pricing" className="px-4 py-1.5 rounded-full hover:text-purple-700 hover:bg-white transition-all">
+            <Link href="/pricing" className="px-4 py-1.5 rounded-full hover:text-purple-700 hover:bg-white transition-all">
               Pricing
-            </a>
+            </Link>
             <Link href="/blog" className="px-4 py-1.5 rounded-full hover:text-purple-700 hover:bg-white transition-all text-purple-600 font-bold">
               Blog
             </Link>
@@ -109,10 +106,10 @@ export function LandingPage() {
               Log In
             </Link>
             <Link
-              href="/content/new"
+              href="/signup"
               className="px-4 py-2 rounded-2xl text-xs font-bold bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-md shadow-purple-200 hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer flex items-center gap-1.5"
             >
-              <span>⚡</span> 300 Free Credits
+              Start free
             </Link>
           </div>
         </div>
@@ -203,20 +200,38 @@ export function LandingPage() {
           {/* Trust Guarantees */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500 font-medium">
             <div className="flex items-center gap-1.5">
-              <span className="text-amber-500 font-bold">★ 4.9/5</span> Rating
+              <span className="text-purple-600 font-bold">✓</span> No Credit Card Required
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-purple-600 font-bold">💳</span> No Credit Card Required
+              <span className="text-emerald-600 font-bold">✓</span> Credits refunded on failed renders
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-emerald-600 font-bold">🛡️</span> 100% Zero-Waste Auto-Refund
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-pink-600 font-bold">🚀</span> 1 Free Social Publish
+              <span className="text-pink-600 font-bold">▶</span> Free trial video
             </div>
           </div>
         </div>
       
+
+        {/* Product walkthrough video */}
+        <div id="demo" className="mt-12 max-w-4xl mx-auto">
+          <div className="rounded-3xl overflow-hidden border border-purple-100 shadow-2xl shadow-purple-900/10 bg-slate-950 aspect-video">
+            <video
+              className="w-full h-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster="/media/hero-poster.jpg"
+              aria-label="Tillercast product walkthrough: describe an idea, review the script, render, and publish"
+            >
+              <source src="/media/hero-walkthrough.webm" type="video/webm" />
+              <source src="/media/hero-walkthrough.mp4" type="video/mp4" />
+            </video>
+          </div>
+          <p className="mt-2 text-[11px] text-slate-400 text-center">Illustrative product walkthrough</p>
+        </div>
+
         {/* ─────────────────────────────────────────────────────────────
             PICTORY-INSPIRED 4 CREATION PATHWAYS (Zero Confusion)
         ───────────────────────────────────────────────────────────── */}
@@ -225,9 +240,7 @@ export function LandingPage() {
             onClick={() => handleQuickChipClick('Turn this script into a high-retention video: ')}
             className="p-5 rounded-2xl bg-white border border-purple-100/80 shadow-sm hover:shadow-md hover:border-purple-300 transition-all cursor-pointer group"
           >
-            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg font-bold mb-3 group-hover:scale-110 transition-transform">
-              📝
-            </div>
+            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg font-bold mb-3 group-hover:scale-110 transition-transform"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></div>
             <h3 className="text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors">Script to Video</h3>
             <p className="text-xs text-slate-500 mt-1 leading-relaxed">Paste your script or outline. AI syncs studio voiceover, kinetic subtitles, and matching visuals.</p>
             <span className="text-[11px] font-bold text-purple-600 mt-3 inline-block group-hover:underline">Start with Script →</span>
@@ -237,9 +250,7 @@ export function LandingPage() {
             onClick={() => handleQuickChipClick('Summarize this article or URL into an engaging video: ')}
             className="p-5 rounded-2xl bg-white border border-purple-100/80 shadow-sm hover:shadow-md hover:border-purple-300 transition-all cursor-pointer group"
           >
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg font-bold mb-3 group-hover:scale-110 transition-transform">
-              🌐
-            </div>
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg font-bold mb-3 group-hover:scale-110 transition-transform"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></div>
             <h3 className="text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors">Article to Video</h3>
             <p className="text-xs text-slate-500 mt-1 leading-relaxed">Turn any blog post, news story, or web link into an engaging summary video ready to post.</p>
             <span className="text-[11px] font-bold text-purple-600 mt-3 inline-block group-hover:underline">Convert Article →</span>
@@ -249,11 +260,9 @@ export function LandingPage() {
             onClick={() => handleQuickChipClick('Create a rapid-fire data video with glassmorphic stat cards about ')}
             className="p-5 rounded-2xl bg-white border border-purple-100/80 shadow-sm hover:shadow-md hover:border-purple-300 transition-all cursor-pointer group"
           >
-            <div className="w-10 h-10 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center text-lg font-bold mb-3 group-hover:scale-110 transition-transform">
-              📊
-            </div>
+            <div className="w-10 h-10 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center text-lg font-bold mb-3 group-hover:scale-110 transition-transform"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg></div>
             <h3 className="text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors">Stats & Infographics</h3>
-            <p className="text-xs text-slate-500 mt-1 leading-relaxed">Generate glassmorphic data cards with animated graphs and highlight text rendered at $0.00 COGS.</p>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">Generate data cards with animated graphs and highlighted key numbers.</p>
             <span className="text-[11px] font-bold text-purple-600 mt-3 inline-block group-hover:underline">Create Stat Video →</span>
           </div>
 
@@ -261,9 +270,7 @@ export function LandingPage() {
             onClick={() => handleQuickChipClick('Adapt a viral competitor hook about ')}
             className="p-5 rounded-2xl bg-white border border-purple-100/80 shadow-sm hover:shadow-md hover:border-purple-300 transition-all cursor-pointer group"
           >
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold mb-3 group-hover:scale-110 transition-transform">
-              🕵️
-            </div>
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold mb-3 group-hover:scale-110 transition-transform"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
             <h3 className="text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors">Viral Outlier Spy</h3>
             <p className="text-xs text-slate-500 mt-1 leading-relaxed">Extract winning hook structures from breakout videos in your niche and generate original variations.</p>
             <span className="text-[11px] font-bold text-purple-600 mt-3 inline-block group-hover:underline">Spy on Outliers →</span>
@@ -275,7 +282,7 @@ export function LandingPage() {
       {/* ─────────────────────────────────────────────────────────────
           4. DUAL-PANE LIVE SHOWCASE: AGENT CHAT vs KINETIC VIDEO
       ───────────────────────────────────────────────────────────── */}
-      <section id="showcase" className="py-16 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+      <section id="how-it-works" className="py-16 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
         <div className="text-center mb-10">
           <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200">
             Interactive Experience
@@ -370,9 +377,7 @@ export function LandingPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Card 1: 4-Platform Direct Auto-Publish */}
           <div className="p-6 rounded-3xl bg-white border border-purple-100 shadow-sm hover:shadow-md transition-all space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center text-xl shadow-md">
-              🚀
-            </div>
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center text-xl shadow-md"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 15c-1 2-1 4-1 5 1 0 3 0 5-1M14 4c4 0 6 2 6 6-2 4-6 7-9 8l-5-5c1-3 4-7 8-9z"/><circle cx="15" cy="9" r="1.5"/></svg></div>
             <h3 className="text-lg font-bold text-slate-900">
               4-Platform Autopilot
             </h3>
@@ -383,9 +388,7 @@ export function LandingPage() {
 
           {/* Card 2: Viral Outlier Spy */}
           <div className="p-6 rounded-3xl bg-white border border-purple-100 shadow-sm hover:shadow-md transition-all space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center text-xl shadow-md">
-              🕵️
-            </div>
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center text-xl shadow-md"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
             <h3 className="text-lg font-bold text-slate-900">
               Competitor Outlier Spy
             </h3>
@@ -396,9 +399,7 @@ export function LandingPage() {
 
           {/* Card 3: Zero-Waste Trust Guarantee */}
           <div className="p-6 rounded-3xl bg-white border border-purple-100 shadow-sm hover:shadow-md transition-all space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center text-xl shadow-md">
-              🛡️
-            </div>
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center text-xl shadow-md"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
             <h3 className="text-lg font-bold text-slate-900">
               Zero-Waste Auto-Refund
             </h3>
@@ -428,39 +429,34 @@ export function LandingPage() {
               <tr className="border-b border-purple-100 bg-purple-50/50">
                 <th className="p-4 font-bold text-slate-700">Capability / Feature</th>
                 <th className="p-4 font-extrabold text-purple-700 bg-purple-100/40">⚡ Tillercast v3.0</th>
-                <th className="p-4 font-bold text-slate-500">Other Platforms</th>
+                <th className="p-4 font-bold text-slate-500">Typical timeline editors</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-purple-50">
               <tr>
                 <td className="p-4 font-bold text-slate-800">Video Creation Interface</td>
                 <td className="p-4 font-bold text-purple-700 bg-purple-50/20">✅ Conversational Agent Chat</td>
-                <td className="p-4 text-slate-500">❌ Cluttered Timeline / Rigid Wizard</td>
+                <td className="p-4 text-slate-500">Timeline or wizard based</td>
               </tr>
               <tr>
                 <td className="p-4 font-bold text-slate-800">Social Publishing</td>
                 <td className="p-4 font-bold text-purple-700 bg-purple-50/20">✅ Direct Autopilot to 4 Platforms</td>
-                <td className="p-4 text-slate-500">❌ Manual MP4 downloads only</td>
+                <td className="p-4 text-slate-500">Usually manual MP4 download</td>
               </tr>
               <tr>
                 <td className="p-4 font-bold text-slate-800">Competitor Outlier Radar</td>
                 <td className="p-4 font-bold text-purple-700 bg-purple-50/20">✅ 1-Click Viral Topic Extractor</td>
-                <td className="p-4 text-slate-500">❌ Not available</td>
+                <td className="p-4 text-slate-500">Rarely offered</td>
               </tr>
               <tr>
                 <td className="p-4 font-bold text-slate-800">Broken Render Refunds</td>
-                <td className="p-4 font-bold text-purple-700 bg-purple-50/20">✅ 100% Instant Auto-Refund</td>
-                <td className="p-4 text-slate-500">❌ Credits lost / Disputed</td>
+                <td className="p-4 font-bold text-purple-700 bg-purple-50/20">✅ Automatic credit refund</td>
+                <td className="p-4 text-slate-500">Policy varies by provider</td>
               </tr>
               <tr>
                 <td className="p-4 font-bold text-slate-800">Free Trial Offering</td>
-                <td className="p-4 font-bold text-purple-700 bg-purple-50/20">✅ 300 Credits + 1 Watermark-Free Post</td>
-                <td className="p-4 text-slate-500">⚠️ Heavy watermarks / restricted</td>
-              </tr>
-              <tr>
-                <td className="p-4 font-bold text-slate-800">Voice Catalog Quality</td>
-                <td className="p-4 font-bold text-purple-700 bg-purple-50/20">✅ Google Neural2 Multi-Accent + ElevenLabs Pro</td>
-                <td className="p-4 text-slate-500">⚠️ Paywalled behind $60+ plans</td>
+                <td className="p-4 font-bold text-purple-700 bg-purple-50/20">✅ Free trial video, no card</td>
+                <td className="p-4 text-slate-500">Often watermarked</td>
               </tr>
             </tbody>
           </table>
@@ -476,10 +472,10 @@ export function LandingPage() {
             Simple Pricing
           </span>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2">
-            Predictable Costs. Guaranteed Margins.
+            Simple, predictable pricing
           </h2>
           <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">
-            All plans include 300 free trial credits for 15 days. Cancel anytime.
+            Start with a free trial video, no card needed. Cancel anytime.
           </p>
 
           {/* Billing Toggle */}
@@ -512,7 +508,7 @@ export function LandingPage() {
           {/* Starter Plan */}
           <div className="p-6 rounded-3xl bg-white border border-purple-100 shadow-sm space-y-5 text-left">
             <div>
-              <div className="text-sm font-bold text-slate-800">Starter Plan</div>
+              <div className="text-sm font-bold text-slate-800">Starter</div>
               <div className="text-3xl font-black text-slate-950 mt-2">
                 ${billingCycle === 'annual' ? 24 : 29}
                 <span className="text-xs font-medium text-slate-400">/month</span>
@@ -559,10 +555,9 @@ export function LandingPage() {
             <div className="space-y-2 text-xs text-slate-600 border-t border-purple-50 pt-4">
               <div className="font-bold text-purple-700">⚡ 1,200 Credits / month (~150 Stock Shorts)</div>
               <div>✓ 100% ElevenLabs Hyper-Realistic Narrators</div>
-              <div>✓ Google Veo 3.1 Lite AI Video Clips 👑</div>
+              <div>✓ Google Veo 3.1 Lite AI video clips</div>
               <div>✓ 2 Connected Social Channels (YT + TikTok)</div>
-              <div>✓ Competitor Outlier Spy & Winner-Bias</div>
-              <div>✓ Conversational Scene Refinement Studio</div>
+                            <div>✓ Conversational Scene Refinement Studio</div>
               <div>✓ Zero-Waste Instant Auto-Refund</div>
             </div>
 
@@ -570,7 +565,7 @@ export function LandingPage() {
               href="/signup?plan=creator"
               className="block w-full py-3 rounded-xl text-center text-xs font-extrabold bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-md shadow-purple-200 hover:shadow-lg transition-all"
             >
-              Get Creator Plan ($49/mo)
+              Get Creator Plan (${billingCycle === 'annual' ? 39 : 49}/mo)
             </Link>
           </div>
 
@@ -594,6 +589,7 @@ export function LandingPage() {
               <div>✓ Custom Voice Cloning Studio</div>
               <div>✓ 4K Master Exports & VIP Turbo Queue</div>
               <div>✓ 5 Connected Social Channels</div>
+              <div>✓ Competitor Outlier Spy</div>
               <div>✓ Zero-Waste Instant Auto-Refund</div>
             </div>
 
@@ -601,7 +597,7 @@ export function LandingPage() {
               href="/signup?plan=pro"
               className="block w-full py-2.5 rounded-xl text-center text-xs font-bold bg-white text-purple-700 border border-purple-200 hover:bg-purple-50 shadow-sm transition-all"
             >
-              Get Pro Plan ($99/mo)
+              Get Pro Plan (${billingCycle === 'annual' ? 79 : 99}/mo)
             </Link>
           </div>
         </div>
@@ -646,18 +642,18 @@ export function LandingPage() {
       {/* ─────────────────────────────────────────────────────────────
           9. STICKY BOTTOM CONVERSION BANNER
       ───────────────────────────────────────────────────────────── */}
-      <div className="sticky bottom-0 z-30 p-3 bg-white/90 backdrop-blur-md border-t border-purple-100 shadow-lg text-center flex flex-wrap items-center justify-center gap-3">
+      <div className="relative z-30 p-3 bg-white/90 backdrop-blur-md border-t border-purple-100 shadow-lg text-center flex flex-wrap items-center justify-center gap-3">
         <span className="text-xs font-bold text-slate-800">
-          ✨ Ready to launch your automated video channel?
+          Ready to launch your automated video channel?
         </span>
         <span className="text-xs text-slate-500 font-medium hidden sm:inline">
-          300 free trial credits included • 1 free watermark-free direct social post
+          Free trial video included • no credit card required
         </span>
         <Link
-          href="/content/new"
+          href="/signup"
           className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 text-white font-extrabold text-xs shadow-md hover:shadow-lg transition-all cursor-pointer"
         >
-          Create First Video in 60s ➔
+          Start free ➔
         </Link>
       </div>
     </div>
