@@ -1,20 +1,19 @@
-# Tillercast - Web Crawler & Robots Policy
+# Tillercast robots
 User-agent: *
 Allow: /
-Allow: /landing
-Allow: /calendar
-Allow: /templates
-Allow: /workflow
-Allow: /billing
-Allow: /login
-Allow: /signup
-
-# Disallow protected and internal API areas from search index
 Disallow: /admin
 Disallow: /api/
-Disallow: /settings/security
+Disallow: /settings
+Disallow: /content
+Disallow: /dashboard
+Disallow: /billing
+Disallow: /channels
+Disallow: /analytics
+Disallow: /calendar
+Disallow: /workflow
+Disallow: /competitors
+Disallow: /onboarding
 Disallow: /reset-password
 Disallow: /verify-email
 
-# XML Sitemaps
 Sitemap: https://tillercast.live/sitemap.xml

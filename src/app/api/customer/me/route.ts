@@ -71,6 +71,25 @@ export async function DELETE(req: Request) {
 
     const db = getDb();
     destroyAllUserSessions(user.id);
+    // Remove all user-owned data. Several tables reference user_id without a foreign key,
+    // so they must be deleted explicitly (privacy policy promises full account erasure).
+    const userOwnedTables = [
+      'oauth_connections',
+      'api_credentials',
+      'user_voices',
+      'agent_sessions',
+      'credit_purchases',
+      'content_projects',
+      'channels',
+      'user_credits',
+    ];
+    for (const table of userOwnedTables) {
+      try {
+        db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).run(user.id);
+      } catch (e) {
+        console.warn(`[account-delete] could not clear ${table}:`, (e as Error).message);
+      }
+    }
     db.prepare('DELETE FROM users WHERE id = ?').run(user.id);
 
     const res = NextResponse.json({ success: true, message: 'Account deleted successfully.' });

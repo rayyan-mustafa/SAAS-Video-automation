@@ -266,7 +266,7 @@ export default function BlogIndexPage() {
             Ready to Automate Your YouTube Channel?
           </h2>
           <p style={{ fontSize: '16px', color: '#a1a1aa', maxWidth: '600px', margin: '0 auto 32px', lineHeight: 1.6 }}>
-            Join thousands of creators using Tillercast to generate 30 days of high-retention AI videos, voiceovers, and photorealistic visuals on autopilot.
+            Use Tillercast to plan, generate and schedule short-form videos with AI scripts, voiceovers and visuals.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
             <Link href="/signup" style={{
