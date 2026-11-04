@@ -2,9 +2,10 @@
 
 export const dynamic = 'force-dynamic';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { AuthShell, AuthError, authInputClass, authButtonClass } from '@/components/auth/AuthShell';
+import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
 
 export default function SignupPage() {
   const [name, setName] = useState('');
@@ -15,6 +16,15 @@ export default function SignupPage() {
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const errParam = new URLSearchParams(window.location.search).get('error');
+      if (errParam) {
+        setError(errParam);
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +44,8 @@ export default function SignupPage() {
         setError(data.error || 'Failed to create account. Please try again.');
         return;
       }
-      window.location.href = '/onboarding';
+      const fromParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('from') : null;
+      window.location.href = fromParam && fromParam.startsWith('/') ? fromParam : '/dashboard';
     } catch {
       setError('Network error. Please try again.');
     } finally {
@@ -45,10 +56,23 @@ export default function SignupPage() {
   return (
     <AuthShell
       title="Create your account"
-      subtitle="Start with a free trial video. No credit card required."
+      subtitle="Start with 25 free credits. No credit card required."
       footer={<>Already have an account? <Link href="/login" className="font-bold text-purple-700 hover:underline">Sign in</Link></>}
     >
       {error && <AuthError>{error}</AuthError>}
+
+      {/* 1-Click Google Sign-up */}
+      <div className="mb-5">
+        <GoogleAuthButton text="Sign up with Google" />
+      </div>
+
+      <div className="relative my-5 flex items-center justify-center">
+        <div className="w-full border-t border-slate-200" />
+        <span className="absolute bg-white px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          or sign up with email
+        </span>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="name" className="block text-sm font-semibold mb-1.5">Full name</label>

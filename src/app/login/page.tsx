@@ -2,14 +2,15 @@
 
 export const dynamic = 'force-dynamic';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { AuthShell, AuthError, authInputClass, authButtonClass } from '@/components/auth/AuthShell';
+import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
 
 function safeRedirect(): string {
-  if (typeof window === 'undefined') return '/';
+  if (typeof window === 'undefined') return '/dashboard';
   const from = new URLSearchParams(window.location.search).get('from');
-  return from && from.startsWith('/') && !from.startsWith('//') && !from.startsWith('/\\') ? from : '/';
+  return from && from.startsWith('/') && !from.startsWith('//') && !from.startsWith('/\\') ? from : '/dashboard';
 }
 
 export default function LoginPage() {
@@ -20,6 +21,15 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [unverified, setUnverified] = useState(false);
   const [resendSent, setResendSent] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const errParam = new URLSearchParams(window.location.search).get('error');
+      if (errParam) {
+        setError(errParam);
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,6 +84,19 @@ export default function LoginPage() {
           )}
         </div>
       )}
+
+      {/* 1-Click Google Sign-in */}
+      <div className="mb-5">
+        <GoogleAuthButton text="Continue with Google" />
+      </div>
+
+      <div className="relative my-5 flex items-center justify-center">
+        <div className="w-full border-t border-slate-200" />
+        <span className="absolute bg-white px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          or continue with email
+        </span>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-semibold mb-1.5">Email</label>

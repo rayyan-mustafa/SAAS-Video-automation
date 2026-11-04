@@ -55,7 +55,8 @@ export function middleware(request: NextRequest) {
     const adminToken = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
     if (!adminToken) {
       const loginUrl = new URL('/admin/login', request.url);
-      loginUrl.searchParams.set('from', pathname);
+      const targetFrom = pathname + (request.nextUrl.search || '');
+    loginUrl.searchParams.set('from', targetFrom);
       return NextResponse.redirect(loginUrl);
     }
     return NextResponse.next();
@@ -65,7 +66,8 @@ export function middleware(request: NextRequest) {
   const sessionToken = request.cookies.get(SESSION_COOKIE)?.value;
   if (!sessionToken) {
     const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('from', pathname);
+    const targetFrom = pathname + (request.nextUrl.search || '');
+    loginUrl.searchParams.set('from', targetFrom);
     return NextResponse.redirect(loginUrl);
   }
 

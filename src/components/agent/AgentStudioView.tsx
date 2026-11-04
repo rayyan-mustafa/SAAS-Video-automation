@@ -20,7 +20,19 @@ export const AgentStudioView: React.FC<AgentStudioViewProps> = ({
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const promptFromUrl = searchParams.get('prompt') || initialPrompt;
+  const [storedPrompt, setStoredPrompt] = useState<string>('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const sp = sessionStorage.getItem('tillercast_guest_prompt');
+      if (sp) {
+        setStoredPrompt(sp);
+        sessionStorage.removeItem('tillercast_guest_prompt');
+      }
+    }
+  }, []);
+
+  const promptFromUrl = searchParams.get('prompt') || storedPrompt || initialPrompt;
 
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<AgentMessage[]>([]);

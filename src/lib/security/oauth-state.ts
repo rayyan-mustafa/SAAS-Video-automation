@@ -16,13 +16,14 @@ const usedNonces = new Set<string>();
 /**
  * Generates an unpredictable, cryptographically signed, single-use, time-limited OAuth state token.
  */
-export function generateOAuthState(userId: string): string {
+export function generateOAuthState(userId: string, metadata?: Record<string, any>): string {
   const nonce = crypto.randomBytes(16).toString('hex');
   const timestamp = Date.now();
-  const data = `${userId}:${timestamp}:${nonce}`;
+  const metaStr = metadata ? JSON.stringify(metadata) : '';
+  const data = `${userId}:${timestamp}:${nonce}:${metaStr}`;
   const signature = crypto.createHmac('sha256', getStateSecret()).update(data).digest('hex');
   
-  const payload = JSON.stringify({ userId, timestamp, nonce, signature });
+  const payload = JSON.stringify({ userId, timestamp, nonce, metadata, signature });
   return Buffer.from(payload).toString('base64url');
 }
 
@@ -32,7 +33,7 @@ export function generateOAuthState(userId: string): string {
 export function verifyOAuthState(
   state: string | null | undefined,
   expectedUserId?: string
-): { valid: boolean; userId?: string; error?: string } {
+): { valid: boolean; userId?: string; metadata?: Record<string, any>; error?: string } {
   if (!state || typeof state !== 'string') {
     return { valid: false, error: 'Missing OAuth state' };
   }
@@ -46,7 +47,7 @@ export function verifyOAuthState(
     }
 
     const parsed = JSON.parse(jsonStr);
-    const { userId, timestamp, nonce, signature } = parsed;
+    const { userId, timestamp, nonce, metadata, signature } = parsed;
 
     if (!userId || !timestamp || !nonce || !signature) {
       return { valid: false, error: 'Malformed OAuth state structure' };
@@ -58,7 +59,8 @@ export function verifyOAuthState(
     }
 
     // 2. Verify cryptographic signature
-    const data = `${userId}:${timestamp}:${nonce}`;
+    const metaStr = metadata ? JSON.stringify(metadata) : '';
+    const data = `${userId}:${timestamp}:${nonce}:${metaStr}`;
     const expectedSig = crypto.createHmac('sha256', getStateSecret()).update(data).digest('hex');
 
     const sigBuffer = Buffer.from(signature, 'hex');
@@ -79,7 +81,7 @@ export function verifyOAuthState(
     }
 
     usedNonces.add(nonce);
-    return { valid: true, userId };
+    return { valid: true, userId, metadata };
   } catch (err: any) {
     return { valid: false, error: 'Invalid or unparseable OAuth state' };
   }
