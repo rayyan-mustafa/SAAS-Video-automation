@@ -1,52 +1,42 @@
-import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { decryptToken } from '../security/encryption';
+import { ResilientDb } from './serverlessDb';
 
 export const DEFAULT_USER_ID = 'user_default';
 
-let dbInstance: Database.Database | null = null;
+let dbInstance: any = null;
 
-export function getDb(): Database.Database {
+export function getDb(): any {
   if (!dbInstance) {
-    const isServerless = process.env.NETLIFY === 'true' || process.env.VERCEL === '1' || !!process.env.AWS_LAMBDA_FUNCTION_NAME || !!process.env.LAMBDA_TASK_ROOT;
-    let dataDir = isServerless ? path.join('/tmp', 'data') : path.join(process.cwd(), 'data');
+    const isServerless =
+      process.env.NETLIFY === 'true' ||
+      process.env.VERCEL === '1' ||
+      !!process.env.AWS_LAMBDA_FUNCTION_NAME ||
+      !!process.env.LAMBDA_TASK_ROOT ||
+      process.env.NODE_ENV === 'production';
 
-    // Ensure directory exists and is writable, fallback to /tmp/data if permission denied
-    try {
-      if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
-      }
-      const testFile = path.join(dataDir, '.write-test-' + Date.now());
-      fs.writeFileSync(testFile, '1');
-      fs.unlinkSync(testFile);
-    } catch (permErr: any) {
-      console.warn(`[DB] Directory ${dataDir} is not writable: ${permErr.message}. Falling back to /tmp/data.`);
-      dataDir = path.join('/tmp', 'data');
-      if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
-      }
+    if (isServerless) {
+      dbInstance = new ResilientDb();
+      return dbInstance;
     }
 
-    let dbPath = path.join(dataDir, 'app.db');
-    console.log(`[DB] Initializing database at ${dbPath}`);
     try {
+      // Local development SQLite
+      const Database = require('better-sqlite3');
+      const dataDir = path.join(process.cwd(), 'data');
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+      const dbPath = path.join(dataDir, 'app.db');
       dbInstance = new Database(dbPath);
     } catch (err: any) {
-      console.error(`[DB] Error opening database at ${dbPath}: ${err.message}. Trying /tmp/data fallback...`);
-      try {
-        dataDir = path.join('/tmp', 'data');
-        if (!fs.existsSync(dataDir)) {
-          fs.mkdirSync(dataDir, { recursive: true });
-        }
-        dbPath = path.join(dataDir, 'app.db');
-        dbInstance = new Database(dbPath);
-      } catch (fallbackErr: any) {
-        console.error(`[DB] Fatal: could not open database in /tmp: ${fallbackErr.message}`);
-        throw fallbackErr;
-      }
+      console.warn('[DB] SQLite native addon unavailable, using ResilientDb:', err.message);
+      dbInstance = new ResilientDb();
+      return dbInstance;
     }
+
     try {
       dbInstance.pragma('journal_mode = DELETE');
       dbInstance.pragma('synchronous = NORMAL');
