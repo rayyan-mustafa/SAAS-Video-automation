@@ -16,6 +16,8 @@
     "test:youtube": "npx -y tsx test-youtube-integration.ts",
     "test:audit": "npx -y tsx test-final-production-audit.ts",
     "upstream:check": "npx -y tsx scripts/check-upstream.ts",
+    "social:status": "node scripts/social-publisher.js --status",
+    "social:publish": "node scripts/social-publisher.js",
     "prepare": "husky || true"
   },
   "keywords": [
@@ -41,6 +43,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "stripe": "^22.6.2",
+    "twitter-api-v2": "^1.31.0",
     "uuid": "^10.0.0"
   },
   "devDependencies": {

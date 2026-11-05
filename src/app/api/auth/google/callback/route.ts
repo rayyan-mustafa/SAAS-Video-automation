@@ -6,12 +6,16 @@ import { verifyOAuthState } from '@/lib/security/oauth-state';
 export const dynamic = 'force-dynamic';
 
 function getAppUrl(req: NextRequest): string {
+  const host = req.headers.get('host');
+  if (host && (host.includes('localhost') || host.includes('127.0.0.1'))) {
+    const proto = req.headers.get('x-forwarded-proto') || 'http';
+    return `${proto}://${host}`;
+  }
   if (process.env.NEXT_PUBLIC_APP_URL) {
     return process.env.NEXT_PUBLIC_APP_URL.replace(/\/+$/, '');
   }
-  const host = req.headers.get('host') || 'localhost:3000';
-  const proto = req.headers.get('x-forwarded-proto') || 'http';
-  return `${proto}://${host}`;
+  const proto = req.headers.get('x-forwarded-proto') || 'https';
+  return `${proto}://${host || 'tillercast.live'}`;
 }
 
 function sanitizeRedirect(from: string | undefined | null): string {
@@ -162,3 +166,4 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 }
+

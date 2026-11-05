@@ -6,9 +6,9 @@
 
 ## 1. Positioning
 
-**One-line pitch:** "Type an idea and get a finished, captioned, voiced video posted to TikTok, Reels, Shorts and Facebook automatically."
+**One-line pitch:** "Type an idea and get a finished, voiced, captioned video in both 16:9 Landscape and 9:16 Vertical formats, auto-posted across YouTube, TikTok, Reels, Shorts and Facebook."
 
-Alternative hook: "A faceless channel on autopilot, from script to publish."
+Alternative hook: "A faceless channel on autopilot, from script to multi-format publish (16:9 & 9:16)."
 
 ### Who buys, and why
 
@@ -140,19 +140,20 @@ Post the polished, lessons-style versions of your X threads here.
 - **X:** the AI tools, indie hacker (#buildinpublic) and faceless-YouTube creator circles. DM people who post about the pain of editing shorts.
 - **Offer to beta users:** free Creator plan for 60 days in exchange for feedback, a testimonial, and permission to share their results.
 
-### Demo assets to make
-1. A 30s hero demo (screen recording, idea → published).
-2. 5 sample videos, one per framework.
-3. A before/after comparison (raw stock video vs your output).
-4. A 2–3 min walkthrough for YouTube and Product Hunt.
-5. A GIF of captions inside the safe zone.
-6. Screenshots of the cost breakdown.
-7. Product Hunt gallery images (5).
+### Demo assets to make (Dual Format: 16:9 Landscape & 9:16 Vertical)
+*Strict Production Standard: Zero raw/amateur screen recordings. Every video asset receives the high-production commercial treatment (cinematic Veo 3 / Omni Flash visual B-roll + floating interactive Tillercast prompt UI mockup + kinetic typography), matching high-converting competitor ads like Pictory 3.*
+
+1. **The Hero Teaser (16:9 Landscape + 9:16 Vertical):** Cinematic Hollywood B-roll with floating Tillercast prompt bar typing an idea → cutting to the finished voiced/captioned scene.
+2. **5 Narrative Framework Sample Videos:** Rendered in both 16:9 and 9:16 (one per hook framework).
+3. **Before vs After Visualizer (16:9):** Generic robotic stock footage vs Tillercast's cinematic AI visuals.
+4. **Safe-Zone Caption Reveal (9:16 & 16:9):** Demonstrating how competitor subtitles get clipped by mobile UI vs Tillercast's perfect safe-zone placement.
+5. **Cost Breakdown Motion Graphic (16:9):** Dynamic cost ticker ($0.00 → $0.72) showing script, voice, and video rendering margin breakdown.
+6. **Product Hunt & X Master Walkthrough (16:9 Landscape):** High-definition 60s teaser video for the launch day hero slot.
 
 ---
 
 ## 3b. 30-day content calendar (starts in pre-launch, runs into launch)
-*LinkedIn posts are your X posts rewritten for agencies and B2B buyers. On Reddit, lead with value, follow each subreddit's rules, and only share a link when someone asks.*
+*Video Asset Rule: Render all demo video assets in 16:9 Landscape for X, LinkedIn, and YouTube, with 9:16 Vertical reframes for TikTok, Instagram Reels, and YouTube Shorts. Zero plain screen captures—always composite with Veo 3 / Omni cinematic visuals and floating SaaS prompt mockups.*
 
 | Day | Channel | Post type | Hook |
 |---|---|---|---|
