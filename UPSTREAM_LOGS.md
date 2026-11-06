@@ -609,3 +609,61 @@ git checkout upstream/main -- <path/to/folder>
 # Update .upstream-sync.json with last_synced_commit = "138980416fe8c0f42d725038ed33f53bf5521790"
 ```
 ---
+
+## 🔔 [Pending Review] Upstream Batch: fd2044b...1389804 (6 new commits)
+- **Detected At**: 2026-11-06T22:34:39.244Z
+- **Commit Range**: `fd2044b66828fa7509eaa5d24f0f56feeffeea1b` ... `138980416fe8c0f42d725038ed33f53bf5521790`
+- **Total Files Changed**: 7
+
+### 📜 New Upstream Commits:
+| Hash | Author | Date | Message |
+| :--- | :--- | :--- | :--- |
+| `1389804` | saninabbas | 2026-11-05 | feat(seo): add missed daily SEO & GEO blog posts for Nov 4 and Nov 5, 2026 |
+| `243fc49` | saninabbas | 2026-11-03 | feat(seo): add 5 missed daily SEO & GEO blog posts for Oct 30 - Nov 3, 2026 |
+| `2cb14bd` | saninabbas | 2026-10-29 | feat(seo): add trending competitor multi-model and viral shorts SEO blogs |
+| `3bdb342` | saninabbas | 2026-10-29 | feat(seo): publish daily SEO and GEO blog posts for Oct 29, 2026 |
+| `c6a52d0` | saninabbas | 2026-10-21 | fix(workflow): eliminate canvas vertical scrolling on mouse wheel and add strict viewport drag bounds |
+| `011e4b2` | saninabbas | 2026-10-21 | fix(workflow): fix mouse drag drift, viewport responsive auto-fit, full node titles, and smooth cable animations |
+
+### 🧩 Affected Architectural Modules:
+#### 🎨 Frontend UI & Pages (1)
+```text
+M: src/components/InteractiveWorkflowCanvas.tsx
+```
+#### 🧪 Tests & Tooling (4)
+```text
+A: scripts/add-evening-blogs.ts
+A: scripts/add-missed-blogs.ts
+A: scripts/add-nov4-nov5-blogs.ts
+A: scripts/add-todays-blogs.ts
+```
+#### 📄 Other Files (2)
+```text
+M: public/sitemap.xml
+M: src/lib/blog/posts.ts
+```
+
+### 📊 Diff Summary:
+```text
+public/sitemap.xml                           | 584 ++++++++++---------
+ scripts/add-evening-blogs.ts                 | 401 +++++++++++++
+ scripts/add-missed-blogs.ts                  | 814 +++++++++++++++++++++++++++
+ scripts/add-nov4-nov5-blogs.ts               | 379 +++++++++++++
+ scripts/add-todays-blogs.ts                  | 419 ++++++++++++++
+ src/components/InteractiveWorkflowCanvas.tsx | 348 ++++++++----
+ src/lib/blog/posts.ts                        | 214 +++++++
+ 7 files changed, 2789 insertions(+), 370 deletions(-)
+```
+
+### 🛠️ Developer Integration Commands (Run only after Founder Approval):
+```bash
+# 1. To inspect individual file diffs:
+git diff fd2044b66828fa7509eaa5d24f0f56feeffeea1b..upstream/main -- <path/to/file>
+
+# 2. To selectively import specific verified folders/files:
+git checkout upstream/main -- <path/to/folder>
+
+# 3. To update sync cursor once approved and committed:
+# Update .upstream-sync.json with last_synced_commit = "138980416fe8c0f42d725038ed33f53bf5521790"
+```
+---
